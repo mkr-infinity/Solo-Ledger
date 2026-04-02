@@ -52,7 +52,7 @@ app/src/main/java/com/mkr/soloLedger/
 
 ## Default Categories
 
-Food 🍕 · Travel ✈️ · Shopping 🛍️ · Entertainment �� · Bills 💡 · Education 📚 · Groceries 🥦 · Subscriptions 📺 · Other
+Food 🍕 · Travel ✈️ · Shopping 🛍️ · Entertainment 🎬 · Bills 💡 · Education 📚 · Groceries 🥦 · Subscriptions 📺 · Other
 
 ## Developer
 

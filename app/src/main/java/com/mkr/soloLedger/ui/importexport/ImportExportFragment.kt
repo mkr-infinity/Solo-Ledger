@@ -82,7 +82,7 @@ class ImportExportFragment : Fragment() {
                 var y = 100f
                 paint.textSize = 11f
                 expenses.take(50).forEach { expense ->
-                    canvas.drawText("${expense.date.toFormattedDate()} | ${expense.title} | ${"%.2f".format(expense.amount)}", 40f, y, paint)
+                    canvas.drawText("${expense.date.toShortDate()} | ${expense.title} | ${"%.2f".format(expense.amount)}", 40f, y, paint)
                     y += 20f
                     if (y > 800f) return@forEach
                 }
@@ -105,7 +105,7 @@ class ImportExportFragment : Fragment() {
         }
     }
 
-    private fun Long.toFormattedDate(): String = this.toFormattedDateTime().split(",").firstOrNull() ?: ""
+    private fun Long.toShortDate(): String = this.toFormattedDateTime().split(",").firstOrNull() ?: ""
 
     override fun onDestroyView() {
         super.onDestroyView()

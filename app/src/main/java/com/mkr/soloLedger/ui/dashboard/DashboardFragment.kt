@@ -54,6 +54,13 @@ class DashboardFragment : Fragment() {
             profile?.let {
                 binding.tvWelcome.text = "Hello, ${it.name}! 👋"
                 val currency = it.currency
+                expenseAdapter = ExpenseAdapter(currency = currency,
+                    onItemClick = { expense ->
+                        val bundle = Bundle().apply { putLong("expenseId", expense.id) }
+                        findNavController().navigate(R.id.action_dashboard_to_addExpense, bundle)
+                    }
+                )
+                binding.rvRecentExpenses.adapter = expenseAdapter
 
                 dashboardViewModel.currentMonthExpenses.observe(viewLifecycleOwner) { expenses ->
                     val total = expenses.sumOf { e -> e.amount }
@@ -73,14 +80,6 @@ class DashboardFragment : Fragment() {
 
                     binding.tvInsight.text = dashboardViewModel.generateInsight(total, budget)
                 }
-
-                expenseAdapter = ExpenseAdapter(currency = currency,
-                    onItemClick = { expense ->
-                        val bundle = Bundle().apply { putLong("expenseId", expense.id) }
-                        findNavController().navigate(R.id.action_dashboard_to_addExpense, bundle)
-                    }
-                )
-                binding.rvRecentExpenses.adapter = expenseAdapter
             }
         }
 

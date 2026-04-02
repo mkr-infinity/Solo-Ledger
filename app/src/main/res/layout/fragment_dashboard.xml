@@ -170,7 +170,7 @@
             android:nestedScrollingEnabled="false" />
 
         <!-- FAB padding -->
-        <View android:layout_width="0dp" android:layout_height="80dp" />
+        <Space android:layout_width="0dp" android:layout_height="80dp" />
 
     </LinearLayout>
 
