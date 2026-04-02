@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/dashboardFragment">
+
+    <fragment
+        android:id="@+id/dashboardFragment"
+        android:name="com.mkr.soloLedger.ui.dashboard.DashboardFragment"
+        android:label="Dashboard">
+        <action
+            android:id="@+id/action_dashboard_to_addExpense"
+            app:destination="@id/addExpenseFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/historyFragment"
+        android:name="com.mkr.soloLedger.ui.history.HistoryFragment"
+        android:label="History">
+        <action
+            android:id="@+id/action_history_to_addExpense"
+            app:destination="@id/addExpenseFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/analyticsFragment"
+        android:name="com.mkr.soloLedger.ui.analytics.AnalyticsFragment"
+        android:label="Analytics" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.mkr.soloLedger.ui.profile.ProfileFragment"
+        android:label="Profile">
+        <action
+            android:id="@+id/action_profile_to_settings"
+            app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_profile_to_categories"
+            app:destination="@id/categoriesFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/addExpenseFragment"
+        android:name="com.mkr.soloLedger.ui.addexpense.AddExpenseFragment"
+        android:label="Add Expense">
+        <argument
+            android:name="expenseId"
+            app:argType="long"
+            android:defaultValue="-1" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.mkr.soloLedger.ui.settings.SettingsFragment"
+        android:label="Settings">
+        <action
+            android:id="@+id/action_settings_to_security"
+            app:destination="@id/securityFragment" />
+        <action
+            android:id="@+id/action_settings_to_importExport"
+            app:destination="@id/importExportFragment" />
+        <action
+            android:id="@+id/action_settings_to_about"
+            app:destination="@id/aboutFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/categoriesFragment"
+        android:name="com.mkr.soloLedger.ui.categories.CategoriesFragment"
+        android:label="Categories" />
+
+    <fragment
+        android:id="@+id/securityFragment"
+        android:name="com.mkr.soloLedger.ui.security.SecurityFragment"
+        android:label="Security" />
+
+    <fragment
+        android:id="@+id/importExportFragment"
+        android:name="com.mkr.soloLedger.ui.importexport.ImportExportFragment"
+        android:label="Import / Export" />
+
+    <fragment
+        android:id="@+id/aboutFragment"
+        android:name="com.mkr.soloLedger.ui.about.AboutFragment"
+        android:label="About" />
+
+</navigation>

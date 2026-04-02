@@ -1,0 +1,28 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="240dp"
+    android:height="240dp"
+    android:viewportWidth="240"
+    android:viewportHeight="240">
+    <!-- Background -->
+    <path android:fillColor="#E3F2FD"
+        android:pathData="M0,0 h240 v240 h-240 z" />
+    <!-- Bar chart bars -->
+    <path android:fillColor="#6750A4"
+        android:pathData="M40,170 h30 v-60 h-30 z" />
+    <path android:fillColor="#9C72CF"
+        android:pathData="M85,170 h30 v-90 h-30 z" />
+    <path android:fillColor="#6750A4"
+        android:pathData="M130,170 h30 v-50 h-30 z" />
+    <path android:fillColor="#9C72CF"
+        android:pathData="M175,170 h30 v-110 h-30 z" />
+    <!-- Axis -->
+    <path android:fillColor="#333333"
+        android:pathData="M30,170 h200 v3 h-200 z" />
+    <path android:fillColor="#333333"
+        android:pathData="M30,60 h3 v115 h-3 z" />
+    <!-- Line chart overlay -->
+    <path android:fillColor="@android:color/transparent"
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="3"
+        android:pathData="M55,110 L100,80 L145,120 L190,60" />
+</vector>
