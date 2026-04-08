@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <!-- Background circle -->
+    <path
+        android:fillColor="#6750A4"
+        android:pathData="M60,10 A50,50 0 1,1 59.99,10 Z" />
+    <!-- Wallet shape -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M35,40 h50 a5,5 0 0 1 5,5 v30 a5,5 0 0 1 -5,5 h-50 a5,5 0 0 1 -5,-5 v-30 a5,5 0 0 1 5,-5 z" />
+    <path
+        android:fillColor="#6750A4"
+        android:pathData="M70,55 a7,7 0 1 0 0.01,0 z" />
+    <!-- Dollar sign -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#6750A4"
+        android:strokeWidth="2"
+        android:pathData="M59,34 v4 M59,72 v4 M54,38 a5,5 0 0 1 5,-4 a5,5 0 0 1 5,4 M54,68 a5,5 0 0 0 5,4 a5,5 0 0 0 5,-4 M54,38 h8 M54,68 h8" />
+</vector>

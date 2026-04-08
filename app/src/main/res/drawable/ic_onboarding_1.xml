@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="240dp"
+    android:height="240dp"
+    android:viewportWidth="240"
+    android:viewportHeight="240">
+    <!-- Background -->
+    <path android:fillColor="#EDE7F6"
+        android:pathData="M0,0 h240 v240 h-240 z" />
+    <!-- Wallet illustration -->
+    <path android:fillColor="#6750A4"
+        android:pathData="M50,80 h140 a10,10 0 0 1 10,10 v80 a10,10 0 0 1 -10,10 h-140 a10,10 0 0 1 -10,-10 v-80 a10,10 0 0 1 10,-10 z" />
+    <path android:fillColor="#9C72CF"
+        android:pathData="M40,95 h160 v10 h-160 z" />
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M150,120 a20,20 0 1 0 0.01,0 z" />
+    <path android:fillColor="#6750A4"
+        android:pathData="M150,112 a8,8 0 1 0 0.01,0 z" />
+    <!-- Coins -->
+    <path android:fillColor="#FFCC02"
+        android:pathData="M80,145 a12,12 0 1 0 0.01,0 z" />
+    <path android:fillColor="#FFCC02"
+        android:pathData="M110,155 a10,10 0 1 0 0.01,0 z" />
+</vector>

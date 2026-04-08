@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="240dp"
+    android:height="240dp"
+    android:viewportWidth="240"
+    android:viewportHeight="240">
+    <!-- Background -->
+    <path android:fillColor="#E8F5E9"
+        android:pathData="M0,0 h240 v240 h-240 z" />
+    <!-- Piggy bank body -->
+    <path android:fillColor="#F48FB1"
+        android:pathData="M120,60 a60,60 0 1 1 -0.01,0 z" />
+    <!-- Ear -->
+    <path android:fillColor="#F48FB1"
+        android:pathData="M155,75 a15,15 0 1 1 -0.01,0 z" />
+    <!-- Eye -->
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M130,95 a8,8 0 1 1 -0.01,0 z" />
+    <path android:fillColor="#333333"
+        android:pathData="M132,97 a4,4 0 1 1 -0.01,0 z" />
+    <!-- Coin slot -->
+    <path android:fillColor="#E91E63"
+        android:pathData="M105,70 h30 a3,3 0 0 1 0,6 h-30 a3,3 0 0 1 0,-6 z" />
+    <!-- Legs -->
+    <path android:fillColor="#F48FB1"
+        android:pathData="M90,155 h15 v20 h-15 z M135,155 h15 v20 h-15 z" />
+    <!-- Coin -->
+    <path android:fillColor="#FFCC02"
+        android:pathData="M108,55 a12,12 0 1 0 0.01,0 z" />
+</vector>
