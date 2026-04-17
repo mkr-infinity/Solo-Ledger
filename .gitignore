@@ -1,0 +1,40 @@
+# Gradle files
+.gradle
+build/
+*.apk
+*.ap_
+*.aab
+*.jks
+*.keystore
+
+# Android Studio
+.idea/
+.classpath
+.project
+.settings/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+local.properties
+build/
+gradlew.bat
+
+# Kotlin
+.kotlin/
+
+# IDEs
+out/
+.vscode/
+
+# OS
+Thumbs.db
+.DS_Store
+*.log
+
+# Build
+bin/
+gen/
+
+# Release
+app/release/
