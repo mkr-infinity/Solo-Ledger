@@ -359,8 +359,7 @@ fun HomeTabContent(
                         colors = AssistChipDefaults.assistChipColors(
                             containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.35f),
                             disabledContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.35f)
-                        ),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.12f))
+                        )
                     )
 
                     Text(
