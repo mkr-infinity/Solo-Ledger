@@ -1,90 +1,64 @@
 package com.kaif.ledger.ui.theme
 
-import androidx.compose.animation.core.*
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 
-/**
- * Fade in animation for appearing elements
- */
+@Composable
 fun Modifier.fadeIn(
     duration: Int = 300,
     delay: Int = 0
 ): Modifier {
-    return this.then(
-        Modifier.graphicsLayer {
-            val infiniteTransition = InfiniteTransition(
-                mutableListOf(),
-                label = "FadeIn"
-            )
-            alpha = infiniteTransition.animateFloat(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = tween(
-                    durationMillis = duration,
-                    delayMillis = delay,
-                    easing = EaseIn
-                ),
-                label = "fadeAlpha"
-            ).value
-        }
+    val alpha by animateFloatAsState(
+        targetValue = 1f,
+        animationSpec = tween(
+            durationMillis = duration,
+            delayMillis = delay,
+            easing = EaseIn
+        ),
+        label = "fadeAlpha"
     )
+    return this.graphicsLayer { this.alpha = alpha }
 }
 
-/**
- * Slide in animation from left
- */
+@Composable
 fun Modifier.slideInFromLeft(
     duration: Int = 300,
     delay: Int = 0
 ): Modifier {
-    return this.then(
-        Modifier.graphicsLayer {
-            val infiniteTransition = InfiniteTransition(
-                mutableListOf(),
-                label = "SlideIn"
-            )
-            translationX = infiniteTransition.animateFloat(
-                initialValue = -100f,
-                targetValue = 0f,
-                animationSpec = tween(
-                    durationMillis = duration,
-                    delayMillis = delay,
-                    easing = EaseOut
-                ),
-                label = "slideX"
-            ).value
-        }
+    val translationX by animateFloatAsState(
+        targetValue = 0f,
+        animationSpec = tween(
+            durationMillis = duration,
+            delayMillis = delay,
+            easing = EaseOut
+        ),
+        label = "slideX"
     )
+    return this.graphicsLayer { this.translationX = translationX }
 }
 
-/**
- * Scale animation for appearing elements
- */
+@Composable
 fun Modifier.scaleIn(
     duration: Int = 300,
     delay: Int = 0
 ): Modifier {
-    return this.then(
-        Modifier.graphicsLayer {
-            val infiniteTransition = InfiniteTransition(
-                mutableListOf(),
-                label = "ScaleIn"
-            )
-            val scale = infiniteTransition.animateFloat(
-                initialValue = 0.9f,
-                targetValue = 1f,
-                animationSpec = tween(
-                    durationMillis = duration,
-                    delayMillis = delay,
-                    easing = EaseOut
-                ),
-                label = "scale"
-            ).value
-            scaleX = scale
-            scaleY = scale
-        }
+    val scale by animateFloatAsState(
+        targetValue = 1f,
+        animationSpec = tween(
+            durationMillis = duration,
+            delayMillis = delay,
+            easing = EaseOut
+        ),
+        label = "scale"
     )
+    return this.graphicsLayer {
+        scaleX = scale
+        scaleY = scale
+    }
 }
