@@ -1,0 +1,114 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!--
+        Solo Ledger Logo: Stylized open ledger book with a trending chart.
+        Left page: horizontal lines (representing entries).
+        Right page: upward-trending line chart (finance vibe).
+        Center spine: vertical divider.
+        Standalone version uses hardcoded color #6C63FF (purple/violet).
+    -->
+
+    <!-- Outer book cover / shadow base -->
+    <path
+        android:pathData="M2,4 C2,3.448 2.448,3 3,3 L11,3 L11,21 L3,21 C2.448,21 2,20.552 2,20 Z"
+        android:fillColor="#5550CC"
+        android:fillAlpha="0.85" />
+
+    <path
+        android:pathData="M13,3 L21,3 C21.552,3 22,3.448 22,4 L22,20 C22,20.552 21.552,21 21,21 L13,21 Z"
+        android:fillColor="#5550CC"
+        android:fillAlpha="0.85" />
+
+    <!-- Left page surface -->
+    <path
+        android:pathData="M3,4.5 L11,4.5 L11,19.5 L3,19.5 Z"
+        android:fillColor="#6C63FF" />
+
+    <!-- Right page surface -->
+    <path
+        android:pathData="M13,4.5 L21,4.5 L21,19.5 L13,19.5 Z"
+        android:fillColor="#6C63FF" />
+
+    <!-- Spine highlight -->
+    <path
+        android:pathData="M11,3 L13,3 L13,21 L11,21 Z"
+        android:fillColor="#3D3580" />
+
+    <!-- Left page: text lines (representing ledger entries) -->
+    <path
+        android:pathData="M4.5,7.5 L9.5,7.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="0.8"
+        android:strokeAlpha="0.7"
+        android:fillColor="#00000000" />
+
+    <path
+        android:pathData="M4.5,9.5 L9.5,9.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="0.8"
+        android:strokeAlpha="0.7"
+        android:fillColor="#00000000" />
+
+    <path
+        android:pathData="M4.5,11.5 L9.5,11.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="0.8"
+        android:strokeAlpha="0.7"
+        android:fillColor="#00000000" />
+
+    <path
+        android:pathData="M4.5,13.5 L8.5,13.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="0.8"
+        android:strokeAlpha="0.5"
+        android:fillColor="#00000000" />
+
+    <path
+        android:pathData="M4.5,15.5 L7.5,15.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="0.8"
+        android:strokeAlpha="0.5"
+        android:fillColor="#00000000" />
+
+    <!-- Right page: upward trending line chart -->
+    <!-- Chart area background (subtle) -->
+    <path
+        android:pathData="M14,9 L20,9 L20,17 L14,17 Z"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.08" />
+
+    <!-- Chart baseline -->
+    <path
+        android:pathData="M14,17 L20,17"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="0.6"
+        android:strokeAlpha="0.4"
+        android:fillColor="#00000000" />
+
+    <!-- Trending up line: goes from bottom-left to top-right -->
+    <path
+        android:pathData="M14.5,15.5 L16,14 L17.5,12.5 L19,11 L19.5,9.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.2"
+        android:strokeAlpha="0.95"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Dot at top of trend line -->
+    <path
+        android:pathData="M19.5,9.5 m-1,0 a1,1 0 1,0 2,0 a1,1 0 1,0 -2,0"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.95" />
+
+    <!-- Small dot at bottom of trend line -->
+    <path
+        android:pathData="M14.5,15.5 m-0.7,0 a0.7,0.7 0 1,0 1.4,0 a0.7,0.7 0 1,0 -1.4,0"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.6" />
+
+</vector>

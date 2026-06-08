@@ -1,0 +1,117 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!--
+        Adaptive icon foreground for Solo Ledger.
+        Content is inset ~25% on all sides to respect the safe zone
+        (safe zone is the inner 72dp circle of a 108dp canvas, i.e. 18dp margin each side).
+        All paths are offset to center within the 108x108 viewport.
+        Icon content occupies roughly x:[27,81] y:[27,81] (54dp wide/tall centered).
+    -->
+
+    <!-- Scale factor: original 24x24 maps to 54x54, offset by (27,27) -->
+    <!-- Scale = 54/24 = 2.25 -->
+
+    <!-- Outer book cover left shadow base: x offset=27, y offset=27, scale=2.25 -->
+    <!-- Original: M2,4 L11,3 L11,21 L3,21 -->
+    <path
+        android:pathData="M31.5,36 C31.5,34.758 32.508,33.75 33.75,33.75 L52.25,33.75 L52.25,74.25 L33.75,74.25 C32.508,74.25 31.5,73.242 31.5,72 Z"
+        android:fillColor="@color/ic_launcher_foreground"
+        android:fillAlpha="0.75" />
+
+    <path
+        android:pathData="M56.25,33.75 L74.25,33.75 C75.492,33.75 76.5,34.758 76.5,36 L76.5,72 C76.5,73.242 75.492,74.25 74.25,74.25 L56.25,74.25 Z"
+        android:fillColor="@color/ic_launcher_foreground"
+        android:fillAlpha="0.75" />
+
+    <!-- Left page surface -->
+    <path
+        android:pathData="M33.75,37.125 L52.25,37.125 L52.25,71.875 L33.75,71.875 Z"
+        android:fillColor="@color/ic_launcher_foreground" />
+
+    <!-- Right page surface -->
+    <path
+        android:pathData="M55.75,37.125 L74.25,37.125 L74.25,71.875 L55.75,71.875 Z"
+        android:fillColor="@color/ic_launcher_foreground" />
+
+    <!-- Spine -->
+    <path
+        android:pathData="M52.25,33.75 L55.75,33.75 L55.75,74.25 L52.25,74.25 Z"
+        android:fillColor="#3D3580" />
+
+    <!-- Left page lines -->
+    <path
+        android:pathData="M36.375,44.375 L49.625,44.375"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeAlpha="0.7"
+        android:fillColor="#00000000" />
+
+    <path
+        android:pathData="M36.375,48.875 L49.625,48.875"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeAlpha="0.7"
+        android:fillColor="#00000000" />
+
+    <path
+        android:pathData="M36.375,53.375 L49.625,53.375"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeAlpha="0.7"
+        android:fillColor="#00000000" />
+
+    <path
+        android:pathData="M36.375,57.875 L46.375,57.875"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeAlpha="0.5"
+        android:fillColor="#00000000" />
+
+    <path
+        android:pathData="M36.375,62.375 L43.375,62.375"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeAlpha="0.5"
+        android:fillColor="#00000000" />
+
+    <!-- Right page chart background -->
+    <path
+        android:pathData="M58.5,47.25 L72,47.25 L72,60.75 L58.5,60.75 Z"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.08" />
+
+    <!-- Chart baseline -->
+    <path
+        android:pathData="M58.5,60.75 L72,60.75"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.35"
+        android:strokeAlpha="0.4"
+        android:fillColor="#00000000" />
+
+    <!-- Trend line -->
+    <path
+        android:pathData="M59.625,57.375 L63.0,54.0 L66.375,50.625 L69.75,47.25 L71.125,43.875"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.7"
+        android:strokeAlpha="0.95"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Dot at top of trend line -->
+    <path
+        android:pathData="M71.125,43.875 m-2.25,0 a2.25,2.25 0 1,0 4.5,0 a2.25,2.25 0 1,0 -4.5,0"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.95" />
+
+    <!-- Dot at bottom of trend line -->
+    <path
+        android:pathData="M59.625,57.375 m-1.575,0 a1.575,1.575 0 1,0 3.15,0 a1.575,1.575 0 1,0 -3.15,0"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.6" />
+
+</vector>

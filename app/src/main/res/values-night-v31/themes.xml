@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Splash screen theme with animated icon (API 31+, night) -->
+    <style name="Theme.SoloLedger.Splash" parent="Theme.SoloLedger">
+        <item name="android:windowSplashScreenBackground">#0A0A0A</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.SoloLedger</item>
+    </style>
+
+</resources>
