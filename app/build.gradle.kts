@@ -31,7 +31,21 @@ android {
 
     signingConfigs {
         getByName("debug") {
-            // Uses default debug keystore
+            val storeFilePath = localProperties.getProperty("storeFile", "")
+                .ifEmpty { System.getenv("STORE_FILE") ?: "" }
+            val storePasswordVal = localProperties.getProperty("storePassword", "")
+                .ifEmpty { System.getenv("STORE_PASSWORD") ?: "" }
+            val keyAliasVal = localProperties.getProperty("keyAlias", "")
+                .ifEmpty { System.getenv("KEY_ALIAS") ?: "" }
+            val keyPasswordVal = localProperties.getProperty("keyPassword", "")
+                .ifEmpty { System.getenv("KEY_PASSWORD") ?: "" }
+
+            if (storeFilePath.isNotEmpty()) {
+                storeFile = file(storeFilePath)
+                storePassword = storePasswordVal
+                keyAlias = keyAliasVal
+                keyPassword = keyPasswordVal
+            }
         }
         create("release") {
             val storeFilePath = localProperties.getProperty("storeFile", "")
@@ -55,6 +69,7 @@ android {
     buildTypes {
         debug {
             isDebuggable = true
+            signingConfig = signingConfigs.getByName("debug")
         }
         release {
             isMinifyEnabled = false

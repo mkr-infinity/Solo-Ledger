@@ -12,29 +12,64 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Setup JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          distribution: temurin
+          java-version: 17
+
+      - name: Install Gradle (to generate wrapper JAR)
+        run: |
+          GRADLE_VERSION=8.10.2
+          curl -fsSL "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" \
+            -o /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /tmp/gradle-install
+          GRADLE_BIN="/tmp/gradle-install/gradle-${GRADLE_VERSION}/bin/gradle"
+          chmod +x "$GRADLE_BIN"
+          # Generate the wrapper JAR into the project
+          "$GRADLE_BIN" wrapper --gradle-version "$GRADLE_VERSION" --project-dir .
+          echo "Wrapper JAR generated:"
+          ls -la gradle/wrapper/gradle-wrapper.jar
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: wrapper
+        uses: gradle/actions/setup-gradle@v4
 
-      - name: Grant execute permission for gradlew
+      - name: Grant Execute Permission
         run: chmod +x gradlew
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+      - name: Generate Temporary Debug Keystore
+        run: |
+          keytool -genkeypair \
+            -alias tempalias \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 3650 \
+            -keystore temp-keystore.jks \
+            -storepass temp123456 \
+            -keypass temp123456 \
+            -dname "CN=Solo Ledger,O=GitHub,C=IN"
+          echo "Keystore generated:"
+          ls -la temp-keystore.jks
 
-      - name: Upload Debug APK
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
+        env:
+          STORE_FILE: ${{ github.workspace }}/temp-keystore.jks
+          STORE_PASSWORD: temp123456
+          KEY_ALIAS: tempalias
+          KEY_PASSWORD: temp123456
+
+      - name: Verify APK
+        run: |
+          echo "APK output:"
+          ls -la app/build/outputs/apk/debug/
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Solo-Ledger-Debug-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/*.apk
           retention-days: 30

@@ -1,13 +1,21 @@
 # Solo Ledger
 
-### Your personal finance, beautifully tracked.
+<p align="center">
+  <img src="assets/logo.svg" alt="Solo Ledger Logo" width="120" height="120"/>
+</p>
 
-[![Build Debug APK](https://github.com/mkr-infinity/solo-ledger/actions/workflows/build-debug.yml/badge.svg)](https://github.com/mkr-infinity/solo-ledger/actions/workflows/build-debug.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Android](https://img.shields.io/badge/Android-API%2026%2B-green.svg)](https://developer.android.com/about/versions/oreo)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.0-blueviolet.svg)](https://kotlinlang.org)
+<h3 align="center">Your personal finance, beautifully tracked.</h3>
 
-Solo Ledger is a clean, modern, and fully offline personal finance tracker for Android. Built with Jetpack Compose and Material3, it helps you take control of your income, expenses, and savings — with beautiful charts and multiple themes to match your style. No ads, no cloud sync, no accounts. Just you and your money.
+<p align="center">
+  <a href="https://github.com/mkr-infinity/Solo-Ledger/actions/workflows/build-debug.yml">
+    <img src="https://github.com/mkr-infinity/Solo-Ledger/actions/workflows/build-debug.yml/badge.svg" alt="Build Debug APK"/>
+  </a>
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License MIT"/>
+  <img src="https://img.shields.io/badge/Android-API%2026%2B-green.svg" alt="Android API 26+"/>
+  <img src="https://img.shields.io/badge/Kotlin-2.0.0-blueviolet.svg" alt="Kotlin 2.0.0"/>
+</p>
+
+Solo Ledger is a clean, modern, and fully offline personal finance tracker for Android. Built with Jetpack Compose and Material 3, it helps you take control of your income, expenses, and savings — with beautiful charts, 8 themes, and 7 navigation styles to match your style. No ads, no cloud sync, no accounts. Just you and your money.
 
 ---
 

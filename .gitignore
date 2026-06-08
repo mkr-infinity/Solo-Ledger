@@ -75,8 +75,8 @@ Desktop.ini
 node_modules/
 npm-debug.log*
 
-# Gradle Wrapper (keep gradlew and gradlew.bat, ignore jar)
-gradle/wrapper/gradle-wrapper.jar
+# Gradle Wrapper (JAR must be committed for CI to work)
+# gradle/wrapper/gradle-wrapper.jar  <-- intentionally NOT ignored
 
 # CI/CD
 .env

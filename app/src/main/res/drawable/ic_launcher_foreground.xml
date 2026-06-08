@@ -5,113 +5,40 @@
     android:viewportHeight="108">
 
     <!--
-        Adaptive icon foreground for Solo Ledger.
-        Content is inset ~25% on all sides to respect the safe zone
-        (safe zone is the inner 72dp circle of a 108dp canvas, i.e. 18dp margin each side).
-        All paths are offset to center within the 108x108 viewport.
-        Icon content occupies roughly x:[27,81] y:[27,81] (54dp wide/tall centered).
+        Solo Ledger adaptive icon foreground.
+        Safe zone: content within x:18–90, y:18–90 (72x72 box).
+        Wallet icon: body + flap + card slot + gold coin.
     -->
 
-    <!-- Scale factor: original 24x24 maps to 54x54, offset by (27,27) -->
-    <!-- Scale = 54/24 = 2.25 -->
-
-    <!-- Outer book cover left shadow base: x offset=27, y offset=27, scale=2.25 -->
-    <!-- Original: M2,4 L11,3 L11,21 L3,21 -->
+    <!-- Wallet body -->
     <path
-        android:pathData="M31.5,36 C31.5,34.758 32.508,33.75 33.75,33.75 L52.25,33.75 L52.25,74.25 L33.75,74.25 C32.508,74.25 31.5,73.242 31.5,72 Z"
-        android:fillColor="@color/ic_launcher_foreground"
-        android:fillAlpha="0.75" />
+        android:pathData="M22,46 Q22,38 30,38 L78,38 Q86,38 86,46 L86,78 Q86,86 78,86 L30,86 Q22,86 22,78 Z"
+        android:fillColor="@color/ic_launcher_foreground"/>
 
+    <!-- Wallet flap top arc -->
     <path
-        android:pathData="M56.25,33.75 L74.25,33.75 C75.492,33.75 76.5,34.758 76.5,36 L76.5,72 C76.5,73.242 75.492,74.25 74.25,74.25 L56.25,74.25 Z"
-        android:fillColor="@color/ic_launcher_foreground"
-        android:fillAlpha="0.75" />
-
-    <!-- Left page surface -->
-    <path
-        android:pathData="M33.75,37.125 L52.25,37.125 L52.25,71.875 L33.75,71.875 Z"
-        android:fillColor="@color/ic_launcher_foreground" />
-
-    <!-- Right page surface -->
-    <path
-        android:pathData="M55.75,37.125 L74.25,37.125 L74.25,71.875 L55.75,71.875 Z"
-        android:fillColor="@color/ic_launcher_foreground" />
-
-    <!-- Spine -->
-    <path
-        android:pathData="M52.25,33.75 L55.75,33.75 L55.75,74.25 L52.25,74.25 Z"
-        android:fillColor="#3D3580" />
-
-    <!-- Left page lines -->
-    <path
-        android:pathData="M36.375,44.375 L49.625,44.375"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="1.8"
-        android:strokeAlpha="0.7"
-        android:fillColor="#00000000" />
-
-    <path
-        android:pathData="M36.375,48.875 L49.625,48.875"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="1.8"
-        android:strokeAlpha="0.7"
-        android:fillColor="#00000000" />
-
-    <path
-        android:pathData="M36.375,53.375 L49.625,53.375"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="1.8"
-        android:strokeAlpha="0.7"
-        android:fillColor="#00000000" />
-
-    <path
-        android:pathData="M36.375,57.875 L46.375,57.875"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="1.8"
-        android:strokeAlpha="0.5"
-        android:fillColor="#00000000" />
-
-    <path
-        android:pathData="M36.375,62.375 L43.375,62.375"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="1.8"
-        android:strokeAlpha="0.5"
-        android:fillColor="#00000000" />
-
-    <!-- Right page chart background -->
-    <path
-        android:pathData="M58.5,47.25 L72,47.25 L72,60.75 L58.5,60.75 Z"
+        android:pathData="M30,38 Q54,20 78,38 Z"
         android:fillColor="#FFFFFF"
-        android:fillAlpha="0.08" />
+        android:fillAlpha="0.28"/>
 
-    <!-- Chart baseline -->
+    <!-- Card slot -->
     <path
-        android:pathData="M58.5,60.75 L72,60.75"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="1.35"
-        android:strokeAlpha="0.4"
-        android:fillColor="#00000000" />
-
-    <!-- Trend line -->
-    <path
-        android:pathData="M59.625,57.375 L63.0,54.0 L66.375,50.625 L69.75,47.25 L71.125,43.875"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.7"
-        android:strokeAlpha="0.95"
-        android:strokeLineJoin="round"
-        android:strokeLineCap="round"
-        android:fillColor="#00000000" />
-
-    <!-- Dot at top of trend line -->
-    <path
-        android:pathData="M71.125,43.875 m-2.25,0 a2.25,2.25 0 1,0 4.5,0 a2.25,2.25 0 1,0 -4.5,0"
+        android:pathData="M30,56 Q30,53 33,53 L57,53 Q60,53 60,56 L60,60 Q60,63 57,63 L33,63 Q30,63 30,60 Z"
         android:fillColor="#FFFFFF"
-        android:fillAlpha="0.95" />
+        android:fillAlpha="0.22"/>
 
-    <!-- Dot at bottom of trend line -->
+    <!-- Gold coin -->
     <path
-        android:pathData="M59.625,57.375 m-1.575,0 a1.575,1.575 0 1,0 3.15,0 a1.575,1.575 0 1,0 -3.15,0"
+        android:pathData="M73,53 m-8,0 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0"
+        android:fillColor="#FFD700"/>
+    <path
+        android:pathData="M73,57 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0"
+        android:fillColor="#E89800"/>
+
+    <!-- Top shine -->
+    <path
+        android:pathData="M22,46 Q22,38 30,38 L78,38 Q86,38 86,46 L86,50 L22,50 Z"
         android:fillColor="#FFFFFF"
-        android:fillAlpha="0.6" />
+        android:fillAlpha="0.15"/>
 
 </vector>
