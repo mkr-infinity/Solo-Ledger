@@ -12,6 +12,7 @@ object NavRoutes {
     const val SUPPORT = "support"
     const val COMING_SOON = "coming_soon"
     const val DELETED = "deleted"
+    const val CHECK_UPDATES = "check_updates"
     const val ONBOARDING = "onboarding"
     const val LOGS = "logs"
     const val EDIT_TRANSACTION = "edit_transaction/{transactionId}"

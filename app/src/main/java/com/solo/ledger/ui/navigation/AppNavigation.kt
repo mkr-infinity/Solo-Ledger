@@ -26,6 +26,7 @@ import com.solo.ledger.ui.screens.about.AboutScreen
 import com.solo.ledger.ui.screens.analytics.AnalyticsScreen
 import com.solo.ledger.ui.screens.architect.ArchitectScreen
 import com.solo.ledger.ui.screens.calendar.CalendarScreen
+import com.solo.ledger.ui.screens.checkupdates.CheckUpdatesScreen
 import com.solo.ledger.ui.screens.comingsoon.ComingSoonScreen
 import com.solo.ledger.ui.screens.deleted.DeletedScreen
 import com.solo.ledger.ui.screens.quickadd.EditTransactionScreen
@@ -134,6 +135,9 @@ fun AppNavigation(
             }
             composable(NavRoutes.DELETED) {
                 DeletedScreen(navController = navController)
+            }
+            composable(NavRoutes.CHECK_UPDATES) {
+                CheckUpdatesScreen(navController = navController)
             }
             composable(NavRoutes.LOGS) {
                 LogsScreen(navController = navController)
