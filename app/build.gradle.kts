@@ -109,6 +109,7 @@ dependencies {
     debugImplementation(libs.compose.ui.tooling)
     implementation(libs.compose.material3)
     implementation(libs.material.components)
+    implementation(libs.compose.material.icons.extended)
     implementation(libs.compose.animation)
     implementation(libs.compose.foundation)
 
@@ -120,6 +121,7 @@ dependencies {
 
     // Lifecycle
     implementation(libs.lifecycle.runtime.ktx)
+    implementation(libs.lifecycle.runtime.compose)
     implementation(libs.lifecycle.viewmodel.compose)
 
     // Navigation
