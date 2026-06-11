@@ -108,6 +108,7 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)
     implementation(libs.compose.material3)
+    implementation("com.google.android.material:material:1.12.0")
     implementation(libs.compose.animation)
     implementation(libs.compose.foundation)
 
