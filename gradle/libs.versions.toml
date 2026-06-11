@@ -14,6 +14,7 @@ vico = "1.15.0"
 coreSplashscreen = "1.0.1"
 activityCompose = "1.9.3"
 coreKtx = "1.15.0"
+material = "1.12.0"
 
 [libraries]
 # Compose BOM
@@ -27,6 +28,7 @@ compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 compose-animation = { group = "androidx.compose.animation", name = "animation" }
 compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
+material-components = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 # Activity
 activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
