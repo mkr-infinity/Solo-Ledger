@@ -2,21 +2,24 @@ package com.solo.ledger.ui.components.charts
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottomAxis
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStartAxis
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
-import com.patrykandpatrick.vico.core.cartesian.axis.AxisItemPlacer
+import com.patrykandpatrick.vico.compose.common.fill
+import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
-import com.patrykandpatrick.vico.core.common.shape.Shape
+import com.patrykandpatrick.vico.core.common.shape.CorneredShape
 import com.solo.ledger.ui.theme.extendedColors
 
 data class MonthlyData(
@@ -37,7 +40,7 @@ fun IncomeExpenseBarChart(
 
     val modelProducer = remember { CartesianChartModelProducer() }
 
-    remember(monthlyData) {
+    LaunchedEffect(monthlyData) {
         modelProducer.runTransaction {
             columnSeries {
                 series(monthlyData.map { it.income })
@@ -47,14 +50,14 @@ fun IncomeExpenseBarChart(
     }
 
     val incomeColumn = rememberLineComponent(
-        color = incomeColor,
+        fill = fill(incomeColor),
         thickness = 16.dp,
-        shape = Shape.rounded(topLeftPercent = 30, topRightPercent = 30)
+        shape = CorneredShape.rounded(topLeftPercent = 30, topRightPercent = 30)
     )
     val expenseColumn = rememberLineComponent(
-        color = expenseColor,
+        fill = fill(expenseColor),
         thickness = 16.dp,
-        shape = Shape.rounded(topLeftPercent = 30, topRightPercent = 30)
+        shape = CorneredShape.rounded(topLeftPercent = 30, topRightPercent = 30)
     )
 
     val columnLayer = rememberColumnCartesianLayer(
@@ -62,7 +65,7 @@ fun IncomeExpenseBarChart(
             incomeColumn,
             expenseColumn
         ),
-        mergeMode = { ColumnCartesianLayer.MergeMode.Grouped }
+        mergeMode = { ColumnCartesianLayer.MergeMode.Grouped() }
     )
 
     val labelTextComponent = rememberTextComponent(
@@ -72,15 +75,15 @@ fun IncomeExpenseBarChart(
     CartesianChartHost(
         chart = rememberCartesianChart(
             columnLayer,
-            startAxis = rememberStartAxis(
+            startAxis = VerticalAxis.rememberStart(
                 label = labelTextComponent
             ),
-            bottomAxis = rememberBottomAxis(
+            bottomAxis = HorizontalAxis.rememberBottom(
                 label = labelTextComponent,
                 valueFormatter = { _, value, _ ->
                     monthlyData.getOrNull(value.toInt())?.month ?: ""
                 },
-                itemPlacer = AxisItemPlacer.Horizontal.default(spacing = 1)
+                itemPlacer = HorizontalAxis.ItemPlacer.aligned(spacing = 1)
             )
         ),
         modelProducer = modelProducer,

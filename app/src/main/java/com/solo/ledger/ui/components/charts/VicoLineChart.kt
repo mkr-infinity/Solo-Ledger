@@ -2,23 +2,28 @@ package com.solo.ledger.ui.components.charts
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottomAxis
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStartAxis
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.patrykandpatrick.vico.compose.common.fill
-import com.patrykandpatrick.vico.core.cartesian.axis.AxisItemPlacer
+import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
-import com.patrykandpatrick.vico.core.common.shape.Shape
+import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
+import com.patrykandpatrick.vico.core.common.shape.CorneredShape
 
 data class TrendPoint(
     val label: String,
@@ -36,7 +41,7 @@ fun BalanceTrendChart(
 
     val modelProducer = remember { CartesianChartModelProducer() }
 
-    remember(trendData) {
+    LaunchedEffect(trendData) {
         modelProducer.runTransaction {
             lineSeries {
                 series(trendData.map { it.value })
@@ -45,18 +50,19 @@ fun BalanceTrendChart(
     }
 
     val pointComponent = rememberShapeComponent(
-        shape = Shape.Pill,
-        color = primaryColor
+        shape = CorneredShape.Pill,
+        fill = fill(primaryColor)
     )
 
     val lineLayer = rememberLineCartesianLayer(
         lineProvider = LineCartesianLayer.LineProvider.series(
-            LineCartesianLayer.rememberLine(
+            rememberLine(
                 fill = remember(primaryColor, transparent) {
                     LineCartesianLayer.LineFill.double(
                         topFill = fill(
-                            androidx.compose.ui.graphics.Brush.verticalGradient(
-                                colors = listOf(primaryColor.copy(alpha = 0.35f), transparent)
+                            ShaderProvider.verticalGradient(
+                                primaryColor.copy(alpha = 0.35f).toArgb(),
+                                transparent.toArgb()
                             )
                         ),
                         bottomFill = fill(transparent)
@@ -65,8 +71,9 @@ fun BalanceTrendChart(
                 areaFill = remember(primaryColor, transparent) {
                     LineCartesianLayer.AreaFill.single(
                         fill(
-                            androidx.compose.ui.graphics.Brush.verticalGradient(
-                                colors = listOf(primaryColor.copy(alpha = 0.25f), transparent)
+                            ShaderProvider.verticalGradient(
+                                primaryColor.copy(alpha = 0.25f).toArgb(),
+                                transparent.toArgb()
                             )
                         )
                     )
@@ -88,15 +95,15 @@ fun BalanceTrendChart(
     CartesianChartHost(
         chart = rememberCartesianChart(
             lineLayer,
-            startAxis = rememberStartAxis(
+            startAxis = VerticalAxis.rememberStart(
                 label = labelTextComponent
             ),
-            bottomAxis = rememberBottomAxis(
+            bottomAxis = HorizontalAxis.rememberBottom(
                 label = labelTextComponent,
                 valueFormatter = { _, value, _ ->
                     trendData.getOrNull(value.toInt())?.label ?: ""
                 },
-                itemPlacer = AxisItemPlacer.Horizontal.default(spacing = 1)
+                itemPlacer = HorizontalAxis.ItemPlacer.aligned(spacing = 1)
             )
         ),
         modelProducer = modelProducer,
