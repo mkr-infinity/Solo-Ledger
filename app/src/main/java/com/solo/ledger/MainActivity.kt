@@ -78,6 +78,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         lifecycleScope.launch {
+            settingsDataStore.syncAppLoggerState()
+        }
+
+        lifecycleScope.launch {
             deleteTransactionUseCase.purgeExpired()
         }
 

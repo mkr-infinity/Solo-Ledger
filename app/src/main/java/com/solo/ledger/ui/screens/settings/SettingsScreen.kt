@@ -152,7 +152,7 @@ fun SettingsScreen(
     var currencyDropdownExpanded by remember { mutableStateOf(false) }
     var swipeLeftDropdownExpanded by remember { mutableStateOf(false) }
     var swipeRightDropdownExpanded by remember { mutableStateOf(false) }
-    var logsEnabled by remember { mutableStateOf(AppLogger.isEnabled) }
+    var logsEnabled by remember(settings.logsEnabled) { mutableStateOf(settings.logsEnabled) }
 
     var customCurrencySymbol by remember(settings.currencySymbol) {
         mutableStateOf(settings.currencySymbol)

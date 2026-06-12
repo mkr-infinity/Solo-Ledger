@@ -13,6 +13,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.solo.ledger.util.AppLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -281,14 +282,11 @@ class SettingsDataStore @Inject constructor(
         context.dataStore.edit { it[Keys.STORAGE_PERMISSION_DEFERRED] = value }
     }
 
-    // NOTE: Call this on app start (e.g. in Application.onCreate or a Hilt initializer)
-    // to restore AppLogger.isEnabled from persisted settings before any logging occurs.
+    // Restore AppLogger.isEnabled from persisted settings during app startup.
     suspend fun syncAppLoggerState() {
-        context.dataStore.data.map { prefs ->
+        AppLogger.isEnabled = context.dataStore.data.map { prefs ->
             prefs[Keys.LOGS_ENABLED] ?: false
-        }.collect { enabled ->
-            AppLogger.isEnabled = enabled
-        }
+        }.first()
     }
 
     suspend fun setLogsEnabled(value: Boolean) {

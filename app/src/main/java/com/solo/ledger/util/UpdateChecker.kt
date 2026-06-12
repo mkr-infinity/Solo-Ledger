@@ -1,5 +1,6 @@
 package com.solo.ledger.util
 
+import com.solo.ledger.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -16,7 +17,6 @@ data class ReleaseInfo(
 
 object UpdateChecker {
     private const val API_URL = "https://api.github.com/repos/mkr-infinity/Solo-Ledger/releases/latest"
-    private const val CURRENT_VERSION = "1.0.0"
 
     suspend fun checkForUpdate(): Result<ReleaseInfo?> = withContext(Dispatchers.IO) {
         try {
@@ -44,7 +44,7 @@ object UpdateChecker {
                 htmlUrl = obj.getString("html_url"),
                 publishedAt = obj.optString("published_at", "")
             )
-            val isNewer = isVersionNewer(tagName, CURRENT_VERSION)
+            val isNewer = isVersionNewer(tagName, BuildConfig.VERSION_NAME)
             Result.success(if (isNewer) releaseInfo else null)
         } catch (e: Exception) {
             Result.failure(e)
