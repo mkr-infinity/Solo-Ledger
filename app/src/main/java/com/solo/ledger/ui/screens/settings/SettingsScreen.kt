@@ -259,7 +259,7 @@ fun SettingsScreen(
                     items(allNavStyles) { style ->
                         NavStylePreviewCard(
                             style = style,
-                            displayName = navigationStyleDisplayName(style),
+                            styleName = navigationStyleDisplayName(style),
                             isSelected = settings.navigationStyle == navigationStyleToString(style),
                             onClick = { viewModel.setNavigationStyle(navigationStyleToString(style)) }
                         )

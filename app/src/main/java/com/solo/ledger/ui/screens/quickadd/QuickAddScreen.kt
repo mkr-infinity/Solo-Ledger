@@ -196,8 +196,9 @@ internal fun QuickAddContent(
 
         // Amount input
         AmountInput(
-            value = uiState.amountString,
-            onValueChange = onAmountChange,
+            amount = uiState.amountString,
+            onAmountChange = onAmountChange,
+            currencySymbol = uiState.currencySymbol,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -207,7 +208,8 @@ internal fun QuickAddContent(
         CategoryPicker(
             categories = uiState.categories,
             selectedCategoryId = uiState.selectedCategoryId,
-            onCategorySelected = onCategoryChange,
+            onCategorySelected = { category -> onCategoryChange(category.id) },
+            transactionType = uiState.type,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -305,7 +307,7 @@ internal fun QuickAddContent(
             exit = shrinkVertically() + fadeOut()
         ) {
             DatePickerField(
-                selectedDate = uiState.date,
+                date = uiState.date,
                 onDateSelected = onDateChange,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -320,7 +322,7 @@ internal fun QuickAddContent(
             exit = shrinkVertically() + fadeOut()
         ) {
             TimePickerField(
-                selectedTime = uiState.time,
+                time = uiState.time,
                 onTimeSelected = onTimeChange,
                 modifier = Modifier
                     .fillMaxWidth()

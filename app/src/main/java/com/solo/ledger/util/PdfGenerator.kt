@@ -493,7 +493,7 @@ object PdfGenerator {
             "${d.year}-${d.monthValue.toString().padStart(2, '0')}"
         }.toSortedMap()
 
-        val months = grouped.entries.takeLast(6).map { (key, txList) ->
+        val months = grouped.entries.toList().takeLast(6).map { (key, txList) ->
             val (yr, mo) = key.split("-")
             val monthLabel = java.time.Month.of(mo.toInt())
                 .getDisplayName(TextStyle.SHORT, Locale.ENGLISH) + "\n'${yr.takeLast(2)}"

@@ -21,14 +21,15 @@ class ExportJsonUseCase @Inject constructor(
     suspend fun export(uri: Uri): Result<Unit> = runCatching {
         val transactions = transactionRepository.getAll().first()
         val categories = categoryRepository.getAll().first()
-        // BudgetRepository only exposes per-month queries; gather last 24 months
         val budgets = run {
             val today = java.time.LocalDate.now()
-            (0L..23L).flatMap { offset ->
+            val list = mutableListOf<Budget>()
+            for (offset in 0L..23L) {
                 val d = today.minusMonths(offset)
                 val my = String.format("%04d-%02d", d.year, d.monthValue)
-                kotlinx.coroutines.flow.first(budgetRepository.getByMonth(my))
-            }.distinctBy { it.id }
+                list.addAll(budgetRepository.getByMonth(my).first())
+            }
+            list.distinctBy { it.id }
         }
 
         val exportData = ExportData(

@@ -22,6 +22,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
 import javax.inject.Inject
+import com.solo.ledger.util.DateUtils
 
 data class QuickAddUiState(
     val amountString: String = "",
@@ -37,7 +38,8 @@ data class QuickAddUiState(
     val isSuccess: Boolean = false,
     val error: String? = null,
     val isEditMode: Boolean = false,
-    val editingTransactionId: String? = null
+    val editingTransactionId: String? = null,
+    val currencySymbol: String = "₹"
 )
 
 @HiltViewModel
@@ -72,7 +74,8 @@ class QuickAddViewModel @Inject constructor(
                     }
                     state.copy(
                         categories = filteredCategories,
-                        selectedCategoryId = defaultCategoryId
+                        selectedCategoryId = defaultCategoryId,
+                        currencySymbol = settings.currencySymbol
                     )
                 }
             }
@@ -185,7 +188,7 @@ class QuickAddViewModel @Inject constructor(
                         tags = null,
                         date = state.date,
                         time = state.time,
-                        dayOfWeek = state.date.dayOfWeek,
+                        dayOfWeek = DateUtils.getDayOfWeek(state.date),
                         createdAt = now,
                         updatedAt = now
                     )).copy(
@@ -199,7 +202,7 @@ class QuickAddViewModel @Inject constructor(
                             ?.joinToString(","),
                         date = state.date,
                         time = state.time,
-                        dayOfWeek = state.date.dayOfWeek,
+                        dayOfWeek = DateUtils.getDayOfWeek(state.date),
                         updatedAt = now
                     )
                     addTransactionUseCase.update(updated)
@@ -216,7 +219,7 @@ class QuickAddViewModel @Inject constructor(
                             ?.joinToString(","),
                         date = state.date,
                         time = state.time,
-                        dayOfWeek = state.date.dayOfWeek,
+                        dayOfWeek = DateUtils.getDayOfWeek(state.date),
                         createdAt = now,
                         updatedAt = now,
                         isDeleted = false,

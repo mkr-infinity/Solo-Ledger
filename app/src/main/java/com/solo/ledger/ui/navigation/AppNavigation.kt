@@ -61,17 +61,19 @@ fun AppNavigation(
     val coroutineScope = rememberCoroutineScope()
 
     val handleItemSelected: (Int) -> Unit = { index ->
-        val route = bottomNavRoutes.getOrNull(index) ?: return@handleItemSelected
-        if (route == NavRoutes.QUICK_ADD) {
-            showQuickAddSheet = true
-            onQuickAddClick()
-        } else if (route != currentRoute) {
-            navController.navigate(route) {
-                popUpTo(NavRoutes.HOME) {
-                    saveState = true
+        val route = bottomNavRoutes.getOrNull(index)
+        if (route != null) {
+            if (route == NavRoutes.QUICK_ADD) {
+                showQuickAddSheet = true
+                onQuickAddClick()
+            } else if (route != currentRoute) {
+                navController.navigate(route) {
+                    popUpTo(NavRoutes.HOME) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
                 }
-                launchSingleTop = true
-                restoreState = true
             }
         }
     }

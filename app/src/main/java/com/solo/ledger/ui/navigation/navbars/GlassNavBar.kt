@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.Shader
+import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,7 +53,7 @@ fun GlassNavBar(
             .graphicsLayer {
                 renderEffect = android.graphics.RenderEffect
                     .createBlurEffect(20f, 20f, android.graphics.Shader.TileMode.CLAMP)
-                    .let { androidx.compose.ui.graphics.asComposeRenderEffect(it) }
+                    .asComposeRenderEffect()
             }
             .background(surfaceColor.copy(alpha = 0.7f))
     } else {

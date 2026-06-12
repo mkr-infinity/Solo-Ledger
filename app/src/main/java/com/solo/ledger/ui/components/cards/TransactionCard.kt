@@ -21,7 +21,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.DirectionsBus
-import androidx.compose.material.icons.filled.FastFood
+import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalHospital
@@ -210,7 +210,7 @@ fun CategoryIconCircle(
 }
 
 fun iconForName(name: String): ImageVector? = when (name.lowercase()) {
-    "food", "fastfood", "restaurant", "dining"    -> Icons.Filled.FastFood
+    "food", "fastfood", "restaurant", "dining"    -> Icons.Filled.Fastfood
     "transport", "bus", "commute", "travel"        -> Icons.Filled.DirectionsBus
     "shopping", "cart", "shop"                     -> Icons.Filled.ShoppingCart
     "home", "house", "rent", "housing"             -> Icons.Filled.Home

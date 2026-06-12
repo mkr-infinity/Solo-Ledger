@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -264,7 +265,13 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _operationState.update { it.copy(isExporting = true, operationResult = null) }
             try {
-                exportPdfUseCase.export(uri)
+                val settings = settingsDataStore.settings.first()
+                exportPdfUseCase.export(
+                    uri = uri,
+                    monthYear = null,
+                    currencySymbol = settings.currencySymbol,
+                    userName = settings.userName
+                )
                 _operationState.update {
                     it.copy(
                         isExporting = false,
