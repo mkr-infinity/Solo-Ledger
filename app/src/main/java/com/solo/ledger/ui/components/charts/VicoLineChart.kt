@@ -56,7 +56,7 @@ fun BalanceTrendChart(
 
     val lineLayer = rememberLineCartesianLayer(
         lineProvider = LineCartesianLayer.LineProvider.series(
-            rememberLine(
+            listOf(LineCartesianLayer.rememberLine(
                 fill = remember(primaryColor, transparent) {
                     LineCartesianLayer.LineFill.double(
                         topFill = fill(
@@ -84,7 +84,7 @@ fun BalanceTrendChart(
                         sizeDp = 8f
                     )
                 )
-            )
+            ))
         )
     )
 
@@ -103,7 +103,7 @@ fun BalanceTrendChart(
                 valueFormatter = { _, value, _ ->
                     trendData.getOrNull(value.toInt())?.label ?: ""
                 },
-                itemPlacer = HorizontalAxis.ItemPlacer.aligned(spacing = 1)
+                itemPlacer = HorizontalAxis.ItemPlacer.aligned(spacing = { 1 })
             )
         ),
         modelProducer = modelProducer,

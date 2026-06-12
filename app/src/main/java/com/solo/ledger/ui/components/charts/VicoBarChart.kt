@@ -83,7 +83,7 @@ fun IncomeExpenseBarChart(
                 valueFormatter = { _, value, _ ->
                     monthlyData.getOrNull(value.toInt())?.month ?: ""
                 },
-                itemPlacer = HorizontalAxis.ItemPlacer.aligned(spacing = 1)
+                itemPlacer = HorizontalAxis.ItemPlacer.aligned(spacing = { 1 })
             )
         ),
         modelProducer = modelProducer,
