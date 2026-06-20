@@ -1,5 +1,6 @@
 package com.solo.ledger.ui
 
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -12,6 +13,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -67,8 +69,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -95,6 +103,7 @@ import java.time.YearMonth
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
+import kotlin.math.max
 import com.solo.ledger.ui.theme.LedgerTheme
 import com.solo.ledger.ui.theme.LocalLedgerColors
 import com.solo.ledger.ui.theme.LocalLedgerRadius
@@ -148,6 +157,7 @@ fun SoloLedgerApp(ledgerViewModel: SoloLedgerViewModel = viewModel()) {
                     MainLedgerShell(
                         ledgerViewModel = ledgerViewModel,
                         currencyCode = activeSettings.currencyCode,
+                        reducedMotion = activeSettings.reducedMotion || !activeSettings.animationsEnabled,
                     )
                 }
             }
@@ -405,6 +415,7 @@ private fun TemplateChip(
 private fun MainLedgerShell(
     ledgerViewModel: SoloLedgerViewModel? = null,
     currencyCode: String = "INR",
+    reducedMotion: Boolean = false,
 ) {
     var selectedTab by remember { mutableStateOf(LedgerDestination.Home) }
 
@@ -425,8 +436,12 @@ private fun MainLedgerShell(
         AnimatedContent(
             targetState = selectedTab,
             transitionSpec = {
-                (fadeIn(spring()) + scaleIn(initialScale = 0.98f)) togetherWith
-                    (fadeOut(spring()) + scaleOut(targetScale = 0.98f))
+                if (reducedMotion) {
+                    fadeIn() togetherWith fadeOut()
+                } else {
+                    (fadeIn(spring()) + scaleIn(initialScale = 0.98f)) togetherWith
+                        (fadeOut(spring()) + scaleOut(targetScale = 0.98f))
+                }
             },
             label = "ledger-screen",
             modifier = Modifier
@@ -534,6 +549,10 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         DashboardCard(title = "Profile") {
+            LocalImagePreview(
+                path = activeSettings.avatarPath,
+                label = "Avatar Preview",
+            )
             Text(
                 text = if (activeSettings.avatarPath.isNullOrBlank()) "No avatar selected." else "Avatar saved locally.",
                 color = LocalLedgerColors.current.muted,
@@ -1731,6 +1750,10 @@ private fun HistoryExpenseCard(
                         DetailLine(label = "Time", value = formatTime(expense.timeMinuteOfDay))
                         DetailLine(label = "Notes", value = expense.notes ?: "No notes")
                         DetailLine(label = "Attachment", value = if (expense.attachmentPath == null) "No attachment" else "Saved locally")
+                        LocalImagePreview(
+                            path = expense.attachmentPath,
+                            label = "Receipt Or Bill Preview",
+                        )
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             TextButton(
                                 onClick = { editing = true },
@@ -2186,6 +2209,8 @@ private fun CategoryBreakdownCard(
     val totals = expenses.groupBy { it.categoryId }.mapValues { entry -> entry.value.sumOf { it.amountMinor } }
     val max = totals.values.maxOrNull()?.coerceAtLeast(1L) ?: 1L
     val categoryNames = categories.associate { it.id to it.name }
+    val sortedTotals = totals.entries.sortedByDescending { it.value }.take(5)
+    val chartPalette = chartColors()
 
     DashboardCard(title = "Category Breakdown") {
         if (expenses.isEmpty()) {
@@ -2195,7 +2220,11 @@ private fun CategoryBreakdownCard(
                 style = MaterialTheme.typography.bodyMedium,
             )
         } else {
-            totals.entries.sortedByDescending { it.value }.take(5).forEach { (categoryId, amount) ->
+            DonutChart(
+                values = sortedTotals.map { it.value },
+                colors = chartPalette,
+            )
+            sortedTotals.forEachIndexed { index, (categoryId, amount) ->
                 Text(
                     text = "${categoryNames[categoryId] ?: "Other"} - ${formatMoney(amount, settings.currencyCode)}",
                     color = MaterialTheme.colorScheme.onSurface,
@@ -2204,7 +2233,7 @@ private fun CategoryBreakdownCard(
                 )
                 AmountBar(
                     progress = (amount.toFloat() / max.toFloat()).coerceIn(0f, 1f),
-                    color = MaterialTheme.colorScheme.primary,
+                    color = chartPalette[index % chartPalette.size],
                 )
             }
         }
@@ -2220,6 +2249,7 @@ private fun MonthlyGraphCard(settings: UserSettings, expenses: List<ExpenseEntit
     val max = weeks.maxOrNull()?.coerceAtLeast(1L) ?: 1L
 
     DashboardCard(title = "Monthly Graph") {
+        LineChart(values = weeks)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -2254,6 +2284,145 @@ private fun MonthlyGraphCard(settings: UserSettings, expenses: List<ExpenseEntit
             style = MaterialTheme.typography.bodySmall,
         )
     }
+}
+
+@Composable
+private fun DonutChart(values: List<Long>, colors: List<Color>) {
+    val total = values.sum().coerceAtLeast(1L)
+    val trackColor = LocalLedgerColors.current.surface
+
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(modifier = Modifier.size(154.dp)) {
+            val strokeWidth = 24.dp.toPx()
+            val chartSize = Size(size.width - strokeWidth, size.height - strokeWidth)
+            val topLeft = Offset(strokeWidth / 2f, strokeWidth / 2f)
+            drawArc(
+                color = trackColor,
+                startAngle = -90f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = topLeft,
+                size = chartSize,
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+            )
+            var startAngle = -90f
+            values.forEachIndexed { index, value ->
+                val sweepAngle = 360f * (value.toFloat() / total.toFloat())
+                drawArc(
+                    color = colors[index % colors.size],
+                    startAngle = startAngle,
+                    sweepAngle = max(2f, sweepAngle),
+                    useCenter = false,
+                    topLeft = topLeft,
+                    size = chartSize,
+                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                )
+                startAngle += sweepAngle
+            }
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = values.size.toString(),
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = "Categories",
+                color = LocalLedgerColors.current.muted,
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
+    }
+}
+
+@Composable
+private fun LineChart(values: List<Long>) {
+    val ledgerColors = LocalLedgerColors.current
+    val chartColor = MaterialTheme.colorScheme.primary
+    val maxValue = values.maxOrNull()?.coerceAtLeast(1L) ?: 1L
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(128.dp),
+    ) {
+        val leftPadding = 12.dp.toPx()
+        val rightPadding = 12.dp.toPx()
+        val topPadding = 18.dp.toPx()
+        val bottomPadding = 22.dp.toPx()
+        val graphWidth = size.width - leftPadding - rightPadding
+        val graphHeight = size.height - topPadding - bottomPadding
+        val baselineY = topPadding + graphHeight
+        val stepX = graphWidth / (values.size - 1).coerceAtLeast(1)
+        val points = values.mapIndexed { index, value ->
+            val x = leftPadding + stepX * index
+            val y = baselineY - graphHeight * (value.toFloat() / maxValue.toFloat())
+            Offset(x, y)
+        }
+
+        drawLine(
+            color = ledgerColors.outline,
+            start = Offset(leftPadding, baselineY),
+            end = Offset(size.width - rightPadding, baselineY),
+            strokeWidth = 1.dp.toPx(),
+        )
+        points.zipWithNext().forEach { (start, end) ->
+            drawLine(
+                color = chartColor,
+                start = start,
+                end = end,
+                strokeWidth = 3.dp.toPx(),
+                cap = StrokeCap.Round,
+            )
+        }
+        points.forEach { point ->
+            drawCircle(color = ledgerColors.card, radius = 6.dp.toPx(), center = point)
+            drawCircle(color = chartColor, radius = 4.dp.toPx(), center = point)
+        }
+    }
+}
+
+@Composable
+private fun LocalImagePreview(path: String?, label: String) {
+    val bitmap = remember(path) {
+        path?.let { BitmapFactory.decodeFile(it)?.asImageBitmap() }
+    }
+    val radius = LocalLedgerRadius.current
+
+    if (bitmap != null) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = label,
+                color = LocalLedgerColors.current.muted,
+                style = MaterialTheme.typography.labelMedium,
+            )
+            Image(
+                bitmap = bitmap,
+                contentDescription = label,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(156.dp)
+                    .clip(RoundedCornerShape(radius)),
+            )
+        }
+    }
+}
+
+@Composable
+private fun chartColors(): List<Color> {
+    val colors = LocalLedgerColors.current
+    return listOf(
+        colors.chartOne,
+        colors.chartTwo,
+        colors.chartThree,
+        colors.secondary,
+        colors.warning,
+    )
 }
 
 @Composable

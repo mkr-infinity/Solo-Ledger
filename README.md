@@ -33,7 +33,7 @@ The theme scaffold includes:
 
 ## Status
 
-Current slice: PRD gap closure for appearance, dashboard controls, Quick Add behavior, avatar storage, and offline PDF export.
+Current slice: Analytics visuals, local image previews, and reduced-motion behavior.
 
 Implemented foundations:
 
@@ -57,5 +57,8 @@ Implemented foundations:
 18. Dashboard hide/show and reorder controls
 19. Profile avatar upload copied into local app storage
 20. App-private PDF report export
+21. Donut and line chart visuals for category and monthly analytics
+22. Local avatar and receipt or bill image previews
+23. Reduced-motion main navigation transitions
 
-Next slice: richer chart visuals, local attachment preview, and broader accessibility polish.
+Next slice: broader accessibility polish, local attachment management, and export refinements.
