@@ -33,7 +33,7 @@ The theme scaffold includes:
 
 ## Status
 
-Current slice: Bin recovery backed by local data.
+Current slice: Calendar analytics backed by local data.
 
 Implemented foundations:
 
@@ -46,5 +46,6 @@ Implemented foundations:
 7. Home dashboard metrics, recent transactions, category breakdown, and monthly graph from saved expenses
 8. History screen with search, category filters, sorting, expandable details, and move-to-bin
 9. Bin section with restore, delete permanently, and clear all actions
+10. Calendar screen with spending-day highlights, date details, and range summaries
 
-Next slice: Calendar screen with spending-day highlights and date details.
+Next slice: Savings goals creation and progress management.

@@ -87,6 +87,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.YearMonth
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
@@ -468,6 +469,7 @@ private fun ScreenShell(
                 ledgerViewModel = ledgerViewModel,
                 currencyCode = currencyCode,
             )
+            destination == LedgerDestination.Calendar && ledgerViewModel != null -> CalendarScreen(ledgerViewModel)
             else -> {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -493,6 +495,234 @@ private fun ScreenShell(
                 }
             }
             }
+        }
+    }
+}
+
+@Composable
+private fun CalendarScreen(ledgerViewModel: SoloLedgerViewModel) {
+    val settings by ledgerViewModel.settings.collectAsState()
+    val expenses by ledgerViewModel.activeExpenses.collectAsState()
+    val categories by ledgerViewModel.categories.collectAsState()
+    val activeSettings = settings ?: return
+    val categoryNames = categories.associate { it.id to it.name }
+    var visibleMonth by remember { mutableStateOf(YearMonth.now()) }
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var rangeMode by remember { mutableStateOf(CalendarRange.Last30Days) }
+    var customStart by remember { mutableStateOf(LocalDate.now().minusDays(30).toString()) }
+    var customEnd by remember { mutableStateOf(LocalDate.now().toString()) }
+    val spendingByDate = expenses.groupBy { it.dateEpochDay }.mapValues { entry -> entry.value.sumOf { it.amountMinor } }
+    val selectedExpenses = expenses.filter { it.dateEpochDay == selectedDate.toEpochDay() }
+    val range = rangeMode.resolve(customStart, customEnd)
+    val rangeExpenses = expenses.filter { it.dateEpochDay in range.first.toEpochDay()..range.second.toEpochDay() }
+
+    Column(
+        modifier = Modifier.verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        DashboardCard(title = "Monthly Calendar") {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TextButton(onClick = { visibleMonth = visibleMonth.minusMonths(1) }) {
+                    Text(text = "Previous")
+                }
+                Text(
+                    text = "${visibleMonth.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${visibleMonth.year}",
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                TextButton(onClick = { visibleMonth = visibleMonth.plusMonths(1) }) {
+                    Text(text = "Next")
+                }
+            }
+            CalendarGrid(
+                month = visibleMonth,
+                selectedDate = selectedDate,
+                spendingByDate = spendingByDate,
+                onSelected = { selectedDate = it },
+            )
+        }
+
+        CalendarDateDetail(
+            date = selectedDate,
+            expenses = selectedExpenses,
+            currencyCode = activeSettings.currencyCode,
+            categoryNames = categoryNames,
+        )
+
+        DashboardCard(title = "Range Summary") {
+            CalendarRangeSelector(selected = rangeMode, onSelected = { rangeMode = it })
+            if (rangeMode == CalendarRange.Custom) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    LedgerTextField(
+                        value = customStart,
+                        onValueChange = { customStart = it },
+                        label = "Start",
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                    )
+                    LedgerTextField(
+                        value = customEnd,
+                        onValueChange = { customEnd = it },
+                        label = "End",
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+            MetricBlock(
+                label = "Range Total",
+                value = formatMoney(rangeExpenses.sumOf { it.amountMinor }, activeSettings.currencyCode),
+            )
+            CategoryBreakdownCard(
+                settings = activeSettings,
+                expenses = rangeExpenses,
+                categories = categories,
+            )
+        }
+    }
+}
+
+@Composable
+private fun CalendarGrid(
+    month: YearMonth,
+    selectedDate: LocalDate,
+    spendingByDate: Map<Long, Long>,
+    onSelected: (LocalDate) -> Unit,
+) {
+    val firstDay = month.atDay(1)
+    val leadingBlanks = firstDay.dayOfWeek.value % 7
+    val days = buildList<LocalDate?> {
+        repeat(leadingBlanks) { add(null) }
+        repeat(month.lengthOfMonth()) { day -> add(month.atDay(day + 1)) }
+        while (size % 7 != 0) add(null)
+    }
+    val dayLabels = listOf("S", "M", "T", "W", "T", "F", "S")
+
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        dayLabels.forEach { label ->
+            Text(
+                text = label,
+                modifier = Modifier.weight(1f),
+                color = LocalLedgerColors.current.muted,
+                style = MaterialTheme.typography.labelSmall,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+    days.chunked(7).forEach { week ->
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            week.forEach { date ->
+                CalendarDayCell(
+                    date = date,
+                    selected = date == selectedDate,
+                    hasSpending = date?.let { spendingByDate.containsKey(it.toEpochDay()) } == true,
+                    onSelected = onSelected,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CalendarDayCell(
+    date: LocalDate?,
+    selected: Boolean,
+    hasSpending: Boolean,
+    onSelected: (LocalDate) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val ledgerColors = LocalLedgerColors.current
+    val background = when {
+        selected -> MaterialTheme.colorScheme.primary
+        hasSpending -> ledgerColors.navSelected
+        else -> ledgerColors.surface
+    }
+    val textColor = when {
+        selected -> Color.White
+        hasSpending -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+
+    Box(
+        modifier = modifier
+            .height(44.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (date == null) Color.Transparent else background)
+            .clickable(
+                enabled = date != null,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = { date?.let(onSelected) },
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (date != null) {
+            Text(
+                text = date.dayOfMonth.toString(),
+                color = textColor,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+    }
+}
+
+@Composable
+private fun CalendarDateDetail(
+    date: LocalDate,
+    expenses: List<ExpenseEntity>,
+    currencyCode: String,
+    categoryNames: Map<String, String>,
+) {
+    DashboardCard(title = "Date Detail") {
+        Text(
+            text = date.toString(),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+        )
+        MetricBlock(label = "Total", value = formatMoney(expenses.sumOf { it.amountMinor }, currencyCode))
+        if (expenses.isEmpty()) {
+            Text(
+                text = "No expenses saved for this date.",
+                color = LocalLedgerColors.current.muted,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        } else {
+            expenses.forEach { expense ->
+                Text(
+                    text = "${expense.title} - ${categoryNames[expense.categoryId] ?: "Other"} - ${formatMoney(expense.amountMinor, currencyCode)}",
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CalendarRangeSelector(
+    selected: CalendarRange,
+    onSelected: (CalendarRange) -> Unit,
+) {
+    CalendarRange.entries.chunked(2).forEach { rowItems ->
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            rowItems.forEach { range ->
+                SelectionChip(
+                    text = range.label,
+                    selected = selected == range,
+                    onClick = { onSelected(range) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            repeat(2 - rowItems.size) { Box(modifier = Modifier.weight(1f)) }
         }
     }
 }
@@ -1314,6 +1544,27 @@ private enum class HistorySort(val label: String) {
     OldestFirst("Oldest First"),
     HighestAmount("Highest Amount"),
     LowestAmount("Lowest Amount"),
+}
+
+private enum class CalendarRange(val label: String) {
+    Last7Days("7 Days"),
+    Last30Days("30 Days"),
+    Last90Days("90 Days"),
+    Custom("Custom Range");
+
+    fun resolve(customStart: String, customEnd: String): Pair<LocalDate, LocalDate> {
+        val today = LocalDate.now()
+        return when (this) {
+            Last7Days -> today.minusDays(6) to today
+            Last30Days -> today.minusDays(29) to today
+            Last90Days -> today.minusDays(89) to today
+            Custom -> {
+                val start = runCatching { LocalDate.parse(customStart.trim()) }.getOrDefault(today.minusDays(29))
+                val end = runCatching { LocalDate.parse(customEnd.trim()) }.getOrDefault(today)
+                if (start <= end) start to end else end to start
+            }
+        }
+    }
 }
 
 @Composable
