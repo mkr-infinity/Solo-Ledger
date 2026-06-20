@@ -2,19 +2,16 @@ package com.solo.ledger.ui.components.inputs
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -51,19 +48,30 @@ fun CategoryPicker(
             (transactionType == TransactionType.EXPENSE && category.type == CategoryType.EXPENSE)
     }
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(4),
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(filtered, key = { it.id }) { category ->
-            CategoryPickerItem(
-                category = category,
-                isSelected = category.id == selectedCategoryId,
-                onClick = { onCategorySelected(category) }
-            )
+        filtered.chunked(4).forEach { rowCategories ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                rowCategories.forEach { category ->
+                    CategoryPickerItem(
+                        category = category,
+                        isSelected = category.id == selectedCategoryId,
+                        onClick = { onCategorySelected(category) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                repeat(4 - rowCategories.size) {
+                    Box(modifier = Modifier.weight(1f))
+                }
+            }
         }
     }
 }
@@ -72,7 +80,8 @@ fun CategoryPicker(
 private fun CategoryPickerItem(
     category: Category,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val scale by animateFloatAsState(
         targetValue = if (isSelected) 1.08f else 1f,
@@ -85,7 +94,7 @@ private fun CategoryPickerItem(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier
+        modifier = modifier
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .clip(RoundedCornerShape(12.dp))
             .clickable(

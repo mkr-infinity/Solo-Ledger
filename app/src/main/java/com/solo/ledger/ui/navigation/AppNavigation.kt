@@ -1,18 +1,10 @@
 package com.solo.ledger.ui.navigation
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -21,7 +13,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.solo.ledger.ui.navigation.navbars.NavBarHost
-import com.solo.ledger.ui.navigation.navbars.navItems
 import com.solo.ledger.ui.screens.about.AboutScreen
 import com.solo.ledger.ui.screens.analytics.AnalyticsScreen
 import com.solo.ledger.ui.screens.architect.ArchitectScreen
@@ -37,9 +28,7 @@ import com.solo.ledger.ui.screens.settings.SettingsScreen
 import com.solo.ledger.ui.screens.support.SupportScreen
 import com.solo.ledger.ui.screens.logs.LogsScreen
 import com.solo.ledger.ui.theme.NavigationStyle
-import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigation(
     navController: NavHostController,
@@ -56,15 +45,10 @@ fun AppNavigation(
     val showBottomNav = currentRoute in bottomNavRoutes || selectedIndex != -1
     val isTelegramStyle = navigationStyle == NavigationStyle.TELEGRAM
 
-    var showQuickAddSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val coroutineScope = rememberCoroutineScope()
-
     val handleItemSelected: (Int) -> Unit = { index ->
         val route = bottomNavRoutes.getOrNull(index)
         if (route != null) {
             if (route == NavRoutes.QUICK_ADD) {
-                showQuickAddSheet = true
                 onQuickAddClick()
             } else if (route != currentRoute) {
                 navController.navigate(route) {
@@ -158,15 +142,5 @@ fun AppNavigation(
             }
         }
 
-        if (showQuickAddSheet) {
-            ModalBottomSheet(
-                onDismissRequest = {
-                    showQuickAddSheet = false
-                },
-                sheetState = sheetState
-            ) {
-                QuickAddScreen(navController = navController)
-            }
-        }
     }
 }

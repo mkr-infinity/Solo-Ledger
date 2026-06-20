@@ -52,6 +52,7 @@ class QuickAddViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(QuickAddUiState())
     val uiState: StateFlow<QuickAddUiState> = _uiState.asStateFlow()
+    private var allCategories: List<Category> = emptyList()
 
     init {
         viewModelScope.launch {
@@ -61,20 +62,20 @@ class QuickAddViewModel @Inject constructor(
             ) { categories, settings ->
                 Pair(categories, settings)
             }.collect { (categories, settings) ->
+                allCategories = categories
                 _uiState.update { state ->
-                    val filteredCategories = categories.filter { category ->
-                        category.type == com.solo.ledger.data.model.CategoryType.BOTH ||
-                                (state.type == TransactionType.INCOME && category.type == com.solo.ledger.data.model.CategoryType.INCOME) ||
-                                (state.type == TransactionType.EXPENSE && category.type == com.solo.ledger.data.model.CategoryType.EXPENSE)
-                    }
+                    val filteredCategories = categories.filteredFor(state.type)
                     val defaultCategoryId = if (state.selectedCategoryId == null && !state.isEditMode) {
                         settings.defaultCategoryId
                     } else {
                         state.selectedCategoryId
                     }
+                    val selectedCategoryId = defaultCategoryId
+                        .takeIf { id -> filteredCategories.any { it.id == id } }
+                        ?: filteredCategories.firstOrNull()?.id
                     state.copy(
                         categories = filteredCategories,
-                        selectedCategoryId = defaultCategoryId,
+                        selectedCategoryId = selectedCategoryId,
                         currencySymbol = settings.currencySymbol
                     )
                 }
@@ -87,12 +88,14 @@ class QuickAddViewModel @Inject constructor(
             val transaction = getTransactionsUseCase.getAll().first().find { it.id == id }
                 ?: return@launch
             _uiState.update { state ->
+                val filteredCategories = allCategories.filteredFor(transaction.type)
                 state.copy(
                     isEditMode = true,
                     editingTransactionId = transaction.id,
                     amountString = transaction.amount.toString(),
                     type = transaction.type,
                     selectedCategoryId = transaction.categoryId,
+                    categories = filteredCategories,
                     title = transaction.title ?: "",
                     notes = transaction.notes ?: "",
                     tags = transaction.tags ?: "",
@@ -113,28 +116,12 @@ class QuickAddViewModel @Inject constructor(
 
     fun updateType(type: TransactionType) {
         _uiState.update { state ->
-            val filteredCategories = state.categories.filter { category ->
-                category.type == com.solo.ledger.data.model.CategoryType.BOTH ||
-                        (type == TransactionType.INCOME && category.type == com.solo.ledger.data.model.CategoryType.INCOME) ||
-                        (type == TransactionType.EXPENSE && category.type == com.solo.ledger.data.model.CategoryType.EXPENSE)
-            }
+            val filteredCategories = allCategories.filteredFor(type)
             state.copy(
                 type = type,
-                selectedCategoryId = null,
+                selectedCategoryId = filteredCategories.firstOrNull()?.id,
                 categories = filteredCategories
             )
-        }
-        viewModelScope.launch {
-            categoryRepository.getAll().collect { categories ->
-                _uiState.update { state ->
-                    val filtered = categories.filter { category ->
-                        category.type == com.solo.ledger.data.model.CategoryType.BOTH ||
-                                (state.type == TransactionType.INCOME && category.type == com.solo.ledger.data.model.CategoryType.INCOME) ||
-                                (state.type == TransactionType.EXPENSE && category.type == com.solo.ledger.data.model.CategoryType.EXPENSE)
-                    }
-                    state.copy(categories = filtered)
-                }
-            }
         }
     }
 
@@ -205,7 +192,7 @@ class QuickAddViewModel @Inject constructor(
                         dayOfWeek = DateUtils.getDayOfWeek(state.date),
                         updatedAt = now
                     )
-                    addTransactionUseCase.update(updated)
+                    addTransactionUseCase.update(updated).getOrThrow()
                 } else {
                     val transaction = Transaction(
                         id = UUID.randomUUID().toString(),
@@ -225,7 +212,7 @@ class QuickAddViewModel @Inject constructor(
                         isDeleted = false,
                         deletedAt = null
                     )
-                    addTransactionUseCase.add(transaction)
+                    addTransactionUseCase.add(transaction).getOrThrow()
                 }
                 _uiState.update { it.copy(isSubmitting = false, isSuccess = true) }
                 delay(500)
@@ -242,11 +229,23 @@ class QuickAddViewModel @Inject constructor(
     }
 
     fun resetState() {
+        val categories = allCategories.filteredFor(TransactionType.EXPENSE)
         _uiState.update {
             QuickAddUiState(
                 date = LocalDate.now(),
-                time = LocalTime.now()
+                time = LocalTime.now(),
+                categories = categories,
+                selectedCategoryId = categories.firstOrNull()?.id,
+                currencySymbol = it.currencySymbol
             )
+        }
+    }
+
+    private fun List<Category>.filteredFor(type: TransactionType): List<Category> {
+        return filter { category ->
+            category.type == com.solo.ledger.data.model.CategoryType.BOTH ||
+                    (type == TransactionType.INCOME && category.type == com.solo.ledger.data.model.CategoryType.INCOME) ||
+                    (type == TransactionType.EXPENSE && category.type == com.solo.ledger.data.model.CategoryType.EXPENSE)
         }
     }
 }

@@ -10,6 +10,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      TEMP_KEYSTORE: ${{ github.workspace }}/temp-debug-keystore.jks
+      TEMP_KEY_ALIAS: solo-ledger-debug
+      TEMP_KEY_PASSWORD: temp-debug-123456
 
     steps:
       - name: Checkout Repository
@@ -43,24 +47,31 @@ jobs:
       - name: Generate Temporary Debug Keystore
         run: |
           keytool -genkeypair \
-            -alias tempalias \
+            -alias "$TEMP_KEY_ALIAS" \
             -keyalg RSA \
             -keysize 2048 \
             -validity 3650 \
-            -keystore temp-keystore.jks \
-            -storepass temp123456 \
-            -keypass temp123456 \
-            -dname "CN=Solo Ledger,O=GitHub,C=IN"
+            -keystore "$TEMP_KEYSTORE" \
+            -storepass "$TEMP_KEY_PASSWORD" \
+            -keypass "$TEMP_KEY_PASSWORD" \
+            -dname "CN=Solo Ledger Debug,O=GitHub Actions,C=IN" \
+            -noprompt
           echo "Keystore generated:"
-          ls -la temp-keystore.jks
+          ls -la "$TEMP_KEYSTORE"
 
-      - name: Build Debug APK
+      - name: Build Signed Debug APK
         run: ./gradlew assembleDebug --stacktrace --no-daemon
         env:
-          STORE_FILE: ${{ github.workspace }}/temp-keystore.jks
-          STORE_PASSWORD: temp123456
-          KEY_ALIAS: tempalias
-          KEY_PASSWORD: temp123456
+          STORE_FILE: ${{ env.TEMP_KEYSTORE }}
+          STORE_PASSWORD: ${{ env.TEMP_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ env.TEMP_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ env.TEMP_KEY_PASSWORD }}
+
+      - name: Verify Debug APK Signature
+        run: |
+          APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+          APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)/apksigner"
+          "$APKSIGNER" verify --verbose --print-certs "$APK_PATH"
 
       - name: Verify APK
         run: |

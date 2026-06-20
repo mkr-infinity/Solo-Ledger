@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.solo.ledger.data.datastore.AppSettings
 import com.solo.ledger.data.datastore.SettingsDataStore
 import com.solo.ledger.data.model.Category
+import com.solo.ledger.data.model.CategoryType
 import com.solo.ledger.data.model.Transaction
 import com.solo.ledger.data.model.TransactionType
 import com.solo.ledger.data.repository.BudgetRepository
@@ -64,8 +65,9 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = combine(
         getTransactionsUseCase.getAll(),
         categoryRepository.getAll(),
-        budgetRepository.getByMonth(currentMonthYear())
-    ) { allTransactions, categories, budgets ->
+        budgetRepository.getByMonth(currentMonthYear()),
+        settingsDataStore.settings
+    ) { allTransactions, categories, budgets, settings ->
         val active = allTransactions.filter { !it.isDeleted }
         val categoryMap = categories.associateBy { it.id }
 
@@ -102,10 +104,10 @@ class HomeViewModel @Inject constructor(
             lastMonthTxns = lastMonthTxns,
             categoryMap = categoryMap,
             dailyAverage = dailyAverage,
-            currencySymbol = "₹"
+            currencySymbol = settings.currencySymbol
         )
 
-        val budgetItems = budgets
+        val categoryBudgetItems = budgets
             .filter { it.categoryId != null }
             .mapNotNull { budget ->
                 val cat = categoryMap[budget.categoryId] ?: return@mapNotNull null
@@ -115,6 +117,26 @@ class HomeViewModel @Inject constructor(
                 BudgetItem(category = cat, spent = spent, limit = budget.limitAmount)
             }
             .sortedByDescending { it.spent / it.limit.coerceAtLeast(0.01) }
+
+        val globalBudgetItem = settings.monthlyBudgetLimit
+            .takeIf { it > 0.0 }
+            ?.let { limit ->
+                BudgetItem(
+                    category = Category(
+                        id = "monthly_budget",
+                        name = "Monthly",
+                        iconName = "Wallet",
+                        colorHex = "#43A047",
+                        type = CategoryType.EXPENSE,
+                        isDefault = true,
+                        sortOrder = -1
+                    ),
+                    spent = expenseThisMonth,
+                    limit = limit
+                )
+            }
+
+        val budgetItems = listOfNotNull(globalBudgetItem) + categoryBudgetItems
 
         HomeUiState(
             isLoading = false,

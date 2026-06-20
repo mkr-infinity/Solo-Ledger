@@ -1,7 +1,7 @@
 # Solo Ledger
 
 <p align="center">
-  <img src="assets/logo.svg" alt="Solo Ledger Logo" width="120" height="120"/>
+  <img src="assets/logo.png" alt="Solo Ledger Logo" width="120" height="120"/>
 </p>
 
 <h3 align="center">Your personal finance, beautifully tracked.</h3>

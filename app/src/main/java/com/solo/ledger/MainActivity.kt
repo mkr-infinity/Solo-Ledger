@@ -49,6 +49,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.solo.ledger.data.datastore.AppSettings
 import com.solo.ledger.data.datastore.SettingsDataStore
+import com.solo.ledger.data.repository.CategoryRepository
 import com.solo.ledger.domain.usecase.DeleteTransactionUseCase
 import com.solo.ledger.ui.navigation.AppNavigation
 import com.solo.ledger.ui.theme.NavigationStyle
@@ -71,6 +72,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var deleteTransactionUseCase: DeleteTransactionUseCase
 
+    @Inject
+    lateinit var categoryRepository: CategoryRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -78,6 +82,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         lifecycleScope.launch {
+            categoryRepository.ensureDefaultCategories()
             settingsDataStore.syncAppLoggerState()
         }
 

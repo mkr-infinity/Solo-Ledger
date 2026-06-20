@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Base colors used by the app icon and adaptive icon system -->
-    <color name="ic_launcher_background">#0D0D1A</color>
+    <color name="ic_launcher_background">#032416</color>
     <color name="ic_launcher_foreground">#6C63FF</color>
 
     <!-- Semantic base colors referenced in XML drawables -->

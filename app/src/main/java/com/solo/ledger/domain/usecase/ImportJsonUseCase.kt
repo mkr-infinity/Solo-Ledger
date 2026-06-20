@@ -32,6 +32,10 @@ class ImportJsonUseCase @Inject constructor(
             runCatching { categoryRepository.insert(category) }
         }
 
+        exportData.budgets.forEach { budget ->
+            runCatching { budgetRepository.insert(budget) }
+        }
+
         var importedCount = 0
         exportData.transactions.forEach { transaction ->
             runCatching {
