@@ -558,8 +558,10 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
     var categoryColor by remember { mutableStateOf("#16A34A") }
     var editingCategory by remember { mutableStateOf<CategoryEntity?>(null) }
     var selectedAvatarUri by remember { mutableStateOf<Uri?>(null) }
+    var useSvgAvatar by remember(activeSettings.avatarPath) { mutableStateOf(activeSettings.avatarPath == ledgerSvgAvatarPath) }
     val avatarPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         selectedAvatarUri = uri
+        if (uri != null) useSvgAvatar = false
     }
 
     Column(
@@ -568,7 +570,7 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
     ) {
         DashboardCard(title = "Profile") {
             LocalImagePreview(
-                path = activeSettings.avatarPath,
+                path = if (useSvgAvatar) ledgerSvgAvatarPath else activeSettings.avatarPath,
                 label = "Avatar Preview",
             )
             Text(
@@ -587,6 +589,21 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
                 ),
             ) {
                 Text(text = if (selectedAvatarUri == null) "Upload Avatar" else "Avatar Selected")
+            }
+            OutlinedButton(
+                onClick = {
+                    selectedAvatarUri = null
+                    useSvgAvatar = true
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                border = BorderStroke(1.dp, LocalLedgerColors.current.outline),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = if (useSvgAvatar) LocalLedgerColors.current.navSelected else LocalLedgerColors.current.surface,
+                    contentColor = if (useSvgAvatar) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                ),
+            ) {
+                Text(text = "Use SVG Avatar")
             }
             LedgerTextField(
                 value = profileName,
@@ -614,6 +631,7 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
                         monthlyBudgetText = monthlyBudget,
                         currencyCode = currencyCode,
                         avatarUri = selectedAvatarUri,
+                        useSvgAvatar = useSvgAvatar,
                         onSaved = { message = "Profile saved offline." },
                         onError = { message = it },
                     )
@@ -2521,11 +2539,27 @@ private fun LineChart(values: List<Long>) {
 @Composable
 private fun LocalImagePreview(path: String?, label: String) {
     val bitmap = remember(path) {
-        path?.let { BitmapFactory.decodeFile(it)?.asImageBitmap() }
+        path?.takeUnless { it == ledgerSvgAvatarPath }?.let { BitmapFactory.decodeFile(it)?.asImageBitmap() }
     }
     val radius = LocalLedgerRadius.current
 
-    if (bitmap != null) {
+    if (path == ledgerSvgAvatarPath) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = label,
+                color = LocalLedgerColors.current.muted,
+                style = MaterialTheme.typography.labelMedium,
+            )
+            Image(
+                painter = painterResource(R.drawable.avatar_ledger),
+                contentDescription = label,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(156.dp)
+                    .clip(RoundedCornerShape(radius)),
+            )
+        }
+    } else if (bitmap != null) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 text = label,
@@ -2743,6 +2777,8 @@ private val quickAddToggleFields = listOf(
     QuickAddField.Notes,
     QuickAddField.Attachment,
 )
+
+private const val ledgerSvgAvatarPath = "svg:ledger-avatar"
 
 private enum class HistorySort(val label: String) {
     NewestFirst("Newest First"),

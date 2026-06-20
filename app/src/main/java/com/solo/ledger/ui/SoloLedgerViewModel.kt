@@ -176,6 +176,7 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         monthlyBudgetText: String,
         currencyCode: String,
         avatarUri: Uri?,
+        useSvgAvatar: Boolean,
         onSaved: () -> Unit,
         onError: (String) -> Unit,
     ) {
@@ -184,7 +185,11 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
             currencyCode.trim().length != 3 -> onError("Use a 3-letter currency code.")
             monthlyBudget == null || monthlyBudget < 0L -> onError("Enter a valid monthly budget.")
             else -> viewModelScope.launch {
-                val avatarPath = avatarUri?.let { uri -> copyLocalImage("avatar", uri, onError) } ?: settings.value?.avatarPath
+                val avatarPath = when {
+                    useSvgAvatar -> ledgerSvgAvatarPath
+                    avatarUri != null -> copyLocalImage("avatar", avatarUri, onError)
+                    else -> settings.value?.avatarPath
+                }
                 if (avatarUri != null && avatarPath == null) return@launch
 
                 container.settingsRepository.updateProfile(
@@ -539,6 +544,8 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
 
 private fun formatMinorForExport(minor: Long, currencyCode: String): String =
     "$currencyCode ${minor / 100}.${(minor % 100).toString().padStart(2, '0')}"
+
+private const val ledgerSvgAvatarPath = "svg:ledger-avatar"
 
 private fun List<CategoryEntity>.toCategoryJson(): JSONArray = JSONArray().also { array ->
     forEach { category ->

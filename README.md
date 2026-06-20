@@ -33,7 +33,7 @@ The theme scaffold includes:
 
 ## Status
 
-Current slice: Final motion, disabled-state, and asset wiring hardening.
+Current slice: SVG avatar support and final profile hardening.
 
 Implemented foundations:
 
@@ -69,5 +69,6 @@ Implemented foundations:
 30. Reduced-motion onboarding and navigation label transitions
 31. Visibly disabled Coming Soon cards
 32. Provided transparent README mark and green app icon assets wired without modification
+33. Local SVG avatar preset stored through profile settings
 
 Next slice: GitHub Actions APK validation after CI run.
