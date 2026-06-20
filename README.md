@@ -33,7 +33,7 @@ The theme scaffold includes:
 
 ## Status
 
-Current slice: Expense editing backed by local data.
+Current slice: PRD gap closure for appearance, dashboard controls, Quick Add behavior, avatar storage, and offline PDF export.
 
 Implemented foundations:
 
@@ -52,5 +52,10 @@ Implemented foundations:
 13. Category management with add, edit, archive, icon name, and color assignment
 14. App-private JSON export/import for categories, expenses, and savings goals
 15. Transaction editing from History with local Room updates
+16. Quick Add field visibility controls applied to the form
+17. Appearance controls for font scale, motion, high contrast, and border radius preferences
+18. Dashboard hide/show and reorder controls
+19. Profile avatar upload copied into local app storage
+20. App-private PDF report export
 
-Next slice: Quick Add field visibility controls and form behavior.
+Next slice: richer chart visuals, local attachment preview, and broader accessibility polish.

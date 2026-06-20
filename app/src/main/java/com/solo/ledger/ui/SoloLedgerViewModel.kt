@@ -1,6 +1,8 @@
 package com.solo.ledger.ui
 
 import android.app.Application
+import android.graphics.Paint
+import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +12,7 @@ import com.solo.ledger.data.local.entity.ExpenseEntity
 import com.solo.ledger.data.local.entity.SavingsGoalEntity
 import com.solo.ledger.data.model.BudgetTemplate
 import com.solo.ledger.data.model.DashboardWidget
+import com.solo.ledger.data.model.QuickAddField
 import com.solo.ledger.data.model.UserSettings
 import com.solo.ledger.ui.theme.LedgerTheme
 import java.io.File
@@ -168,15 +171,25 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    fun updateProfile(name: String, monthlyBudgetText: String, currencyCode: String, onSaved: () -> Unit, onError: (String) -> Unit) {
+    fun updateProfile(
+        name: String,
+        monthlyBudgetText: String,
+        currencyCode: String,
+        avatarUri: Uri?,
+        onSaved: () -> Unit,
+        onError: (String) -> Unit,
+    ) {
         val monthlyBudget = monthlyBudgetText.toMinorAmount()
         when {
             currencyCode.trim().length != 3 -> onError("Use a 3-letter currency code.")
             monthlyBudget == null || monthlyBudget < 0L -> onError("Enter a valid monthly budget.")
             else -> viewModelScope.launch {
+                val avatarPath = avatarUri?.let { uri -> copyLocalImage("avatar", uri, onError) } ?: settings.value?.avatarPath
+                if (avatarUri != null && avatarPath == null) return@launch
+
                 container.settingsRepository.updateProfile(
                     name = name,
-                    avatarPath = null,
+                    avatarPath = avatarPath,
                     monthlyBudgetMinor = monthlyBudget,
                     currencyCode = currencyCode,
                 )
@@ -185,9 +198,33 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    fun updateAppearance(
+        fontScale: Float,
+        animationsEnabled: Boolean,
+        reducedMotion: Boolean,
+        highContrast: Boolean,
+        borderRadiusDp: Int,
+    ) {
+        viewModelScope.launch {
+            container.settingsRepository.updateAppearance(
+                fontScale = fontScale,
+                animationsEnabled = animationsEnabled,
+                reducedMotion = reducedMotion,
+                highContrast = highContrast,
+                borderRadiusDp = borderRadiusDp,
+            )
+        }
+    }
+
     fun updateDashboardWidgets(widgets: List<DashboardWidget>) {
         viewModelScope.launch {
             container.settingsRepository.updateDashboardWidgets(widgets)
+        }
+    }
+
+    fun updateQuickAddFields(fields: Set<QuickAddField>) {
+        viewModelScope.launch {
+            container.settingsRepository.updateQuickAddFields(fields)
         }
     }
 
@@ -252,6 +289,70 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    fun exportPdf(onDone: (String) -> Unit) {
+        viewModelScope.launch {
+            val path = withContext(Dispatchers.IO) {
+                val app = getApplication<SoloLedgerApplication>()
+                val exportDir = File(app.filesDir, "exports")
+                exportDir.mkdirs()
+                val exportFile = File(exportDir, "solo-ledger-report.pdf")
+                val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+                val titlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    textSize = 22f
+                    isFakeBoldText = true
+                }
+                val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = 13f }
+                val document = PdfDocument()
+                val page = document.startPage(PdfDocument.PageInfo.Builder(595, 842, 1).create())
+                val canvas = page.canvas
+                var y = 56f
+                val currentSettings = settings.value
+                val active = activeExpenses.value
+                val deleted = deletedExpenses.value
+                val goals = activeGoals.value
+                val categoryNames = categories.value.associate { it.id to it.name }
+
+                canvas.drawText("Solo Ledger Offline Report", 40f, y, titlePaint)
+                y += 34f
+                paint.textSize = 15f
+                canvas.drawText("Profile: ${currentSettings?.name?.ifBlank { "Local User" } ?: "Local User"}", 40f, y, paint)
+                y += 24f
+                canvas.drawText("Currency: ${currentSettings?.currencyCode ?: "INR"}", 40f, y, paint)
+                y += 24f
+                canvas.drawText("Active expenses: ${active.size}", 40f, y, paint)
+                y += 24f
+                canvas.drawText("Deleted expenses in bin: ${deleted.size}", 40f, y, paint)
+                y += 30f
+                canvas.drawText("Recent Transactions", 40f, y, titlePaint)
+                y += 26f
+
+                active.take(16).forEach { expense ->
+                    val date = LocalDate.ofEpochDay(expense.dateEpochDay).toString()
+                    val amount = formatMinorForExport(expense.amountMinor, expense.currencyCode)
+                    val category = categoryNames[expense.categoryId] ?: "Other"
+                    canvas.drawText("$date  $amount  $category  ${expense.title}".take(86), 40f, y, labelPaint)
+                    y += 18f
+                }
+
+                y += 16f
+                canvas.drawText("Savings Goals", 40f, y, titlePaint)
+                y += 26f
+                goals.take(8).forEach { goal ->
+                    val saved = formatMinorForExport(goal.savedAmountMinor, goal.currencyCode)
+                    val target = formatMinorForExport(goal.targetAmountMinor, goal.currencyCode)
+                    canvas.drawText("${goal.title}: $saved saved of $target".take(86), 40f, y, labelPaint)
+                    y += 18f
+                }
+
+                document.finishPage(page)
+                exportFile.outputStream().use { output -> document.writeTo(output) }
+                document.close()
+                exportFile.absolutePath
+            }
+            onDone("Exported PDF to $path")
+        }
+    }
+
     fun importJson(onDone: (String) -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) {
@@ -311,7 +412,7 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
             else -> viewModelScope.launch {
                 val id = UUID.randomUUID().toString()
                 val now = System.currentTimeMillis()
-                val attachmentPath = attachmentUri?.let { uri -> copyAttachment(id, uri, onError) }
+                val attachmentPath = attachmentUri?.let { uri -> copyLocalImage(id, uri, onError) }
 
                 if (attachmentUri != null && attachmentPath == null) return@launch
 
@@ -382,8 +483,8 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
             .longValueExact()
     }.getOrNull()
 
-    private suspend fun copyAttachment(
-        expenseId: String,
+    private suspend fun copyLocalImage(
+        fileName: String,
         uri: Uri,
         onError: (String) -> Unit,
     ): String? {
@@ -397,9 +498,9 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
                     mimeType.contains("jpg", ignoreCase = true) -> "jpg"
                     else -> "bin"
                 }
-                val attachmentDir = File(app.filesDir, "attachments")
-                attachmentDir.mkdirs()
-                val destination = File(attachmentDir, "$expenseId.$extension")
+                val imageDir = File(app.filesDir, "images")
+                imageDir.mkdirs()
+                val destination = File(imageDir, "$fileName.$extension")
 
                 app.contentResolver.openInputStream(uri)?.use { input ->
                     destination.outputStream().use { output -> input.copyTo(output) }
@@ -410,11 +511,14 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         }
 
         if (path == null) {
-            onError("Attachment could not be saved locally.")
+            onError("Image could not be saved locally.")
         }
         return path
     }
 }
+
+private fun formatMinorForExport(minor: Long, currencyCode: String): String =
+    "$currencyCode ${minor / 100}.${(minor % 100).toString().padStart(2, '0')}"
 
 private fun List<CategoryEntity>.toCategoryJson(): JSONArray = JSONArray().also { array ->
     forEach { category ->

@@ -1,5 +1,8 @@
 package com.solo.ledger.ui
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.spring
@@ -82,6 +85,7 @@ import com.solo.ledger.data.local.entity.ExpenseEntity
 import com.solo.ledger.data.local.entity.SavingsGoalEntity
 import com.solo.ledger.data.model.BudgetTemplate
 import com.solo.ledger.data.model.DashboardWidget
+import com.solo.ledger.data.model.QuickAddField
 import com.solo.ledger.data.model.UserSettings
 import java.time.Instant
 import java.time.LocalDate
@@ -93,6 +97,7 @@ import java.util.Currency
 import java.util.Locale
 import com.solo.ledger.ui.theme.LedgerTheme
 import com.solo.ledger.ui.theme.LocalLedgerColors
+import com.solo.ledger.ui.theme.LocalLedgerRadius
 import com.solo.ledger.ui.theme.SoloLedgerTheme
 
 @Composable
@@ -100,7 +105,12 @@ fun SoloLedgerApp(ledgerViewModel: SoloLedgerViewModel = viewModel()) {
     val settings by ledgerViewModel.settings.collectAsState()
     val activeSettings = settings
 
-    SoloLedgerTheme(theme = activeSettings?.theme ?: LedgerTheme.LedgerDark) {
+    SoloLedgerTheme(
+        theme = activeSettings?.theme ?: LedgerTheme.LedgerDark,
+        fontScale = activeSettings?.fontScale ?: 1f,
+        highContrast = activeSettings?.highContrast ?: false,
+        borderRadiusDp = activeSettings?.borderRadiusDp ?: 28,
+    ) {
         if (activeSettings == null) {
             LoadingSurface()
         } else {
@@ -514,12 +524,33 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
     var categoryIcon by remember { mutableStateOf("category") }
     var categoryColor by remember { mutableStateOf("#16A34A") }
     var editingCategory by remember { mutableStateOf<CategoryEntity?>(null) }
+    var selectedAvatarUri by remember { mutableStateOf<Uri?>(null) }
+    val avatarPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        selectedAvatarUri = uri
+    }
 
     Column(
         modifier = Modifier.verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         DashboardCard(title = "Profile") {
+            Text(
+                text = if (activeSettings.avatarPath.isNullOrBlank()) "No avatar selected." else "Avatar saved locally.",
+                color = LocalLedgerColors.current.muted,
+                style = MaterialTheme.typography.bodySmall,
+            )
+            OutlinedButton(
+                onClick = { avatarPicker.launch("image/*") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                border = BorderStroke(1.dp, LocalLedgerColors.current.outline),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = LocalLedgerColors.current.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                ),
+            ) {
+                Text(text = if (selectedAvatarUri == null) "Upload Avatar" else "Avatar Selected")
+            }
             LedgerTextField(
                 value = profileName,
                 onValueChange = { profileName = it },
@@ -545,6 +576,7 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
                         name = profileName,
                         monthlyBudgetText = monthlyBudget,
                         currencyCode = currencyCode,
+                        avatarUri = selectedAvatarUri,
                         onSaved = { message = "Profile saved offline." },
                         onError = { message = it },
                     )
@@ -581,21 +613,171 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
                     repeat(2 - rowThemes.size) { Box(modifier = Modifier.weight(1f)) }
                 }
             }
+            Text(
+                text = "Font Size",
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+            )
+            listOf(0.9f, 1.0f, 1.1f, 1.2f).chunked(2).forEach { rowScales ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    rowScales.forEach { scale ->
+                        SelectionChip(
+                            text = "${(scale * 100).toInt()}%",
+                            selected = activeSettings.fontScale == scale,
+                            onClick = {
+                                ledgerViewModel.updateAppearance(
+                                    fontScale = scale,
+                                    animationsEnabled = activeSettings.animationsEnabled,
+                                    reducedMotion = activeSettings.reducedMotion,
+                                    highContrast = activeSettings.highContrast,
+                                    borderRadiusDp = activeSettings.borderRadiusDp,
+                                )
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    repeat(2 - rowScales.size) { Box(modifier = Modifier.weight(1f)) }
+                }
+            }
+            SelectionChip(
+                text = if (activeSettings.animationsEnabled) "Animations Enabled" else "Animations Disabled",
+                selected = activeSettings.animationsEnabled,
+                onClick = {
+                    ledgerViewModel.updateAppearance(
+                        fontScale = activeSettings.fontScale,
+                        animationsEnabled = !activeSettings.animationsEnabled,
+                        reducedMotion = activeSettings.reducedMotion,
+                        highContrast = activeSettings.highContrast,
+                        borderRadiusDp = activeSettings.borderRadiusDp,
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            SelectionChip(
+                text = if (activeSettings.reducedMotion) "Reduced Motion On" else "Reduced Motion Off",
+                selected = activeSettings.reducedMotion,
+                onClick = {
+                    ledgerViewModel.updateAppearance(
+                        fontScale = activeSettings.fontScale,
+                        animationsEnabled = activeSettings.animationsEnabled,
+                        reducedMotion = !activeSettings.reducedMotion,
+                        highContrast = activeSettings.highContrast,
+                        borderRadiusDp = activeSettings.borderRadiusDp,
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            SelectionChip(
+                text = if (activeSettings.highContrast) "High Contrast On" else "High Contrast Off",
+                selected = activeSettings.highContrast,
+                onClick = {
+                    ledgerViewModel.updateAppearance(
+                        fontScale = activeSettings.fontScale,
+                        animationsEnabled = activeSettings.animationsEnabled,
+                        reducedMotion = activeSettings.reducedMotion,
+                        highContrast = !activeSettings.highContrast,
+                        borderRadiusDp = activeSettings.borderRadiusDp,
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Text(
+                text = "Border Radius",
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+            )
+            listOf(18, 24, 28, 34).chunked(2).forEach { rowRadii ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    rowRadii.forEach { radius ->
+                        SelectionChip(
+                            text = "$radius dp",
+                            selected = activeSettings.borderRadiusDp == radius,
+                            onClick = {
+                                ledgerViewModel.updateAppearance(
+                                    fontScale = activeSettings.fontScale,
+                                    animationsEnabled = activeSettings.animationsEnabled,
+                                    reducedMotion = activeSettings.reducedMotion,
+                                    highContrast = activeSettings.highContrast,
+                                    borderRadiusDp = radius,
+                                )
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    repeat(2 - rowRadii.size) { Box(modifier = Modifier.weight(1f)) }
+                }
+            }
         }
 
         DashboardCard(title = "Dashboard") {
-            DashboardWidget.entries.forEach { widget ->
-                val enabled = widget in activeSettings.dashboardWidgets
+            activeSettings.dashboardWidgets.forEachIndexed { index, widget ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SelectionChip(
+                        text = widget.name.splitCamelName(),
+                        selected = true,
+                        onClick = { ledgerViewModel.updateDashboardWidgets(activeSettings.dashboardWidgets - widget) },
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedButton(
+                        onClick = {
+                            val nextWidgets = activeSettings.dashboardWidgets.toMutableList()
+                            val item = nextWidgets.removeAt(index)
+                            nextWidgets.add(index - 1, item)
+                            ledgerViewModel.updateDashboardWidgets(nextWidgets)
+                        },
+                        enabled = index > 0,
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, LocalLedgerColors.current.outline),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                    ) {
+                        Text(text = "Up")
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            val nextWidgets = activeSettings.dashboardWidgets.toMutableList()
+                            val item = nextWidgets.removeAt(index)
+                            nextWidgets.add(index + 1, item)
+                            ledgerViewModel.updateDashboardWidgets(nextWidgets)
+                        },
+                        enabled = index < activeSettings.dashboardWidgets.lastIndex,
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, LocalLedgerColors.current.outline),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                    ) {
+                        Text(text = "Down")
+                    }
+                }
+            }
+            DashboardWidget.entries.filterNot { it in activeSettings.dashboardWidgets }.forEach { widget ->
                 SelectionChip(
-                    text = widget.name.splitCamelName(),
+                    text = "Show ${widget.name.splitCamelName()}",
+                    selected = false,
+                    onClick = { ledgerViewModel.updateDashboardWidgets(activeSettings.dashboardWidgets + widget) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+
+        DashboardCard(title = "Quick Add") {
+            Text(
+                text = "Title, amount, and category stay visible so saved expenses remain valid.",
+                color = LocalLedgerColors.current.muted,
+                style = MaterialTheme.typography.bodySmall,
+            )
+            quickAddToggleFields.forEach { field ->
+                val enabled = field in activeSettings.quickAddFields
+                SelectionChip(
+                    text = field.name,
                     selected = enabled,
                     onClick = {
-                        val nextWidgets = if (enabled) {
-                            activeSettings.dashboardWidgets - widget
+                        val nextFields = if (enabled) {
+                            activeSettings.quickAddFields - field
                         } else {
-                            activeSettings.dashboardWidgets + widget
+                            activeSettings.quickAddFields + field
                         }
-                        ledgerViewModel.updateDashboardWidgets(nextWidgets)
+                        ledgerViewModel.updateQuickAddFields(nextFields + requiredQuickAddFields)
                     },
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -693,7 +875,7 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
 
         DashboardCard(title = "Data") {
             Text(
-                text = "JSON import and export use an app-private local file. System document export can be added after this foundation.",
+                text = "JSON and PDF export use app-private local files so data remains offline.",
                 color = LocalLedgerColors.current.muted,
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -719,7 +901,17 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
                     Text(text = "Import JSON")
                 }
             }
-            ComingSoonCard(title = "Export PDF")
+            Button(
+                onClick = { ledgerViewModel.exportPdf { message = it } },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = Color.White,
+                ),
+            ) {
+                Text(text = "Export PDF")
+            }
         }
 
         DashboardCard(title = "Coming Soon") {
@@ -1592,10 +1784,11 @@ private fun SelectionChip(
     modifier: Modifier = Modifier,
 ) {
     val ledgerColors = LocalLedgerColors.current
+    val radius = LocalLedgerRadius.current
 
     Card(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(radius))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -1605,7 +1798,7 @@ private fun SelectionChip(
             containerColor = if (selected) ledgerColors.navSelected else ledgerColors.surface,
         ),
         border = BorderStroke(1.dp, if (selected) MaterialTheme.colorScheme.primary else ledgerColors.outline),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(radius),
     ) {
         Text(
             text = text,
@@ -2069,12 +2262,13 @@ private fun DashboardCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val ledgerColors = LocalLedgerColors.current
+    val radius = LocalLedgerRadius.current
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = ledgerColors.card),
         border = BorderStroke(1.dp, ledgerColors.outline),
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(radius),
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -2098,10 +2292,11 @@ private fun MetricBlock(
     modifier: Modifier = Modifier,
 ) {
     val ledgerColors = LocalLedgerColors.current
+    val radius = LocalLedgerRadius.current
 
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(radius))
             .background(ledgerColors.surface)
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -2188,6 +2383,19 @@ private val comingSoonItems = listOf(
     "OCR Receipt Scanner",
 )
 
+private val requiredQuickAddFields = setOf(
+    QuickAddField.Title,
+    QuickAddField.Amount,
+    QuickAddField.Category,
+)
+
+private val quickAddToggleFields = listOf(
+    QuickAddField.Date,
+    QuickAddField.Time,
+    QuickAddField.Notes,
+    QuickAddField.Attachment,
+)
+
 private enum class HistorySort(val label: String) {
     NewestFirst("Newest First"),
     OldestFirst("Oldest First"),
@@ -2222,6 +2430,8 @@ private fun QuickAddScreen(
     currencyCode: String,
 ) {
     val ledgerColors = LocalLedgerColors.current
+    val settings by ledgerViewModel.settings.collectAsState()
+    val activeSettings = settings
     val categories by ledgerViewModel.categories.collectAsState()
     var title by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
@@ -2272,39 +2482,49 @@ private fun QuickAddScreen(
                 selectedCategoryId = selectedCategoryId,
                 onSelected = { selectedCategoryId = it },
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (activeSettings == null || QuickAddField.Date in activeSettings.quickAddFields || QuickAddField.Time in activeSettings.quickAddFields) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (activeSettings == null || QuickAddField.Date in activeSettings.quickAddFields) {
+                        LedgerTextField(
+                            value = dateText,
+                            onValueChange = { dateText = it },
+                            label = "Date",
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    if (activeSettings == null || QuickAddField.Time in activeSettings.quickAddFields) {
+                        LedgerTextField(
+                            value = timeText,
+                            onValueChange = { timeText = it },
+                            label = "Time",
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
+            }
+            if (activeSettings == null || QuickAddField.Notes in activeSettings.quickAddFields) {
                 LedgerTextField(
-                    value = dateText,
-                    onValueChange = { dateText = it },
-                    label = "Date",
-                    singleLine = true,
-                    modifier = Modifier.weight(1f),
-                )
-                LedgerTextField(
-                    value = timeText,
-                    onValueChange = { timeText = it },
-                    label = "Time",
-                    singleLine = true,
-                    modifier = Modifier.weight(1f),
+                    value = notes,
+                    onValueChange = { notes = it },
+                    label = "Notes",
+                    minLines = 3,
                 )
             }
-            LedgerTextField(
-                value = notes,
-                onValueChange = { notes = it },
-                label = "Notes",
-                minLines = 3,
-            )
-            OutlinedButton(
-                onClick = { attachmentPicker.launch("image/*") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                border = BorderStroke(1.dp, ledgerColors.outline),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = ledgerColors.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                ),
-            ) {
-                Text(text = if (attachmentUri == null) "Attach Receipt Or Bill" else "Attachment Selected")
+            if (activeSettings == null || QuickAddField.Attachment in activeSettings.quickAddFields) {
+                OutlinedButton(
+                    onClick = { attachmentPicker.launch("image/*") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    border = BorderStroke(1.dp, ledgerColors.outline),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = ledgerColors.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                    ),
+                ) {
+                    Text(text = if (attachmentUri == null) "Attach Receipt Or Bill" else "Attachment Selected")
+                }
             }
             Button(
                 onClick = {
@@ -2367,6 +2587,7 @@ private fun LedgerTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
 ) {
     val ledgerColors = LocalLedgerColors.current
+    val radius = LocalLedgerRadius.current
 
     OutlinedTextField(
         value = value,
@@ -2375,7 +2596,7 @@ private fun LedgerTextField(
         label = { Text(text = label) },
         singleLine = singleLine,
         minLines = minLines,
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(radius),
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -2447,10 +2668,11 @@ private fun CategoryChip(
     modifier: Modifier = Modifier,
 ) {
     val ledgerColors = LocalLedgerColors.current
+    val radius = LocalLedgerRadius.current
 
     Card(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(radius))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -2460,7 +2682,7 @@ private fun CategoryChip(
             containerColor = if (selected) ledgerColors.navSelected else ledgerColors.surface,
         ),
         border = BorderStroke(1.dp, if (selected) MaterialTheme.colorScheme.primary else ledgerColors.outline),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(radius),
     ) {
         Text(
             text = category.name,
@@ -2641,6 +2863,3 @@ private fun SoloLedgerAppPreview() {
         MainLedgerShell()
     }
 }
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
