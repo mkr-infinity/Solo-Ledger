@@ -189,6 +189,46 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    fun saveCategory(
+        existing: CategoryEntity?,
+        name: String,
+        iconName: String,
+        colorHex: String,
+        onSaved: () -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        val cleanName = name.trim()
+        val cleanIcon = iconName.trim().ifBlank { "category" }
+        val cleanColor = colorHex.trim().uppercase()
+        val validColor = Regex("^#[0-9A-F]{6}$").matches(cleanColor)
+
+        when {
+            cleanName.isBlank() -> onError("Enter a category name.")
+            !validColor -> onError("Use color format #RRGGBB.")
+            else -> viewModelScope.launch {
+                val now = System.currentTimeMillis()
+                container.categoryRepository.upsert(
+                    CategoryEntity(
+                        id = existing?.id ?: UUID.randomUUID().toString(),
+                        name = cleanName,
+                        iconName = cleanIcon,
+                        colorHex = cleanColor,
+                        createdAtMillis = existing?.createdAtMillis ?: now,
+                        updatedAtMillis = now,
+                        isArchived = false,
+                    ),
+                )
+                onSaved()
+            }
+        }
+    }
+
+    fun archiveCategory(categoryId: String) {
+        viewModelScope.launch {
+            container.categoryRepository.archive(categoryId, System.currentTimeMillis())
+        }
+    }
+
     fun addExpense(
         title: String,
         amountText: String,

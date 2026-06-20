@@ -504,11 +504,16 @@ private fun ScreenShell(
 private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
     val settings by ledgerViewModel.settings.collectAsState()
     val activeSettings = settings ?: return
+    val categories by ledgerViewModel.categories.collectAsState()
     var profileName by remember(activeSettings.name) { mutableStateOf(activeSettings.name) }
     var monthlyBudget by remember(activeSettings.monthlyBudgetMinor) { mutableStateOf((activeSettings.monthlyBudgetMinor / 100.0).toString()) }
     var currencyCode by remember(activeSettings.currencyCode) { mutableStateOf(activeSettings.currencyCode) }
     var message by remember { mutableStateOf<String?>(null) }
     var architectExpanded by remember { mutableStateOf(false) }
+    var categoryName by remember { mutableStateOf("") }
+    var categoryIcon by remember { mutableStateOf("category") }
+    var categoryColor by remember { mutableStateOf("#16A34A") }
+    var editingCategory by remember { mutableStateOf<CategoryEntity?>(null) }
 
     Column(
         modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -597,6 +602,95 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
             }
         }
 
+        DashboardCard(title = "Categories") {
+            Text(
+                text = "Assign concise icon names from Material Symbols and use #RRGGBB colors.",
+                color = LocalLedgerColors.current.muted,
+                style = MaterialTheme.typography.bodySmall,
+            )
+            LedgerTextField(
+                value = categoryName,
+                onValueChange = { categoryName = it },
+                label = "Category Name",
+                singleLine = true,
+            )
+            LedgerTextField(
+                value = categoryIcon,
+                onValueChange = { categoryIcon = it.trim().lowercase(Locale.US) },
+                label = "Icon Name",
+                singleLine = true,
+            )
+            LedgerTextField(
+                value = categoryColor,
+                onValueChange = { categoryColor = it.take(7).uppercase(Locale.US) },
+                label = "Color Hex",
+                singleLine = true,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(
+                    onClick = {
+                        ledgerViewModel.saveCategory(
+                            existing = editingCategory,
+                            name = categoryName,
+                            iconName = categoryIcon,
+                            colorHex = categoryColor,
+                            onSaved = {
+                                categoryName = ""
+                                categoryIcon = "category"
+                                categoryColor = "#16A34A"
+                                editingCategory = null
+                                message = "Category saved offline."
+                            },
+                            onError = { message = it },
+                        )
+                    },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White,
+                    ),
+                ) {
+                    Text(text = if (editingCategory == null) "Add" else "Update")
+                }
+                OutlinedButton(
+                    onClick = {
+                        categoryName = ""
+                        categoryIcon = "category"
+                        categoryColor = "#16A34A"
+                        editingCategory = null
+                    },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(18.dp),
+                    border = BorderStroke(1.dp, LocalLedgerColors.current.outline),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = LocalLedgerColors.current.muted),
+                ) {
+                    Text(text = "Reset")
+                }
+            }
+            categories.forEach { category ->
+                CategoryManagementRow(
+                    category = category,
+                    onEdit = {
+                        editingCategory = category
+                        categoryName = category.name
+                        categoryIcon = category.iconName
+                        categoryColor = category.colorHex
+                    },
+                    onArchive = {
+                        ledgerViewModel.archiveCategory(category.id)
+                        if (editingCategory?.id == category.id) {
+                            editingCategory = null
+                            categoryName = ""
+                            categoryIcon = "category"
+                            categoryColor = "#16A34A"
+                        }
+                        message = "Category archived."
+                    },
+                )
+            }
+        }
+
         DashboardCard(title = "Coming Soon") {
             comingSoonItems.forEach { item -> ComingSoonCard(title = item) }
         }
@@ -655,6 +749,73 @@ private fun ComingSoonCard(title: String) {
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold,
         )
+    }
+}
+
+@Composable
+private fun CategoryManagementRow(
+    category: CategoryEntity,
+    onEdit: () -> Unit,
+    onArchive: () -> Unit,
+) {
+    val ledgerColors = LocalLedgerColors.current
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = ledgerColors.surface),
+        border = BorderStroke(1.dp, ledgerColors.outline),
+        shape = RoundedCornerShape(20.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = category.name,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = "${category.iconName} - ${category.colorHex}",
+                        color = ledgerColors.muted,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(22.dp)
+                        .clip(CircleShape)
+                        .background(parseColorOrDefault(category.colorHex, MaterialTheme.colorScheme.primary)),
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(
+                    onClick = onEdit,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, ledgerColors.outline),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                ) {
+                    Text(text = "Edit")
+                }
+                OutlinedButton(
+                    onClick = onArchive,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, ledgerColors.outline),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = ledgerColors.error),
+                ) {
+                    Text(text = "Archive")
+                }
+            }
+        }
     }
 }
 
@@ -1867,6 +2028,10 @@ private fun formatMoney(minor: Long, currencyCode: String): String = runCatching
 }
 
 private fun cleanAmountInput(value: String): String = value.filter { char -> char.isDigit() || char == '.' }
+
+private fun parseColorOrDefault(value: String, fallback: Color): Color = runCatching {
+    Color(android.graphics.Color.parseColor(value))
+}.getOrElse { fallback }
 
 private fun String.splitThemeName(): String = replace(Regex("(?<=[a-z])(?=[A-Z])"), " ")
 

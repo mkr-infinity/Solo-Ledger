@@ -33,7 +33,7 @@ The theme scaffold includes:
 
 ## Status
 
-Current slice: Settings foundation backed by local data.
+Current slice: Category management backed by local data.
 
 Implemented foundations:
 
@@ -49,5 +49,6 @@ Implemented foundations:
 10. Calendar screen with spending-day highlights, date details, and range summaries
 11. Savings goal creation, progress additions, archiving, and Home progress cards
 12. Settings screen with profile, theme, dashboard controls, coming-soon cards, support, and Architect details
+13. Category management with add, edit, archive, icon name, and color assignment
 
-Next slice: Category management with add, edit, archive, and icon assignment.
+Next slice: Export and import actions for JSON data.
