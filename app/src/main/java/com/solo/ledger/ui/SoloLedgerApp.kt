@@ -470,6 +470,7 @@ private fun ScreenShell(
                 currencyCode = currencyCode,
             )
             destination == LedgerDestination.Calendar && ledgerViewModel != null -> CalendarScreen(ledgerViewModel)
+            destination == LedgerDestination.Settings && ledgerViewModel != null -> SettingsScreen(ledgerViewModel)
             else -> {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -496,6 +497,164 @@ private fun ScreenShell(
             }
             }
         }
+    }
+}
+
+@Composable
+private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
+    val settings by ledgerViewModel.settings.collectAsState()
+    val activeSettings = settings ?: return
+    var profileName by remember(activeSettings.name) { mutableStateOf(activeSettings.name) }
+    var monthlyBudget by remember(activeSettings.monthlyBudgetMinor) { mutableStateOf((activeSettings.monthlyBudgetMinor / 100.0).toString()) }
+    var currencyCode by remember(activeSettings.currencyCode) { mutableStateOf(activeSettings.currencyCode) }
+    var message by remember { mutableStateOf<String?>(null) }
+    var architectExpanded by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier.verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        DashboardCard(title = "Profile") {
+            LedgerTextField(
+                value = profileName,
+                onValueChange = { profileName = it },
+                label = "Name",
+                singleLine = true,
+            )
+            LedgerTextField(
+                value = monthlyBudget,
+                onValueChange = { monthlyBudget = cleanAmountInput(it) },
+                label = "Monthly Budget",
+                singleLine = true,
+                keyboardType = KeyboardType.Decimal,
+            )
+            LedgerTextField(
+                value = currencyCode,
+                onValueChange = { currencyCode = it.take(3).uppercase(Locale.US) },
+                label = "Currency",
+                singleLine = true,
+            )
+            Button(
+                onClick = {
+                    ledgerViewModel.updateProfile(
+                        name = profileName,
+                        monthlyBudgetText = monthlyBudget,
+                        currencyCode = currencyCode,
+                        onSaved = { message = "Profile saved offline." },
+                        onError = { message = it },
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = Color.White,
+                ),
+            ) {
+                Text(text = "Save Profile")
+            }
+            message?.let { currentMessage ->
+                Text(
+                    text = currentMessage,
+                    color = if (currentMessage.contains("saved", ignoreCase = true)) LocalLedgerColors.current.success else LocalLedgerColors.current.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+
+        DashboardCard(title = "Appearance") {
+            LedgerTheme.entries.chunked(2).forEach { rowThemes ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    rowThemes.forEach { theme ->
+                        SelectionChip(
+                            text = theme.name.splitThemeName(),
+                            selected = activeSettings.theme == theme,
+                            onClick = { ledgerViewModel.updateTheme(theme) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    repeat(2 - rowThemes.size) { Box(modifier = Modifier.weight(1f)) }
+                }
+            }
+        }
+
+        DashboardCard(title = "Dashboard") {
+            DashboardWidget.entries.forEach { widget ->
+                val enabled = widget in activeSettings.dashboardWidgets
+                SelectionChip(
+                    text = widget.name.splitCamelName(),
+                    selected = enabled,
+                    onClick = {
+                        val nextWidgets = if (enabled) {
+                            activeSettings.dashboardWidgets - widget
+                        } else {
+                            activeSettings.dashboardWidgets + widget
+                        }
+                        ledgerViewModel.updateDashboardWidgets(nextWidgets)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+
+        DashboardCard(title = "Coming Soon") {
+            comingSoonItems.forEach { item -> ComingSoonCard(title = item) }
+        }
+
+        DashboardCard(title = "Support") {
+            Text(text = "Support This Project", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
+            Text(text = "https://buymeacoffee.com/mkr_infinity", color = LocalLedgerColors.current.muted)
+            Text(text = "Request Feature", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
+            Text(text = "https://github.com/mkr-infinity/Solo-Ledger", color = LocalLedgerColors.current.muted)
+            Text(text = "Report Bug", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
+            Text(text = "https://github.com/mkr-infinity/Solo-Ledger", color = LocalLedgerColors.current.muted)
+        }
+
+        DashboardCard(title = "The Architect") {
+            SelectionChip(
+                text = if (architectExpanded) "Hide Details" else "Show Details",
+                selected = architectExpanded,
+                onClick = { architectExpanded = !architectExpanded },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            AnimatedVisibility(visible = architectExpanded) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(text = "Mohammad Kaif Raja", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
+                    Text(text = "GitHub: https://github.com/mkr-infinity", color = LocalLedgerColors.current.muted)
+                    Text(text = "Website: https://mkr-infinity.github.io/", color = LocalLedgerColors.current.muted)
+                    Text(text = "Instagram: https://instagram.com/mkr_infinity", color = LocalLedgerColors.current.muted)
+                    Text(text = "Telegram: https://t.me/mkr_infinity", color = LocalLedgerColors.current.muted)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ComingSoonCard(title: String) {
+    val ledgerColors = LocalLedgerColors.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(ledgerColors.surface)
+            .padding(14.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = title,
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+        )
+        Text(
+            text = "COMING SOON",
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
+        )
     }
 }
 
@@ -1708,6 +1867,23 @@ private fun formatMoney(minor: Long, currencyCode: String): String = runCatching
 }
 
 private fun cleanAmountInput(value: String): String = value.filter { char -> char.isDigit() || char == '.' }
+
+private fun String.splitThemeName(): String = replace(Regex("(?<=[a-z])(?=[A-Z])"), " ")
+
+private fun String.splitCamelName(): String = replace(Regex("(?<=[a-z])(?=[A-Z])"), " ")
+
+private val comingSoonItems = listOf(
+    "Login",
+    "Cloud Sync",
+    "Online Backup",
+    "Multi Device Sync",
+    "Shared Budgets",
+    "Family Accounts",
+    "AI Insights",
+    "Bank Integration",
+    "UPI Integration",
+    "OCR Receipt Scanner",
+)
 
 private enum class HistorySort(val label: String) {
     NewestFirst("Newest First"),

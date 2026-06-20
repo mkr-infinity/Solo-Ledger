@@ -9,7 +9,9 @@ import com.solo.ledger.data.local.entity.CategoryEntity
 import com.solo.ledger.data.local.entity.ExpenseEntity
 import com.solo.ledger.data.local.entity.SavingsGoalEntity
 import com.solo.ledger.data.model.BudgetTemplate
+import com.solo.ledger.data.model.DashboardWidget
 import com.solo.ledger.data.model.UserSettings
+import com.solo.ledger.ui.theme.LedgerTheme
 import java.io.File
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -155,6 +157,35 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
     fun archiveSavingsGoal(goalId: String) {
         viewModelScope.launch {
             container.goalRepository.archive(goalId, System.currentTimeMillis())
+        }
+    }
+
+    fun updateTheme(theme: LedgerTheme) {
+        viewModelScope.launch {
+            container.settingsRepository.updateTheme(theme)
+        }
+    }
+
+    fun updateProfile(name: String, monthlyBudgetText: String, currencyCode: String, onSaved: () -> Unit, onError: (String) -> Unit) {
+        val monthlyBudget = monthlyBudgetText.toMinorAmount()
+        when {
+            currencyCode.trim().length != 3 -> onError("Use a 3-letter currency code.")
+            monthlyBudget == null || monthlyBudget < 0L -> onError("Enter a valid monthly budget.")
+            else -> viewModelScope.launch {
+                container.settingsRepository.updateProfile(
+                    name = name,
+                    avatarPath = null,
+                    monthlyBudgetMinor = monthlyBudget,
+                    currencyCode = currencyCode,
+                )
+                onSaved()
+            }
+        }
+    }
+
+    fun updateDashboardWidgets(widgets: List<DashboardWidget>) {
+        viewModelScope.launch {
+            container.settingsRepository.updateDashboardWidgets(widgets)
         }
     }
 
