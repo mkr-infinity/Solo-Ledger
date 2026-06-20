@@ -33,6 +33,13 @@ The theme scaffold includes:
 
 ## Status
 
-Current slice: foundation only.
+Current slice: offline data foundation.
 
-Next slice: local data foundation with Room, DataStore, repositories, and models.
+Implemented foundations:
+
+1. Android Compose project scaffold
+2. Theme system and app identity
+3. GitHub Actions signed debug APK workflow
+4. Room entities, DAOs, database, repositories, and DataStore settings
+
+Next slice: onboarding and budget template selection wired to DataStore.
