@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.solo.ledger.data.model.BudgetTemplate
 import com.solo.ledger.data.model.DashboardWidget
 import com.solo.ledger.data.model.QuickAddField
 import com.solo.ledger.data.model.UserSettings
@@ -24,6 +25,8 @@ class SettingsRepository(
 
     val settings: Flow<UserSettings> = dataStore.data.map { preferences ->
         UserSettings(
+            onboardingCompleted = preferences[Keys.onboardingCompleted] ?: false,
+            selectedBudgetTemplate = preferences[Keys.selectedBudgetTemplate]?.let(::budgetTemplateFromName),
             name = preferences[Keys.name].orEmpty(),
             avatarPath = preferences[Keys.avatarPath],
             monthlyBudgetMinor = preferences[Keys.monthlyBudgetMinor] ?: 0L,
@@ -41,6 +44,17 @@ class SettingsRepository(
 
     suspend fun updateTheme(theme: LedgerTheme) {
         dataStore.edit { it[Keys.theme] = theme.name }
+    }
+
+    suspend fun completeOnboarding(template: BudgetTemplate?) {
+        dataStore.edit {
+            it[Keys.onboardingCompleted] = true
+            if (template == null) {
+                it.remove(Keys.selectedBudgetTemplate)
+            } else {
+                it[Keys.selectedBudgetTemplate] = template.name
+            }
+        }
     }
 
     suspend fun updateProfile(name: String, avatarPath: String?, monthlyBudgetMinor: Long, currencyCode: String) {
@@ -83,6 +97,8 @@ class SettingsRepository(
     private fun themeFromName(name: String): LedgerTheme = LedgerTheme.entries.firstOrNull { it.name == name }
         ?: LedgerTheme.LedgerDark
 
+    private fun budgetTemplateFromName(name: String): BudgetTemplate? = BudgetTemplate.entries.firstOrNull { it.name == name }
+
     private fun String.decodeDashboardWidgets(): List<DashboardWidget> = split(',')
         .filter { it.isNotBlank() }
         .mapNotNull { encoded -> DashboardWidget.entries.firstOrNull { it.name == encoded } }
@@ -94,6 +110,8 @@ class SettingsRepository(
 
     private object Keys {
         val name = stringPreferencesKey("name")
+        val onboardingCompleted = booleanPreferencesKey("onboarding_completed")
+        val selectedBudgetTemplate = stringPreferencesKey("selected_budget_template")
         val avatarPath = stringPreferencesKey("avatar_path")
         val monthlyBudgetMinor = longPreferencesKey("monthly_budget_minor")
         val currencyCode = stringPreferencesKey("currency_code")

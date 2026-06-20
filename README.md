@@ -33,7 +33,7 @@ The theme scaffold includes:
 
 ## Status
 
-Current slice: offline data foundation.
+Current slice: onboarding foundation.
 
 Implemented foundations:
 
@@ -41,5 +41,6 @@ Implemented foundations:
 2. Theme system and app identity
 3. GitHub Actions signed debug APK workflow
 4. Room entities, DAOs, database, repositories, and DataStore settings
+5. Onboarding flow with budget template selection stored offline
 
-Next slice: onboarding and budget template selection wired to DataStore.
+Next slice: expense quick-add form and local expense creation.

@@ -3,6 +3,8 @@ package com.solo.ledger.data.model
 import com.solo.ledger.ui.theme.LedgerTheme
 
 data class UserSettings(
+    val onboardingCompleted: Boolean,
+    val selectedBudgetTemplate: BudgetTemplate?,
     val name: String,
     val avatarPath: String?,
     val monthlyBudgetMinor: Long,
