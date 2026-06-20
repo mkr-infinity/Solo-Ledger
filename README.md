@@ -33,7 +33,7 @@ The theme scaffold includes:
 
 ## Status
 
-Current slice: Category management backed by local data.
+Current slice: JSON data import/export foundation.
 
 Implemented foundations:
 
@@ -50,5 +50,6 @@ Implemented foundations:
 11. Savings goal creation, progress additions, archiving, and Home progress cards
 12. Settings screen with profile, theme, dashboard controls, coming-soon cards, support, and Architect details
 13. Category management with add, edit, archive, icon name, and color assignment
+14. App-private JSON export/import for categories, expenses, and savings goals
 
-Next slice: Export and import actions for JSON data.
+Next slice: Quick Add field visibility controls and form behavior.

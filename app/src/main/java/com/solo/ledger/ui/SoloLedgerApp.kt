@@ -691,6 +691,37 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
             }
         }
 
+        DashboardCard(title = "Data") {
+            Text(
+                text = "JSON import and export use an app-private local file. System document export can be added after this foundation.",
+                color = LocalLedgerColors.current.muted,
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(
+                    onClick = { ledgerViewModel.exportJson { message = it } },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White,
+                    ),
+                ) {
+                    Text(text = "Export JSON")
+                }
+                OutlinedButton(
+                    onClick = { ledgerViewModel.importJson(onDone = { message = it }, onError = { message = it }) },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(18.dp),
+                    border = BorderStroke(1.dp, LocalLedgerColors.current.outline),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                ) {
+                    Text(text = "Import JSON")
+                }
+            }
+            ComingSoonCard(title = "Export PDF")
+        }
+
         DashboardCard(title = "Coming Soon") {
             comingSoonItems.forEach { item -> ComingSoonCard(title = item) }
         }

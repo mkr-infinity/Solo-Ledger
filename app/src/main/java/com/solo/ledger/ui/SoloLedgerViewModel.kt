@@ -24,6 +24,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
 
 class SoloLedgerViewModel(application: Application) : AndroidViewModel(application) {
     private val container = (application as SoloLedgerApplication).container
@@ -229,6 +231,60 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    fun exportJson(onDone: (String) -> Unit) {
+        viewModelScope.launch {
+            val path = withContext(Dispatchers.IO) {
+                val app = getApplication<SoloLedgerApplication>()
+                val exportDir = File(app.filesDir, "exports")
+                exportDir.mkdirs()
+                val exportFile = File(exportDir, "solo-ledger-export.json")
+                val payload = JSONObject()
+                    .put("version", 1)
+                    .put("exportedAtMillis", System.currentTimeMillis())
+                    .put("categories", categories.value.toCategoryJson())
+                    .put("expenses", (activeExpenses.value + deletedExpenses.value).toExpenseJson())
+                    .put("savingsGoals", activeGoals.value.toGoalJson())
+
+                exportFile.writeText(payload.toString(2))
+                exportFile.absolutePath
+            }
+            onDone("Exported JSON to $path")
+        }
+    }
+
+    fun importJson(onDone: (String) -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val app = getApplication<SoloLedgerApplication>()
+                    val exportFile = File(File(app.filesDir, "exports"), "solo-ledger-export.json")
+                    if (!exportFile.exists()) error("No local export file found.")
+                    val payload = JSONObject(exportFile.readText())
+
+                    payload.optJSONArray("categories")?.let { categoriesJson ->
+                        for (index in 0 until categoriesJson.length()) {
+                            container.categoryRepository.upsert(categoriesJson.getJSONObject(index).toCategoryEntity())
+                        }
+                    }
+                    payload.optJSONArray("expenses")?.let { expensesJson ->
+                        for (index in 0 until expensesJson.length()) {
+                            container.expenseRepository.upsert(expensesJson.getJSONObject(index).toExpenseEntity())
+                        }
+                    }
+                    payload.optJSONArray("savingsGoals")?.let { goalsJson ->
+                        for (index in 0 until goalsJson.length()) {
+                            container.goalRepository.upsert(goalsJson.getJSONObject(index).toSavingsGoalEntity())
+                        }
+                    }
+
+                    "Imported JSON from ${exportFile.absolutePath}"
+                }
+            }
+
+            result.onSuccess(onDone).onFailure { onError(it.message ?: "JSON import failed.") }
+        }
+    }
+
     fun addExpense(
         title: String,
         amountText: String,
@@ -320,3 +376,98 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         return path
     }
 }
+
+private fun List<CategoryEntity>.toCategoryJson(): JSONArray = JSONArray().also { array ->
+    forEach { category ->
+        array.put(
+            JSONObject()
+                .put("id", category.id)
+                .put("name", category.name)
+                .put("iconName", category.iconName)
+                .put("colorHex", category.colorHex)
+                .put("createdAtMillis", category.createdAtMillis)
+                .put("updatedAtMillis", category.updatedAtMillis)
+                .put("isArchived", category.isArchived),
+        )
+    }
+}
+
+private fun List<ExpenseEntity>.toExpenseJson(): JSONArray = JSONArray().also { array ->
+    forEach { expense ->
+        array.put(
+            JSONObject()
+                .put("id", expense.id)
+                .put("title", expense.title)
+                .put("amountMinor", expense.amountMinor)
+                .put("currencyCode", expense.currencyCode)
+                .put("categoryId", expense.categoryId)
+                .put("dateEpochDay", expense.dateEpochDay)
+                .put("timeMinuteOfDay", expense.timeMinuteOfDay)
+                .put("notes", expense.notes)
+                .put("attachmentPath", expense.attachmentPath)
+                .put("createdAtMillis", expense.createdAtMillis)
+                .put("updatedAtMillis", expense.updatedAtMillis)
+                .put("deletedAtMillis", expense.deletedAtMillis),
+        )
+    }
+}
+
+private fun List<SavingsGoalEntity>.toGoalJson(): JSONArray = JSONArray().also { array ->
+    forEach { goal ->
+        array.put(
+            JSONObject()
+                .put("id", goal.id)
+                .put("title", goal.title)
+                .put("targetAmountMinor", goal.targetAmountMinor)
+                .put("savedAmountMinor", goal.savedAmountMinor)
+                .put("currencyCode", goal.currencyCode)
+                .put("targetDateEpochDay", goal.targetDateEpochDay)
+                .put("accentColorHex", goal.accentColorHex)
+                .put("createdAtMillis", goal.createdAtMillis)
+                .put("updatedAtMillis", goal.updatedAtMillis)
+                .put("archivedAtMillis", goal.archivedAtMillis),
+        )
+    }
+}
+
+private fun JSONObject.toCategoryEntity(): CategoryEntity = CategoryEntity(
+    id = getString("id"),
+    name = getString("name"),
+    iconName = optString("iconName", "category"),
+    colorHex = optString("colorHex", "#16A34A"),
+    createdAtMillis = optLong("createdAtMillis", System.currentTimeMillis()),
+    updatedAtMillis = optLong("updatedAtMillis", System.currentTimeMillis()),
+    isArchived = optBoolean("isArchived", false),
+)
+
+private fun JSONObject.toExpenseEntity(): ExpenseEntity = ExpenseEntity(
+    id = getString("id"),
+    title = getString("title"),
+    amountMinor = getLong("amountMinor"),
+    currencyCode = optString("currencyCode", "INR"),
+    categoryId = getString("categoryId"),
+    dateEpochDay = getLong("dateEpochDay"),
+    timeMinuteOfDay = getInt("timeMinuteOfDay"),
+    notes = nullableString("notes"),
+    attachmentPath = nullableString("attachmentPath"),
+    createdAtMillis = optLong("createdAtMillis", System.currentTimeMillis()),
+    updatedAtMillis = optLong("updatedAtMillis", System.currentTimeMillis()),
+    deletedAtMillis = nullableLong("deletedAtMillis"),
+)
+
+private fun JSONObject.toSavingsGoalEntity(): SavingsGoalEntity = SavingsGoalEntity(
+    id = getString("id"),
+    title = getString("title"),
+    targetAmountMinor = getLong("targetAmountMinor"),
+    savedAmountMinor = getLong("savedAmountMinor"),
+    currencyCode = optString("currencyCode", "INR"),
+    targetDateEpochDay = nullableLong("targetDateEpochDay"),
+    accentColorHex = optString("accentColorHex", "#22C55E"),
+    createdAtMillis = optLong("createdAtMillis", System.currentTimeMillis()),
+    updatedAtMillis = optLong("updatedAtMillis", System.currentTimeMillis()),
+    archivedAtMillis = nullableLong("archivedAtMillis"),
+)
+
+private fun JSONObject.nullableString(key: String): String? = if (isNull(key)) null else optString(key)
+
+private fun JSONObject.nullableLong(key: String): Long? = if (isNull(key)) null else optLong(key)
