@@ -44,6 +44,12 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         initialValue = emptyList(),
     )
 
+    val deletedExpenses: StateFlow<List<ExpenseEntity>> = container.expenseRepository.observeDeletedExpenses().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = emptyList(),
+    )
+
     val activeGoals: StateFlow<List<SavingsGoalEntity>> = container.goalRepository.observeActiveGoals().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -65,6 +71,24 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
     fun moveExpenseToBin(expenseId: String) {
         viewModelScope.launch {
             container.expenseRepository.moveToBin(expenseId, System.currentTimeMillis())
+        }
+    }
+
+    fun restoreExpense(expenseId: String) {
+        viewModelScope.launch {
+            container.expenseRepository.restore(expenseId, System.currentTimeMillis())
+        }
+    }
+
+    fun deleteExpensePermanently(expense: ExpenseEntity) {
+        viewModelScope.launch {
+            container.expenseRepository.deletePermanently(expense)
+        }
+    }
+
+    fun clearBin() {
+        viewModelScope.launch {
+            container.expenseRepository.clearBin()
         }
     }
 

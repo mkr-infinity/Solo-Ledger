@@ -33,7 +33,7 @@ The theme scaffold includes:
 
 ## Status
 
-Current slice: History screen backed by local data.
+Current slice: Bin recovery backed by local data.
 
 Implemented foundations:
 
@@ -45,5 +45,6 @@ Implemented foundations:
 6. Quick Add expense form with local image attachment copy and Room persistence
 7. Home dashboard metrics, recent transactions, category breakdown, and monthly graph from saved expenses
 8. History screen with search, category filters, sorting, expandable details, and move-to-bin
+9. Bin section with restore, delete permanently, and clear all actions
 
-Next slice: Bin screen and restore/delete-permanently actions.
+Next slice: Calendar screen with spending-day highlights and date details.

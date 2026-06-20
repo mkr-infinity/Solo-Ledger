@@ -83,11 +83,13 @@ import com.solo.ledger.data.local.entity.SavingsGoalEntity
 import com.solo.ledger.data.model.BudgetTemplate
 import com.solo.ledger.data.model.DashboardWidget
 import com.solo.ledger.data.model.UserSettings
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
-import java.time.LocalDate
-import java.time.LocalTime
 import com.solo.ledger.ui.theme.LedgerTheme
 import com.solo.ledger.ui.theme.LocalLedgerColors
 import com.solo.ledger.ui.theme.SoloLedgerTheme
@@ -499,6 +501,7 @@ private fun ScreenShell(
 private fun HistoryScreen(ledgerViewModel: SoloLedgerViewModel) {
     val settings by ledgerViewModel.settings.collectAsState()
     val expenses by ledgerViewModel.activeExpenses.collectAsState()
+    val deletedExpenses by ledgerViewModel.deletedExpenses.collectAsState()
     val categories by ledgerViewModel.categories.collectAsState()
     val activeSettings = settings ?: return
     val categoryNames = categories.associate { it.id to it.name }
@@ -582,6 +585,129 @@ private fun HistoryScreen(ledgerViewModel: SoloLedgerViewModel) {
                         message = "Transaction moved to Bin."
                     },
                 )
+            }
+        }
+
+        BinSection(
+            deletedExpenses = deletedExpenses,
+            currencyCode = activeSettings.currencyCode,
+            categoryNames = categoryNames,
+            onRestore = { expenseId ->
+                ledgerViewModel.restoreExpense(expenseId)
+                message = "Transaction restored."
+            },
+            onDeletePermanently = { expense ->
+                ledgerViewModel.deleteExpensePermanently(expense)
+                message = "Transaction deleted permanently."
+            },
+            onClearAll = {
+                ledgerViewModel.clearBin()
+                message = "Bin cleared."
+            },
+        )
+    }
+}
+
+@Composable
+private fun BinSection(
+    deletedExpenses: List<ExpenseEntity>,
+    currencyCode: String,
+    categoryNames: Map<String, String>,
+    onRestore: (String) -> Unit,
+    onDeletePermanently: (ExpenseEntity) -> Unit,
+    onClearAll: () -> Unit,
+) {
+    DashboardCard(title = "Bin") {
+        if (deletedExpenses.isEmpty()) {
+            Text(
+                text = "Deleted transactions appear here before permanent removal.",
+                color = LocalLedgerColors.current.muted,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        } else {
+            TextButton(
+                onClick = onClearAll,
+                colors = ButtonDefaults.textButtonColors(contentColor = LocalLedgerColors.current.error),
+            ) {
+                Text(text = "Clear All")
+            }
+            deletedExpenses.forEach { expense ->
+                BinExpenseCard(
+                    expense = expense,
+                    currencyCode = currencyCode,
+                    categoryName = categoryNames[expense.categoryId] ?: "Other",
+                    onRestore = { onRestore(expense.id) },
+                    onDeletePermanently = { onDeletePermanently(expense) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BinExpenseCard(
+    expense: ExpenseEntity,
+    currencyCode: String,
+    categoryName: String,
+    onRestore: () -> Unit,
+    onDeletePermanently: () -> Unit,
+) {
+    val ledgerColors = LocalLedgerColors.current
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = ledgerColors.surface),
+        border = BorderStroke(1.dp, ledgerColors.outline),
+        shape = RoundedCornerShape(22.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = expense.title,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = "$categoryName - Deleted ${expense.deletedAtMillis?.let(::formatMillisDate) ?: "Recently"}",
+                        color = ledgerColors.muted,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Text(
+                    text = formatMoney(expense.amountMinor, currencyCode),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(
+                    onClick = onRestore,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, ledgerColors.outline),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = ledgerColors.success),
+                ) {
+                    Text(text = "Restore")
+                }
+                OutlinedButton(
+                    onClick = onDeletePermanently,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, ledgerColors.outline),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = ledgerColors.error),
+                ) {
+                    Text(text = "Delete Permanently")
+                }
             }
         }
     }
@@ -1163,6 +1289,11 @@ private fun currentMonthExpenses(expenses: List<ExpenseEntity>): List<ExpenseEnt
 }
 
 private fun formatDate(epochDay: Long): String = LocalDate.ofEpochDay(epochDay).toString()
+
+private fun formatMillisDate(millis: Long): String = Instant.ofEpochMilli(millis)
+    .atZone(ZoneId.systemDefault())
+    .toLocalDate()
+    .toString()
 
 private fun formatTime(minuteOfDay: Int): String {
     val hour = minuteOfDay / 60
