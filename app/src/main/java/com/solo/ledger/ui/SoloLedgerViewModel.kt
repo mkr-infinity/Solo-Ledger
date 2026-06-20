@@ -92,6 +92,72 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    fun createSavingsGoal(
+        title: String,
+        targetAmountText: String,
+        savedAmountText: String,
+        currencyCode: String,
+        onSaved: () -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        val cleanTitle = title.trim()
+        val targetAmount = targetAmountText.toMinorAmount()
+        val savedAmount = savedAmountText.ifBlank { "0" }.toMinorAmount()
+
+        when {
+            cleanTitle.isBlank() -> onError("Enter a goal title.")
+            targetAmount == null || targetAmount <= 0L -> onError("Enter a valid target amount.")
+            savedAmount == null || savedAmount < 0L -> onError("Enter a valid saved amount.")
+            else -> viewModelScope.launch {
+                val now = System.currentTimeMillis()
+                container.goalRepository.upsert(
+                    SavingsGoalEntity(
+                        id = UUID.randomUUID().toString(),
+                        title = cleanTitle,
+                        targetAmountMinor = targetAmount,
+                        savedAmountMinor = savedAmount.coerceAtMost(targetAmount),
+                        currencyCode = currencyCode.ifBlank { "INR" },
+                        targetDateEpochDay = null,
+                        accentColorHex = "#22C55E",
+                        createdAtMillis = now,
+                        updatedAtMillis = now,
+                        archivedAtMillis = null,
+                    ),
+                )
+                onSaved()
+            }
+        }
+    }
+
+    fun addSavingsProgress(
+        goal: SavingsGoalEntity,
+        amountText: String,
+        onSaved: () -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        val amount = amountText.toMinorAmount()
+        if (amount == null || amount <= 0L) {
+            onError("Enter a valid progress amount.")
+            return
+        }
+
+        viewModelScope.launch {
+            container.goalRepository.upsert(
+                goal.copy(
+                    savedAmountMinor = (goal.savedAmountMinor + amount).coerceAtMost(goal.targetAmountMinor),
+                    updatedAtMillis = System.currentTimeMillis(),
+                ),
+            )
+            onSaved()
+        }
+    }
+
+    fun archiveSavingsGoal(goalId: String) {
+        viewModelScope.launch {
+            container.goalRepository.archive(goalId, System.currentTimeMillis())
+        }
+    }
+
     fun addExpense(
         title: String,
         amountText: String,

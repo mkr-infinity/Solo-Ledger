@@ -1192,7 +1192,11 @@ private fun HomeDashboard(ledgerViewModel: SoloLedgerViewModel) {
             DailySpendingCard(settings = activeSettings, expenses = expenses)
         }
         if (DashboardWidget.SavingsGoalProgress in widgets) {
-            SavingsGoalCard(settings = activeSettings, goals = goals)
+            SavingsGoalCard(
+                settings = activeSettings,
+                goals = goals,
+                ledgerViewModel = ledgerViewModel,
+            )
         }
         if (DashboardWidget.Insights in widgets) {
             InsightCard(settings = activeSettings, expenses = expenses)
@@ -1259,7 +1263,17 @@ private fun DailySpendingCard(settings: UserSettings, expenses: List<ExpenseEnti
 }
 
 @Composable
-private fun SavingsGoalCard(settings: UserSettings, goals: List<SavingsGoalEntity>) {
+private fun SavingsGoalCard(
+    settings: UserSettings,
+    goals: List<SavingsGoalEntity>,
+    ledgerViewModel: SoloLedgerViewModel,
+) {
+    var title by remember { mutableStateOf("") }
+    var targetAmount by remember { mutableStateOf("") }
+    var savedAmount by remember { mutableStateOf("") }
+    var progressAmounts by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var message by remember { mutableStateOf<String?>(null) }
+
     DashboardCard(title = "Savings Goal Progress") {
         if (goals.isEmpty()) {
             Text(
@@ -1267,13 +1281,138 @@ private fun SavingsGoalCard(settings: UserSettings, goals: List<SavingsGoalEntit
                 color = LocalLedgerColors.current.muted,
                 style = MaterialTheme.typography.bodyMedium,
             )
+            SavingsGoalForm(
+                title = title,
+                onTitleChange = { title = it },
+                targetAmount = targetAmount,
+                onTargetAmountChange = { targetAmount = cleanAmountInput(it) },
+                savedAmount = savedAmount,
+                onSavedAmountChange = { savedAmount = cleanAmountInput(it) },
+                currencyCode = settings.currencyCode,
+                onSave = {
+                    ledgerViewModel.createSavingsGoal(
+                        title = title,
+                        targetAmountText = targetAmount,
+                        savedAmountText = savedAmount,
+                        currencyCode = settings.currencyCode,
+                        onSaved = {
+                            title = ""
+                            targetAmount = ""
+                            savedAmount = ""
+                            message = "Savings goal created."
+                        },
+                        onError = { message = it },
+                    )
+                },
+            )
         } else {
-            val goal = goals.first()
-            val progress = if (goal.targetAmountMinor > 0L) {
-                (goal.savedAmountMinor.toFloat() / goal.targetAmountMinor.toFloat()).coerceIn(0f, 1f)
-            } else {
-                0f
+            goals.forEach { goal ->
+                SavingsGoalRow(
+                    settings = settings,
+                    goal = goal,
+                    progressAmount = progressAmounts[goal.id].orEmpty(),
+                    onProgressAmountChange = { value ->
+                        progressAmounts = progressAmounts + (goal.id to cleanAmountInput(value))
+                    },
+                    onAddProgress = {
+                        ledgerViewModel.addSavingsProgress(
+                            goal = goal,
+                            amountText = progressAmounts[goal.id].orEmpty(),
+                            onSaved = {
+                                progressAmounts = progressAmounts - goal.id
+                                message = "Savings progress updated."
+                            },
+                            onError = { message = it },
+                        )
+                    },
+                    onArchive = {
+                        ledgerViewModel.archiveSavingsGoal(goal.id)
+                        message = "Savings goal archived."
+                    },
+                )
             }
+        }
+        message?.let { currentMessage ->
+            Text(
+                text = currentMessage,
+                color = if (currentMessage.contains("Enter", ignoreCase = true)) LocalLedgerColors.current.error else LocalLedgerColors.current.success,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SavingsGoalForm(
+    title: String,
+    onTitleChange: (String) -> Unit,
+    targetAmount: String,
+    onTargetAmountChange: (String) -> Unit,
+    savedAmount: String,
+    onSavedAmountChange: (String) -> Unit,
+    currencyCode: String,
+    onSave: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        LedgerTextField(
+            value = title,
+            onValueChange = onTitleChange,
+            label = "Goal Title",
+            singleLine = true,
+        )
+        LedgerTextField(
+            value = targetAmount,
+            onValueChange = onTargetAmountChange,
+            label = "Target $currencyCode",
+            singleLine = true,
+            keyboardType = KeyboardType.Decimal,
+        )
+        LedgerTextField(
+            value = savedAmount,
+            onValueChange = onSavedAmountChange,
+            label = "Saved $currencyCode",
+            singleLine = true,
+            keyboardType = KeyboardType.Decimal,
+        )
+        Button(
+            onClick = onSave,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White,
+            ),
+        ) {
+            Text(text = "Create Goal")
+        }
+    }
+}
+
+@Composable
+private fun SavingsGoalRow(
+    settings: UserSettings,
+    goal: SavingsGoalEntity,
+    progressAmount: String,
+    onProgressAmountChange: (String) -> Unit,
+    onAddProgress: () -> Unit,
+    onArchive: () -> Unit,
+) {
+    val progress = if (goal.targetAmountMinor > 0L) {
+        (goal.savedAmountMinor.toFloat() / goal.targetAmountMinor.toFloat()).coerceIn(0f, 1f)
+    } else {
+        0f
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = LocalLedgerColors.current.surface),
+        border = BorderStroke(1.dp, LocalLedgerColors.current.outline),
+        shape = RoundedCornerShape(22.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             Text(
                 text = goal.title,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -1286,6 +1425,35 @@ private fun SavingsGoalCard(settings: UserSettings, goals: List<SavingsGoalEntit
                 color = LocalLedgerColors.current.muted,
                 style = MaterialTheme.typography.bodyMedium,
             )
+            LedgerTextField(
+                value = progressAmount,
+                onValueChange = onProgressAmountChange,
+                label = "Add Saved ${settings.currencyCode}",
+                singleLine = true,
+                keyboardType = KeyboardType.Decimal,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(
+                    onClick = onAddProgress,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White,
+                    ),
+                ) {
+                    Text(text = "Add")
+                }
+                OutlinedButton(
+                    onClick = onArchive,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, LocalLedgerColors.current.outline),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = LocalLedgerColors.current.muted),
+                ) {
+                    Text(text = "Archive")
+                }
+            }
         }
     }
 }
@@ -1538,6 +1706,8 @@ private fun formatMoney(minor: Long, currencyCode: String): String = runCatching
 }.getOrElse {
     "$currencyCode ${String.format(Locale.US, "%.2f", minor / 100.0)}"
 }
+
+private fun cleanAmountInput(value: String): String = value.filter { char -> char.isDigit() || char == '.' }
 
 private enum class HistorySort(val label: String) {
     NewestFirst("Newest First"),

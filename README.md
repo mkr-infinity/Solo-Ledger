@@ -33,7 +33,7 @@ The theme scaffold includes:
 
 ## Status
 
-Current slice: Calendar analytics backed by local data.
+Current slice: Savings goals backed by local data.
 
 Implemented foundations:
 
@@ -47,5 +47,6 @@ Implemented foundations:
 8. History screen with search, category filters, sorting, expandable details, and move-to-bin
 9. Bin section with restore, delete permanently, and clear all actions
 10. Calendar screen with spending-day highlights, date details, and range summaries
+11. Savings goal creation, progress additions, archiving, and Home progress cards
 
-Next slice: Savings goals creation and progress management.
+Next slice: Settings screen for profile, appearance, dashboard controls, support, and coming-soon cards.
