@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.solo.ledger.SoloLedgerApplication
 import com.solo.ledger.data.local.entity.CategoryEntity
 import com.solo.ledger.data.local.entity.ExpenseEntity
+import com.solo.ledger.data.local.entity.SavingsGoalEntity
 import com.solo.ledger.data.model.BudgetTemplate
 import com.solo.ledger.data.model.UserSettings
 import java.io.File
@@ -32,6 +33,18 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
     )
 
     val categories: StateFlow<List<CategoryEntity>> = container.categoryRepository.observeActiveCategories().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = emptyList(),
+    )
+
+    val activeExpenses: StateFlow<List<ExpenseEntity>> = container.expenseRepository.observeActiveExpenses().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = emptyList(),
+    )
+
+    val activeGoals: StateFlow<List<SavingsGoalEntity>> = container.goalRepository.observeActiveGoals().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = emptyList(),

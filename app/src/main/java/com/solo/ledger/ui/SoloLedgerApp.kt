@@ -16,6 +16,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
@@ -77,7 +78,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.solo.ledger.R
 import com.solo.ledger.data.local.entity.CategoryEntity
+import com.solo.ledger.data.local.entity.ExpenseEntity
+import com.solo.ledger.data.local.entity.SavingsGoalEntity
 import com.solo.ledger.data.model.BudgetTemplate
+import com.solo.ledger.data.model.DashboardWidget
+import com.solo.ledger.data.model.UserSettings
+import java.text.NumberFormat
+import java.util.Currency
+import java.util.Locale
 import java.time.LocalDate
 import java.time.LocalTime
 import com.solo.ledger.ui.theme.LedgerTheme
@@ -451,12 +459,13 @@ private fun ScreenShell(
             )
         }
 
-        if (destination == LedgerDestination.QuickAdd && ledgerViewModel != null) {
-            QuickAddScreen(
+        when {
+            destination == LedgerDestination.Home && ledgerViewModel != null -> HomeDashboard(ledgerViewModel)
+            destination == LedgerDestination.QuickAdd && ledgerViewModel != null -> QuickAddScreen(
                 ledgerViewModel = ledgerViewModel,
                 currencyCode = currencyCode,
             )
-        } else {
+            else -> {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = ledgerColors.card),
@@ -480,8 +489,373 @@ private fun ScreenShell(
                     )
                 }
             }
+            }
         }
     }
+}
+
+@Composable
+private fun HomeDashboard(ledgerViewModel: SoloLedgerViewModel) {
+    val settings by ledgerViewModel.settings.collectAsState()
+    val expenses by ledgerViewModel.activeExpenses.collectAsState()
+    val categories by ledgerViewModel.categories.collectAsState()
+    val goals by ledgerViewModel.activeGoals.collectAsState()
+    val activeSettings = settings ?: return
+    val widgets = activeSettings.dashboardWidgets
+
+    Column(
+        modifier = Modifier.verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        if (widgets.isEmpty()) {
+            DashboardCard(title = "Dashboard Hidden") {
+                Text(
+                    text = "All dashboard sections are hidden in settings.",
+                    color = LocalLedgerColors.current.muted,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+
+        if (DashboardWidget.MonthlyBudget in widgets) {
+            MonthlyBudgetCard(settings = activeSettings, expenses = expenses)
+        }
+        if (DashboardWidget.DailySpending in widgets) {
+            DailySpendingCard(settings = activeSettings, expenses = expenses)
+        }
+        if (DashboardWidget.SavingsGoalProgress in widgets) {
+            SavingsGoalCard(settings = activeSettings, goals = goals)
+        }
+        if (DashboardWidget.Insights in widgets) {
+            InsightCard(settings = activeSettings, expenses = expenses)
+        }
+        if (DashboardWidget.RecentTransactions in widgets) {
+            RecentTransactionsCard(
+                settings = activeSettings,
+                expenses = expenses,
+                categories = categories,
+            )
+        }
+        if (DashboardWidget.CategoryBreakdown in widgets) {
+            CategoryBreakdownCard(
+                settings = activeSettings,
+                expenses = currentMonthExpenses(expenses),
+                categories = categories,
+            )
+        }
+        if (DashboardWidget.MonthlyGraph in widgets) {
+            MonthlyGraphCard(settings = activeSettings, expenses = currentMonthExpenses(expenses))
+        }
+    }
+}
+
+@Composable
+private fun MonthlyBudgetCard(settings: UserSettings, expenses: List<ExpenseEntity>) {
+    val ledgerColors = LocalLedgerColors.current
+    val used = currentMonthExpenses(expenses).sumOf { it.amountMinor }
+    val budget = settings.monthlyBudgetMinor
+    val remaining = (budget - used).coerceAtLeast(0L)
+    val progress = if (budget > 0L) (used.toFloat() / budget.toFloat()).coerceIn(0f, 1f) else 0f
+
+    DashboardCard(title = "Monthly Budget") {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            MetricBlock(
+                label = "Budget",
+                value = formatMoney(budget, settings.currencyCode),
+                modifier = Modifier.weight(1f),
+            )
+            MetricBlock(
+                label = "Used",
+                value = formatMoney(used, settings.currencyCode),
+                modifier = Modifier.weight(1f),
+            )
+        }
+        MetricBlock(label = "Remaining", value = formatMoney(remaining, settings.currencyCode))
+        AmountBar(progress = progress, color = if (progress < 0.8f) ledgerColors.success else ledgerColors.warning)
+    }
+}
+
+@Composable
+private fun DailySpendingCard(settings: UserSettings, expenses: List<ExpenseEntity>) {
+    val today = LocalDate.now().toEpochDay()
+    val todaySpent = expenses.filter { it.dateEpochDay == today }.sumOf { it.amountMinor }
+
+    DashboardCard(title = "Daily Spending") {
+        MetricBlock(label = "Today", value = formatMoney(todaySpent, settings.currencyCode))
+        Text(
+            text = if (todaySpent == 0L) "No spending recorded today." else "Today has saved expense activity.",
+            color = LocalLedgerColors.current.muted,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
+}
+
+@Composable
+private fun SavingsGoalCard(settings: UserSettings, goals: List<SavingsGoalEntity>) {
+    DashboardCard(title = "Savings Goal Progress") {
+        if (goals.isEmpty()) {
+            Text(
+                text = "Create a savings goal to track target, saved, and remaining amounts.",
+                color = LocalLedgerColors.current.muted,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        } else {
+            val goal = goals.first()
+            val progress = if (goal.targetAmountMinor > 0L) {
+                (goal.savedAmountMinor.toFloat() / goal.targetAmountMinor.toFloat()).coerceIn(0f, 1f)
+            } else {
+                0f
+            }
+            Text(
+                text = goal.title,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            AmountBar(progress = progress, color = LocalLedgerColors.current.success)
+            Text(
+                text = "${formatMoney(goal.savedAmountMinor, settings.currencyCode)} saved of ${formatMoney(goal.targetAmountMinor, settings.currencyCode)}",
+                color = LocalLedgerColors.current.muted,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+    }
+}
+
+@Composable
+private fun InsightCard(settings: UserSettings, expenses: List<ExpenseEntity>) {
+    val monthExpenses = currentMonthExpenses(expenses)
+    val used = monthExpenses.sumOf { it.amountMinor }
+    val budget = settings.monthlyBudgetMinor
+    val message = when {
+        monthExpenses.isEmpty() -> "Start with one saved expense to unlock spending insights."
+        budget <= 0L -> "Set a monthly budget to compare usage against your spending."
+        used <= budget -> "You are within your monthly budget."
+        else -> "Monthly spending is above the saved budget."
+    }
+
+    DashboardCard(title = "Insights") {
+        Text(
+            text = message,
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}
+
+@Composable
+private fun RecentTransactionsCard(
+    settings: UserSettings,
+    expenses: List<ExpenseEntity>,
+    categories: List<CategoryEntity>,
+) {
+    val categoryNames = categories.associate { it.id to it.name }
+
+    DashboardCard(title = "Recent Transactions") {
+        if (expenses.isEmpty()) {
+            Text(
+                text = "No expenses saved yet.",
+                color = LocalLedgerColors.current.muted,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        } else {
+            expenses.take(5).forEach { expense ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = expense.title,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = categoryNames[expense.categoryId] ?: "Other",
+                            color = LocalLedgerColors.current.muted,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    Text(
+                        text = formatMoney(expense.amountMinor, settings.currencyCode),
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CategoryBreakdownCard(
+    settings: UserSettings,
+    expenses: List<ExpenseEntity>,
+    categories: List<CategoryEntity>,
+) {
+    val totals = expenses.groupBy { it.categoryId }.mapValues { entry -> entry.value.sumOf { it.amountMinor } }
+    val max = totals.values.maxOrNull()?.coerceAtLeast(1L) ?: 1L
+    val categoryNames = categories.associate { it.id to it.name }
+
+    DashboardCard(title = "Category Breakdown") {
+        if (expenses.isEmpty()) {
+            Text(
+                text = "Category spending appears after expenses are saved.",
+                color = LocalLedgerColors.current.muted,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        } else {
+            totals.entries.sortedByDescending { it.value }.take(5).forEach { (categoryId, amount) ->
+                Text(
+                    text = "${categoryNames[categoryId] ?: "Other"} - ${formatMoney(amount, settings.currencyCode)}",
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                AmountBar(
+                    progress = (amount.toFloat() / max.toFloat()).coerceIn(0f, 1f),
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MonthlyGraphCard(settings: UserSettings, expenses: List<ExpenseEntity>) {
+    val weeks = (1..5).map { week ->
+        expenses.filter { expense -> LocalDate.ofEpochDay(expense.dateEpochDay).dayOfMonth in ((week - 1) * 7 + 1)..(week * 7) }
+            .sumOf { it.amountMinor }
+    }
+    val max = weeks.maxOrNull()?.coerceAtLeast(1L) ?: 1L
+
+    DashboardCard(title = "Monthly Graph") {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(96.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            weeks.forEachIndexed { index, amount ->
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Bottom,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height((16 + (64 * (amount.toFloat() / max.toFloat()))).dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.primary),
+                    )
+                    Text(
+                        text = "W${index + 1}",
+                        color = LocalLedgerColors.current.muted,
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
+            }
+        }
+        Text(
+            text = "Monthly total ${formatMoney(expenses.sumOf { it.amountMinor }, settings.currencyCode)}",
+            color = LocalLedgerColors.current.muted,
+            style = MaterialTheme.typography.bodySmall,
+        )
+    }
+}
+
+@Composable
+private fun DashboardCard(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val ledgerColors = LocalLedgerColors.current
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = ledgerColors.card),
+        border = BorderStroke(1.dp, ledgerColors.outline),
+        shape = RoundedCornerShape(28.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = title,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            content()
+        }
+    }
+}
+
+@Composable
+private fun MetricBlock(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+) {
+    val ledgerColors = LocalLedgerColors.current
+
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(ledgerColors.surface)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(text = label, color = ledgerColors.muted, style = MaterialTheme.typography.labelMedium)
+        Text(
+            text = value,
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+        )
+    }
+}
+
+@Composable
+private fun AmountBar(progress: Float, color: Color) {
+    val ledgerColors = LocalLedgerColors.current
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(10.dp)
+            .clip(RoundedCornerShape(999.dp))
+            .background(ledgerColors.surface),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                .height(10.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(color),
+        )
+    }
+}
+
+private fun currentMonthExpenses(expenses: List<ExpenseEntity>): List<ExpenseEntity> {
+    val now = LocalDate.now()
+    val start = now.withDayOfMonth(1).toEpochDay()
+    val end = now.withDayOfMonth(now.lengthOfMonth()).toEpochDay()
+    return expenses.filter { it.dateEpochDay in start..end }
+}
+
+private fun formatMoney(minor: Long, currencyCode: String): String = runCatching {
+    NumberFormat.getCurrencyInstance().apply {
+        currency = Currency.getInstance(currencyCode)
+    }.format(minor / 100.0)
+}.getOrElse {
+    "$currencyCode ${String.format(Locale.US, "%.2f", minor / 100.0)}"
 }
 
 @Composable

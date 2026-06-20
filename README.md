@@ -33,7 +33,7 @@ The theme scaffold includes:
 
 ## Status
 
-Current slice: quick-add expense creation.
+Current slice: Home dashboard backed by local data.
 
 Implemented foundations:
 
@@ -43,5 +43,6 @@ Implemented foundations:
 4. Room entities, DAOs, database, repositories, and DataStore settings
 5. Onboarding flow with budget template selection stored offline
 6. Quick Add expense form with local image attachment copy and Room persistence
+7. Home dashboard metrics, recent transactions, category breakdown, and monthly graph from saved expenses
 
-Next slice: Home dashboard backed by saved expense data.
+Next slice: History screen with search, filters, expandable rows, restore-ready deleted state.
