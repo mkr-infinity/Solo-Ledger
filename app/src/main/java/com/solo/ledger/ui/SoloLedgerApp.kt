@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,8 +26,11 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CalendarMonth
@@ -41,11 +45,15 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -59,6 +67,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -67,7 +76,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.solo.ledger.R
+import com.solo.ledger.data.local.entity.CategoryEntity
 import com.solo.ledger.data.model.BudgetTemplate
+import java.time.LocalDate
+import java.time.LocalTime
 import com.solo.ledger.ui.theme.LedgerTheme
 import com.solo.ledger.ui.theme.LocalLedgerColors
 import com.solo.ledger.ui.theme.SoloLedgerTheme
@@ -112,7 +124,10 @@ fun SoloLedgerApp(ledgerViewModel: SoloLedgerViewModel = viewModel()) {
                     )
                 }
                 composable(AppRoute.Main.route) {
-                    MainLedgerShell()
+                    MainLedgerShell(
+                        ledgerViewModel = ledgerViewModel,
+                        currencyCode = activeSettings.currencyCode,
+                    )
                 }
             }
         }
@@ -366,7 +381,10 @@ private fun TemplateChip(
 }
 
 @Composable
-private fun MainLedgerShell() {
+private fun MainLedgerShell(
+    ledgerViewModel: SoloLedgerViewModel? = null,
+    currencyCode: String = "INR",
+) {
     var selectedTab by remember { mutableStateOf(LedgerDestination.Home) }
 
     Scaffold(
@@ -395,13 +413,21 @@ private fun MainLedgerShell() {
                 .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding),
         ) { destination ->
-            ScreenShell(destination = destination)
+            ScreenShell(
+                destination = destination,
+                ledgerViewModel = ledgerViewModel,
+                currencyCode = currencyCode,
+            )
         }
     }
 }
 
 @Composable
-private fun ScreenShell(destination: LedgerDestination) {
+private fun ScreenShell(
+    destination: LedgerDestination,
+    ledgerViewModel: SoloLedgerViewModel?,
+    currencyCode: String,
+) {
     val ledgerColors = LocalLedgerColors.current
 
     Column(
@@ -425,29 +451,295 @@ private fun ScreenShell(destination: LedgerDestination) {
             )
         }
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = ledgerColors.card),
-            border = BorderStroke(1.dp, ledgerColors.outline),
-            shape = RoundedCornerShape(28.dp),
+        if (destination == LedgerDestination.QuickAdd && ledgerViewModel != null) {
+            QuickAddScreen(
+                ledgerViewModel = ledgerViewModel,
+                currencyCode = currencyCode,
+            )
+        } else {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = ledgerColors.card),
+                border = BorderStroke(1.dp, ledgerColors.outline),
+                shape = RoundedCornerShape(28.dp),
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        text = destination.emptyTitle,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = destination.emptyBody,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickAddScreen(
+    ledgerViewModel: SoloLedgerViewModel,
+    currencyCode: String,
+) {
+    val ledgerColors = LocalLedgerColors.current
+    val categories by ledgerViewModel.categories.collectAsState()
+    var title by remember { mutableStateOf("") }
+    var amount by remember { mutableStateOf("") }
+    var selectedCategoryId by remember { mutableStateOf("") }
+    var dateText by remember { mutableStateOf(LocalDate.now().toString()) }
+    var timeText by remember { mutableStateOf(LocalTime.now().withSecond(0).withNano(0).toString()) }
+    var notes by remember { mutableStateOf("") }
+    var attachmentUri by remember { mutableStateOf<Uri?>(null) }
+    var formMessage by remember { mutableStateOf<String?>(null) }
+    val attachmentPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        attachmentUri = uri
+    }
+
+    LaunchedEffect(categories) {
+        if (selectedCategoryId.isBlank() && categories.isNotEmpty()) {
+            selectedCategoryId = categories.first().id
+        }
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = ledgerColors.card),
+        border = BorderStroke(1.dp, ledgerColors.outline),
+        shape = RoundedCornerShape(28.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+            LedgerTextField(
+                value = title,
+                onValueChange = { title = it },
+                label = "Title",
+                singleLine = true,
+            )
+            LedgerTextField(
+                value = amount,
+                onValueChange = { amount = it.filter { char -> char.isDigit() || char == '.' } },
+                label = "Amount $currencyCode",
+                singleLine = true,
+                keyboardType = KeyboardType.Decimal,
+            )
+            CategorySelector(
+                categories = categories,
+                selectedCategoryId = selectedCategoryId,
+                onSelected = { selectedCategoryId = it },
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                LedgerTextField(
+                    value = dateText,
+                    onValueChange = { dateText = it },
+                    label = "Date",
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                )
+                LedgerTextField(
+                    value = timeText,
+                    onValueChange = { timeText = it },
+                    label = "Time",
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            LedgerTextField(
+                value = notes,
+                onValueChange = { notes = it },
+                label = "Notes",
+                minLines = 3,
+            )
+            OutlinedButton(
+                onClick = { attachmentPicker.launch("image/*") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                border = BorderStroke(1.dp, ledgerColors.outline),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = ledgerColors.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                ),
+            ) {
+                Text(text = if (attachmentUri == null) "Attach Receipt Or Bill" else "Attachment Selected")
+            }
+            Button(
+                onClick = {
+                    ledgerViewModel.addExpense(
+                        title = title,
+                        amountText = amount,
+                        currencyCode = currencyCode,
+                        categoryId = selectedCategoryId,
+                        dateText = dateText,
+                        timeText = timeText,
+                        notes = notes,
+                        attachmentUri = attachmentUri,
+                        onSaved = {
+                            title = ""
+                            amount = ""
+                            notes = ""
+                            attachmentUri = null
+                            formMessage = "Expense saved offline."
+                        },
+                        onError = { formMessage = it },
+                    )
+                },
+                enabled = title.isNotBlank() && amount.isNotBlank() && selectedCategoryId.isNotBlank(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                shape = RoundedCornerShape(18.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = Color.White,
+                    disabledContainerColor = ledgerColors.surface,
+                    disabledContentColor = ledgerColors.muted,
+                ),
             ) {
                 Text(
-                    text = destination.emptyTitle,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    text = "Save Expense",
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
+            }
+            formMessage?.let { message ->
                 Text(
-                    text = destination.emptyBody,
+                    text = message,
+                    color = if (message.contains("saved", ignoreCase = true)) ledgerColors.success else ledgerColors.error,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun LedgerTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    singleLine: Boolean = false,
+    minLines: Int = 1,
+    keyboardType: KeyboardType = KeyboardType.Text,
+) {
+    val ledgerColors = LocalLedgerColors.current
+
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier.fillMaxWidth(),
+        label = { Text(text = label) },
+        singleLine = singleLine,
+        minLines = minLines,
+        shape = RoundedCornerShape(18.dp),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+            focusedContainerColor = ledgerColors.card,
+            unfocusedContainerColor = ledgerColors.card,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = ledgerColors.outline,
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            unfocusedLabelColor = ledgerColors.muted,
+            cursorColor = MaterialTheme.colorScheme.primary,
+        ),
+    )
+}
+
+@Composable
+private fun CategorySelector(
+    categories: List<CategoryEntity>,
+    selectedCategoryId: String,
+    onSelected: (String) -> Unit,
+) {
+    val ledgerColors = LocalLedgerColors.current
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "Category",
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+        )
+        categories.chunked(3).forEach { rowCategories ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                rowCategories.forEach { category ->
+                    CategoryChip(
+                        category = category,
+                        selected = selectedCategoryId == category.id,
+                        onSelected = onSelected,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                repeat(3 - rowCategories.size) {
+                    SpacerWeight()
+                }
+            }
+        }
+        if (categories.isEmpty()) {
+            Text(
+                text = "Preparing default categories offline.",
+                color = ledgerColors.muted,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
+}
+
+@Composable
+private fun RowScope.SpacerWeight() {
+    Box(modifier = Modifier.weight(1f))
+}
+
+@Composable
+private fun CategoryChip(
+    category: CategoryEntity,
+    selected: Boolean,
+    onSelected: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val ledgerColors = LocalLedgerColors.current
+
+    Card(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = { onSelected(category.id) },
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) ledgerColors.navSelected else ledgerColors.surface,
+        ),
+        border = BorderStroke(1.dp, if (selected) MaterialTheme.colorScheme.primary else ledgerColors.outline),
+        shape = RoundedCornerShape(16.dp),
+    ) {
+        Text(
+            text = category.name,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 10.dp),
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
@@ -617,3 +909,6 @@ private fun SoloLedgerAppPreview() {
         MainLedgerShell()
     }
 }
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts

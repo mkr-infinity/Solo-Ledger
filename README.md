@@ -33,7 +33,7 @@ The theme scaffold includes:
 
 ## Status
 
-Current slice: onboarding foundation.
+Current slice: quick-add expense creation.
 
 Implemented foundations:
 
@@ -42,5 +42,6 @@ Implemented foundations:
 3. GitHub Actions signed debug APK workflow
 4. Room entities, DAOs, database, repositories, and DataStore settings
 5. Onboarding flow with budget template selection stored offline
+6. Quick Add expense form with local image attachment copy and Room persistence
 
-Next slice: expense quick-add form and local expense creation.
+Next slice: Home dashboard backed by saved expense data.
