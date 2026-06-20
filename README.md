@@ -33,7 +33,7 @@ The theme scaffold includes:
 
 ## Status
 
-Current slice: CI APK signing polish, empty-state illustrations, support actions, and calendar date analytics.
+Current slice: Category icon rendering and attachment editing for expense-only transactions.
 
 Implemented foundations:
 
@@ -64,5 +64,7 @@ Implemented foundations:
 25. Custom SVG empty states for no expenses, no results, and no data
 26. Calendar date detail category breakdown from local expense data
 27. Clickable support and Architect links
+28. Assigned category icons rendered across filters, chips, lists, and category management
+29. Expense attachment replacement and removal from History edit mode
 
-Next slice: broader accessibility polish, local attachment management, and final PRD hardening.
+Next slice: final accessibility polish and production hardening.

@@ -445,6 +445,8 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         dateText: String,
         timeText: String,
         notes: String,
+        attachmentUri: Uri?,
+        removeAttachment: Boolean,
         onSaved: () -> Unit,
         onError: (String) -> Unit,
     ) {
@@ -460,6 +462,17 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
             date == null -> onError("Use date format YYYY-MM-DD.")
             time == null -> onError("Use time format HH:MM.")
             else -> viewModelScope.launch {
+                val nextAttachmentPath = when {
+                    removeAttachment -> {
+                        expense.attachmentPath?.let(::deleteLocalFile)
+                        null
+                    }
+                    attachmentUri != null -> copyLocalImage(expense.id, attachmentUri, onError)
+                    else -> expense.attachmentPath
+                }
+
+                if (attachmentUri != null && nextAttachmentPath == null) return@launch
+
                 container.expenseRepository.upsert(
                     expense.copy(
                         title = cleanTitle,
@@ -468,6 +481,7 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
                         dateEpochDay = date.toEpochDay(),
                         timeMinuteOfDay = time.hour * 60 + time.minute,
                         notes = notes.trim().ifBlank { null },
+                        attachmentPath = nextAttachmentPath,
                         updatedAtMillis = System.currentTimeMillis(),
                     ),
                 )
@@ -514,6 +528,12 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
             onError("Image could not be saved locally.")
         }
         return path
+    }
+
+    private suspend fun deleteLocalFile(path: String) {
+        withContext(Dispatchers.IO) {
+            runCatching { File(path).delete() }
+        }
     }
 }
 

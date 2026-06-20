@@ -41,9 +41,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Category
+import androidx.compose.material.icons.outlined.Directions
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.LocalGroceryStore
+import androidx.compose.material.icons.outlined.Movie
+import androidx.compose.material.icons.outlined.Receipt
+import androidx.compose.material.icons.outlined.Restaurant
+import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.ShoppingBag
+import androidx.compose.material.icons.outlined.Subscriptions
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -1040,18 +1049,25 @@ private fun CategoryManagementRow(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = category.name,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        text = "${category.iconName} - ${category.colorHex}",
-                        color = ledgerColors.muted,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    CategoryIcon(category = category)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = category.name,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = "${category.iconName} - ${category.colorHex}",
+                            color = ledgerColors.muted,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
                 }
                 Box(
                     modifier = Modifier
@@ -1414,7 +1430,7 @@ private fun HistoryScreen(ledgerViewModel: SoloLedgerViewModel) {
                     categories = categories,
                     expandedId = expandedId,
                     onExpanded = { expenseId -> expandedId = if (expandedId == expenseId) null else expenseId },
-                    onSave = { expense, title, amount, categoryId, date, time, notes ->
+                    onSave = { expense, title, amount, categoryId, date, time, notes, attachmentUri, removeAttachment ->
                         ledgerViewModel.updateExpense(
                             expense = expense,
                             title = title,
@@ -1423,6 +1439,8 @@ private fun HistoryScreen(ledgerViewModel: SoloLedgerViewModel) {
                             dateText = date,
                             timeText = time,
                             notes = notes,
+                            attachmentUri = attachmentUri,
+                            removeAttachment = removeAttachment,
                             onSaved = { message = "Transaction updated." },
                             onError = { message = it },
                         )
@@ -1611,10 +1629,10 @@ private fun HistoryCategoryFilter(
         categories.chunked(3).forEach { rowCategories ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 rowCategories.forEach { category ->
-                    SelectionChip(
-                        text = category.name,
+                    CategoryChip(
+                        category = category,
                         selected = selectedCategoryId == category.id,
-                        onClick = { onSelected(category.id) },
+                        onSelected = { onSelected(category.id) },
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -1633,7 +1651,7 @@ private fun HistoryDateGroup(
     categories: List<CategoryEntity>,
     expandedId: String?,
     onExpanded: (String) -> Unit,
-    onSave: (ExpenseEntity, String, String, String, String, String, String) -> Unit,
+    onSave: (ExpenseEntity, String, String, String, String, String, String, Uri?, Boolean) -> Unit,
     onDelete: (String) -> Unit,
 ) {
     DashboardCard(title = formatDate(epochDay)) {
@@ -1645,8 +1663,8 @@ private fun HistoryDateGroup(
                 categories = categories,
                 expanded = expandedId == expense.id,
                 onExpanded = { onExpanded(expense.id) },
-                onSave = { title, amount, categoryId, date, time, notes ->
-                    onSave(expense, title, amount, categoryId, date, time, notes)
+                onSave = { title, amount, categoryId, date, time, notes, attachmentUri, removeAttachment ->
+                    onSave(expense, title, amount, categoryId, date, time, notes, attachmentUri, removeAttachment)
                 },
                 onDelete = { onDelete(expense.id) },
             )
@@ -1662,10 +1680,11 @@ private fun HistoryExpenseCard(
     categories: List<CategoryEntity>,
     expanded: Boolean,
     onExpanded: () -> Unit,
-    onSave: (String, String, String, String, String, String) -> Unit,
+    onSave: (String, String, String, String, String, String, Uri?, Boolean) -> Unit,
     onDelete: () -> Unit,
 ) {
     val ledgerColors = LocalLedgerColors.current
+    val category = categories.firstOrNull { it.id == expense.categoryId }
     var editing by remember(expense.id) { mutableStateOf(false) }
     var editTitle by remember(expense.id, expense.updatedAtMillis) { mutableStateOf(expense.title) }
     var editAmount by remember(expense.id, expense.updatedAtMillis) { mutableStateOf((expense.amountMinor / 100.0).toString()) }
@@ -1673,6 +1692,12 @@ private fun HistoryExpenseCard(
     var editDate by remember(expense.id, expense.updatedAtMillis) { mutableStateOf(formatDate(expense.dateEpochDay)) }
     var editTime by remember(expense.id, expense.updatedAtMillis) { mutableStateOf(formatTime(expense.timeMinuteOfDay)) }
     var editNotes by remember(expense.id, expense.updatedAtMillis) { mutableStateOf(expense.notes.orEmpty()) }
+    var editAttachmentUri by remember(expense.id, expense.updatedAtMillis) { mutableStateOf<Uri?>(null) }
+    var removeAttachment by remember(expense.id, expense.updatedAtMillis) { mutableStateOf(false) }
+    val editAttachmentPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        editAttachmentUri = uri
+        if (uri != null) removeAttachment = false
+    }
 
     Card(
         modifier = Modifier
@@ -1696,18 +1721,25 @@ private fun HistoryExpenseCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = expense.title,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        text = "$categoryName - ${formatTime(expense.timeMinuteOfDay)}",
-                        color = ledgerColors.muted,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    category?.let { CategoryIcon(category = it) }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = expense.title,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = "$categoryName - ${formatTime(expense.timeMinuteOfDay)}",
+                            color = ledgerColors.muted,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
                 }
                 Text(
                     text = formatMoney(expense.amountMinor, currencyCode),
@@ -1760,10 +1792,38 @@ private fun HistoryExpenseCard(
                             label = "Notes",
                             minLines = 2,
                         )
+                        LocalImagePreview(
+                            path = if (removeAttachment) null else expense.attachmentPath,
+                            label = "Current Attachment",
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            OutlinedButton(
+                                onClick = { editAttachmentPicker.launch("image/*") },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(16.dp),
+                                border = BorderStroke(1.dp, ledgerColors.outline),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                            ) {
+                                Text(text = if (editAttachmentUri == null) "Replace Attachment" else "New Attachment Selected")
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    editAttachmentUri = null
+                                    removeAttachment = true
+                                },
+                                enabled = expense.attachmentPath != null && !removeAttachment,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(16.dp),
+                                border = BorderStroke(1.dp, ledgerColors.outline),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = ledgerColors.error),
+                            ) {
+                                Text(text = "Remove")
+                            }
+                        }
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Button(
                                 onClick = {
-                                    onSave(editTitle, editAmount, editCategoryId, editDate, editTime, editNotes)
+                                    onSave(editTitle, editAmount, editCategoryId, editDate, editTime, editNotes, editAttachmentUri, removeAttachment)
                                     editing = false
                                 },
                                 modifier = Modifier.weight(1f),
@@ -2210,6 +2270,7 @@ private fun RecentTransactionsCard(
     categories: List<CategoryEntity>,
 ) {
     val categoryNames = categories.associate { it.id to it.name }
+    val categoryById = categories.associateBy { it.id }
 
     DashboardCard(title = "Recent Transactions") {
         if (expenses.isEmpty()) {
@@ -2225,18 +2286,25 @@ private fun RecentTransactionsCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = expense.title,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Text(
-                            text = categoryNames[expense.categoryId] ?: "Other",
-                            color = LocalLedgerColors.current.muted,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        categoryById[expense.categoryId]?.let { CategoryIcon(category = it) }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = expense.title,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Text(
+                                text = categoryNames[expense.categoryId] ?: "Other",
+                                color = LocalLedgerColors.current.muted,
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
                     }
                     Text(
                         text = formatMoney(expense.amountMinor, settings.currencyCode),
@@ -2620,6 +2688,18 @@ private fun parseColorOrDefault(value: String, fallback: Color): Color = runCatc
     Color(android.graphics.Color.parseColor(value))
 }.getOrElse { fallback }
 
+private fun String.toCategoryIconVector(): ImageVector = when (lowercase(Locale.US)) {
+    "restaurant", "food" -> Icons.Outlined.Restaurant
+    "directions", "travel" -> Icons.Outlined.Directions
+    "shopping_bag", "shopping" -> Icons.Outlined.ShoppingBag
+    "receipt", "bills" -> Icons.Outlined.Receipt
+    "school", "education" -> Icons.Outlined.School
+    "movie", "entertainment" -> Icons.Outlined.Movie
+    "local_grocery_store", "groceries" -> Icons.Outlined.LocalGroceryStore
+    "subscriptions", "subscription" -> Icons.Outlined.Subscriptions
+    else -> Icons.Outlined.Category
+}
+
 private fun String.splitThemeName(): String = replace(Regex("(?<=[a-z])(?=[A-Z])"), " ")
 
 private fun String.splitCamelName(): String = replace(Regex("(?<=[a-z])(?=[A-Z])"), " ")
@@ -2938,17 +3018,42 @@ private fun CategoryChip(
         border = BorderStroke(1.dp, if (selected) MaterialTheme.colorScheme.primary else ledgerColors.outline),
         shape = RoundedCornerShape(radius),
     ) {
-        Text(
-            text = category.name,
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 10.dp, vertical = 10.dp),
-            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center,
-        )
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CategoryIcon(
+                category = category,
+                tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(
+                text = category.name,
+                modifier = Modifier.padding(start = 6.dp),
+                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
+}
+
+@Composable
+private fun CategoryIcon(
+    category: CategoryEntity,
+    tint: Color = parseColorOrDefault(category.colorHex, MaterialTheme.colorScheme.primary),
+    modifier: Modifier = Modifier.size(22.dp),
+) {
+    Icon(
+        imageVector = category.iconName.toCategoryIconVector(),
+        contentDescription = category.name,
+        tint = tint,
+        modifier = modifier,
+    )
 }
 
 @Composable
