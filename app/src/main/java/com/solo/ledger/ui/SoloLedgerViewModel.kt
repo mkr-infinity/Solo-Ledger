@@ -62,6 +62,12 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    fun moveExpenseToBin(expenseId: String) {
+        viewModelScope.launch {
+            container.expenseRepository.moveToBin(expenseId, System.currentTimeMillis())
+        }
+    }
+
     fun addExpense(
         title: String,
         amountText: String,

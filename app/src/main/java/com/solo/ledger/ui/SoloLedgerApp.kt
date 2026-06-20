@@ -461,6 +461,7 @@ private fun ScreenShell(
 
         when {
             destination == LedgerDestination.Home && ledgerViewModel != null -> HomeDashboard(ledgerViewModel)
+            destination == LedgerDestination.History && ledgerViewModel != null -> HistoryScreen(ledgerViewModel)
             destination == LedgerDestination.QuickAdd && ledgerViewModel != null -> QuickAddScreen(
                 ledgerViewModel = ledgerViewModel,
                 currencyCode = currencyCode,
@@ -491,6 +492,317 @@ private fun ScreenShell(
             }
             }
         }
+    }
+}
+
+@Composable
+private fun HistoryScreen(ledgerViewModel: SoloLedgerViewModel) {
+    val settings by ledgerViewModel.settings.collectAsState()
+    val expenses by ledgerViewModel.activeExpenses.collectAsState()
+    val categories by ledgerViewModel.categories.collectAsState()
+    val activeSettings = settings ?: return
+    val categoryNames = categories.associate { it.id to it.name }
+    var query by remember { mutableStateOf("") }
+    var selectedCategoryId by remember { mutableStateOf<String?>(null) }
+    var sortOrder by remember { mutableStateOf(HistorySort.NewestFirst) }
+    var expandedId by remember { mutableStateOf<String?>(null) }
+    var message by remember { mutableStateOf<String?>(null) }
+    val filtered = expenses
+        .filter { expense ->
+            val matchesQuery = query.isBlank() ||
+                expense.title.contains(query, ignoreCase = true) ||
+                expense.notes.orEmpty().contains(query, ignoreCase = true) ||
+                categoryNames[expense.categoryId].orEmpty().contains(query, ignoreCase = true)
+            val matchesCategory = selectedCategoryId == null || expense.categoryId == selectedCategoryId
+            matchesQuery && matchesCategory
+        }
+        .let { list ->
+            when (sortOrder) {
+                HistorySort.NewestFirst -> list.sortedWith(compareByDescending<ExpenseEntity> { it.dateEpochDay }.thenByDescending { it.timeMinuteOfDay })
+                HistorySort.OldestFirst -> list.sortedWith(compareBy<ExpenseEntity> { it.dateEpochDay }.thenBy { it.timeMinuteOfDay })
+                HistorySort.HighestAmount -> list.sortedByDescending { it.amountMinor }
+                HistorySort.LowestAmount -> list.sortedBy { it.amountMinor }
+            }
+        }
+    val grouped = filtered.groupBy { it.dateEpochDay }
+
+    Column(
+        modifier = Modifier.verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        DashboardCard(title = "Search And Filter") {
+            LedgerTextField(
+                value = query,
+                onValueChange = { query = it },
+                label = "Search Title, Note, Category",
+                singleLine = true,
+            )
+            HistorySortSelector(selected = sortOrder, onSelected = { sortOrder = it })
+            HistoryCategoryFilter(
+                categories = categories,
+                selectedCategoryId = selectedCategoryId,
+                onSelected = { selectedCategoryId = it },
+            )
+        }
+
+        message?.let { currentMessage ->
+            DashboardCard(title = "History Update") {
+                Text(
+                    text = currentMessage,
+                    color = LocalLedgerColors.current.success,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+
+        if (filtered.isEmpty()) {
+            DashboardCard(title = if (expenses.isEmpty()) "No Expenses" else "No Results") {
+                Text(
+                    text = if (expenses.isEmpty()) {
+                        "Saved expenses appear here grouped by spending date."
+                    } else {
+                        "No transactions match the current search and filters."
+                    },
+                    color = LocalLedgerColors.current.muted,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        } else {
+            grouped.forEach { (epochDay, dayExpenses) ->
+                HistoryDateGroup(
+                    epochDay = epochDay,
+                    expenses = dayExpenses,
+                    currencyCode = activeSettings.currencyCode,
+                    categoryNames = categoryNames,
+                    expandedId = expandedId,
+                    onExpanded = { expenseId -> expandedId = if (expandedId == expenseId) null else expenseId },
+                    onDelete = { expenseId ->
+                        ledgerViewModel.moveExpenseToBin(expenseId)
+                        expandedId = null
+                        message = "Transaction moved to Bin."
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistorySortSelector(
+    selected: HistorySort,
+    onSelected: (HistorySort) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "Sort",
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+        )
+        HistorySort.entries.chunked(2).forEach { rowItems ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                rowItems.forEach { sort ->
+                    SelectionChip(
+                        text = sort.label,
+                        selected = selected == sort,
+                        onClick = { onSelected(sort) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                repeat(2 - rowItems.size) { Box(modifier = Modifier.weight(1f)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryCategoryFilter(
+    categories: List<CategoryEntity>,
+    selectedCategoryId: String?,
+    onSelected: (String?) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "Filter",
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+        )
+        SelectionChip(
+            text = "All Categories",
+            selected = selectedCategoryId == null,
+            onClick = { onSelected(null) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        categories.chunked(3).forEach { rowCategories ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                rowCategories.forEach { category ->
+                    SelectionChip(
+                        text = category.name,
+                        selected = selectedCategoryId == category.id,
+                        onClick = { onSelected(category.id) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                repeat(3 - rowCategories.size) { Box(modifier = Modifier.weight(1f)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryDateGroup(
+    epochDay: Long,
+    expenses: List<ExpenseEntity>,
+    currencyCode: String,
+    categoryNames: Map<String, String>,
+    expandedId: String?,
+    onExpanded: (String) -> Unit,
+    onDelete: (String) -> Unit,
+) {
+    DashboardCard(title = formatDate(epochDay)) {
+        expenses.forEach { expense ->
+            HistoryExpenseCard(
+                expense = expense,
+                currencyCode = currencyCode,
+                categoryName = categoryNames[expense.categoryId] ?: "Other",
+                expanded = expandedId == expense.id,
+                onExpanded = { onExpanded(expense.id) },
+                onDelete = { onDelete(expense.id) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun HistoryExpenseCard(
+    expense: ExpenseEntity,
+    currencyCode: String,
+    categoryName: String,
+    expanded: Boolean,
+    onExpanded: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    val ledgerColors = LocalLedgerColors.current
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(22.dp))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onExpanded,
+            ),
+        colors = CardDefaults.cardColors(containerColor = ledgerColors.surface),
+        border = BorderStroke(1.dp, ledgerColors.outline),
+        shape = RoundedCornerShape(22.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = expense.title,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = "$categoryName - ${formatTime(expense.timeMinuteOfDay)}",
+                        color = ledgerColors.muted,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Text(
+                    text = formatMoney(expense.amountMinor, currencyCode),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+
+            AnimatedVisibility(visible = expanded) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DetailLine(label = "Amount", value = formatMoney(expense.amountMinor, currencyCode))
+                    DetailLine(label = "Category", value = categoryName)
+                    DetailLine(label = "Date", value = formatDate(expense.dateEpochDay))
+                    DetailLine(label = "Time", value = formatTime(expense.timeMinuteOfDay))
+                    DetailLine(label = "Notes", value = expense.notes ?: "No notes")
+                    DetailLine(label = "Attachment", value = if (expense.attachmentPath == null) "No attachment" else "Saved locally")
+                    TextButton(
+                        onClick = onDelete,
+                        colors = ButtonDefaults.textButtonColors(contentColor = ledgerColors.error),
+                    ) {
+                        Text(text = "Move To Bin")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DetailLine(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = label,
+            color = LocalLedgerColors.current.muted,
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Text(
+            text = value,
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun SelectionChip(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val ledgerColors = LocalLedgerColors.current
+
+    Card(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) ledgerColors.navSelected else ledgerColors.surface,
+        ),
+        border = BorderStroke(1.dp, if (selected) MaterialTheme.colorScheme.primary else ledgerColors.outline),
+        shape = RoundedCornerShape(16.dp),
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 10.dp),
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
@@ -850,12 +1162,27 @@ private fun currentMonthExpenses(expenses: List<ExpenseEntity>): List<ExpenseEnt
     return expenses.filter { it.dateEpochDay in start..end }
 }
 
+private fun formatDate(epochDay: Long): String = LocalDate.ofEpochDay(epochDay).toString()
+
+private fun formatTime(minuteOfDay: Int): String {
+    val hour = minuteOfDay / 60
+    val minute = minuteOfDay % 60
+    return String.format(Locale.US, "%02d:%02d", hour, minute)
+}
+
 private fun formatMoney(minor: Long, currencyCode: String): String = runCatching {
     NumberFormat.getCurrencyInstance().apply {
         currency = Currency.getInstance(currencyCode)
     }.format(minor / 100.0)
 }.getOrElse {
     "$currencyCode ${String.format(Locale.US, "%.2f", minor / 100.0)}"
+}
+
+private enum class HistorySort(val label: String) {
+    NewestFirst("Newest First"),
+    OldestFirst("Oldest First"),
+    HighestAmount("Highest Amount"),
+    LowestAmount("Lowest Amount"),
 }
 
 @Composable
