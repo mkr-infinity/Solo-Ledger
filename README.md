@@ -33,7 +33,7 @@ The theme scaffold includes:
 
 ## Status
 
-Current slice: Analytics visuals, local image previews, and reduced-motion behavior.
+Current slice: CI APK signing polish, empty-state illustrations, support actions, and calendar date analytics.
 
 Implemented foundations:
 
@@ -60,5 +60,9 @@ Implemented foundations:
 21. Donut and line chart visuals for category and monthly analytics
 22. Local avatar and receipt or bill image previews
 23. Reduced-motion main navigation transitions
+24. GitHub Actions signed debug APK artifact with temporary CI signing key
+25. Custom SVG empty states for no expenses, no results, and no data
+26. Calendar date detail category breakdown from local expense data
+27. Clickable support and Architect links
 
-Next slice: broader accessibility polish, local attachment management, and export refinements.
+Next slice: broader accessibility polish, local attachment management, and final PRD hardening.

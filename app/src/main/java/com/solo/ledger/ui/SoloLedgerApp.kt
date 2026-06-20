@@ -1,6 +1,7 @@
 package com.solo.ledger.ui
 
 import android.graphics.BitmapFactory
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -77,6 +78,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -939,11 +941,11 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
 
         DashboardCard(title = "Support") {
             Text(text = "Support This Project", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
-            Text(text = "https://buymeacoffee.com/mkr_infinity", color = LocalLedgerColors.current.muted)
+            ExternalLinkText(text = "https://buymeacoffee.com/mkr_infinity")
             Text(text = "Request Feature", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
-            Text(text = "https://github.com/mkr-infinity/Solo-Ledger", color = LocalLedgerColors.current.muted)
+            ExternalLinkText(text = "https://github.com/mkr-infinity/Solo-Ledger")
             Text(text = "Report Bug", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
-            Text(text = "https://github.com/mkr-infinity/Solo-Ledger", color = LocalLedgerColors.current.muted)
+            ExternalLinkText(text = "https://github.com/mkr-infinity/Solo-Ledger")
         }
 
         DashboardCard(title = "The Architect") {
@@ -956,10 +958,10 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
             AnimatedVisibility(visible = architectExpanded) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(text = "Mohammad Kaif Raja", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
-                    Text(text = "GitHub: https://github.com/mkr-infinity", color = LocalLedgerColors.current.muted)
-                    Text(text = "Website: https://mkr-infinity.github.io/", color = LocalLedgerColors.current.muted)
-                    Text(text = "Instagram: https://instagram.com/mkr_infinity", color = LocalLedgerColors.current.muted)
-                    Text(text = "Telegram: https://t.me/mkr_infinity", color = LocalLedgerColors.current.muted)
+                    ExternalLinkText(text = "GitHub: https://github.com/mkr-infinity", url = "https://github.com/mkr-infinity")
+                    ExternalLinkText(text = "Website: https://mkr-infinity.github.io/", url = "https://mkr-infinity.github.io/")
+                    ExternalLinkText(text = "Instagram: https://instagram.com/mkr_infinity", url = "https://instagram.com/mkr_infinity")
+                    ExternalLinkText(text = "Telegram: https://t.me/mkr_infinity", url = "https://t.me/mkr_infinity")
                 }
             }
         }
@@ -992,6 +994,27 @@ private fun ComingSoonCard(title: String) {
             fontWeight = FontWeight.SemiBold,
         )
     }
+}
+
+@Composable
+private fun ExternalLinkText(
+    text: String,
+    url: String = text,
+) {
+    val context = LocalContext.current
+    Text(
+        text = text,
+        color = LocalLedgerColors.current.muted,
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null,
+            onClick = {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                runCatching { context.startActivity(intent) }
+            },
+        ),
+    )
 }
 
 @Composable
@@ -1251,18 +1274,37 @@ private fun CalendarDateDetail(
         )
         MetricBlock(label = "Total", value = formatMoney(expenses.sumOf { it.amountMinor }, currencyCode))
         if (expenses.isEmpty()) {
-            Text(
-                text = "No expenses saved for this date.",
-                color = LocalLedgerColors.current.muted,
-                style = MaterialTheme.typography.bodyMedium,
+            EmptyState(
+                illustrationRes = R.drawable.empty_data,
+                title = "No Data",
+                body = "No expenses saved for this date.",
             )
         } else {
+            val totals = expenses.groupBy { it.categoryId }.mapValues { entry -> entry.value.sumOf { it.amountMinor } }
+            val maxAmount = totals.values.maxOrNull()?.coerceAtLeast(1L) ?: 1L
             expenses.forEach { expense ->
                 Text(
                     text = "${expense.title} - ${categoryNames[expense.categoryId] ?: "Other"} - ${formatMoney(expense.amountMinor, currencyCode)}",
                     color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
+                )
+            }
+            Text(
+                text = "Date Category Breakdown",
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+            )
+            totals.entries.sortedByDescending { it.value }.forEach { (categoryId, amount) ->
+                Text(
+                    text = "${categoryNames[categoryId] ?: "Other"} - ${formatMoney(amount, currencyCode)}",
+                    color = LocalLedgerColors.current.muted,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                AmountBar(
+                    progress = (amount.toFloat() / maxAmount.toFloat()).coerceIn(0f, 1f),
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -1352,14 +1394,14 @@ private fun HistoryScreen(ledgerViewModel: SoloLedgerViewModel) {
 
         if (filtered.isEmpty()) {
             DashboardCard(title = if (expenses.isEmpty()) "No Expenses" else "No Results") {
-                Text(
-                    text = if (expenses.isEmpty()) {
+                EmptyState(
+                    illustrationRes = if (expenses.isEmpty()) R.drawable.empty_expenses else R.drawable.empty_results,
+                    title = if (expenses.isEmpty()) "No Expenses" else "No Results",
+                    body = if (expenses.isEmpty()) {
                         "Saved expenses appear here grouped by spending date."
                     } else {
                         "No transactions match the current search and filters."
                     },
-                    color = LocalLedgerColors.current.muted,
-                    style = MaterialTheme.typography.bodyMedium,
                 )
             }
         } else {
@@ -1425,10 +1467,10 @@ private fun BinSection(
 ) {
     DashboardCard(title = "Bin") {
         if (deletedExpenses.isEmpty()) {
-            Text(
-                text = "Deleted transactions appear here before permanent removal.",
-                color = LocalLedgerColors.current.muted,
-                style = MaterialTheme.typography.bodyMedium,
+            EmptyState(
+                illustrationRes = R.drawable.empty_data,
+                title = "No Data",
+                body = "Deleted transactions appear here before permanent removal.",
             )
         } else {
             TextButton(
@@ -1851,10 +1893,10 @@ private fun HomeDashboard(ledgerViewModel: SoloLedgerViewModel) {
     ) {
         if (widgets.isEmpty()) {
             DashboardCard(title = "Dashboard Hidden") {
-                Text(
-                    text = "All dashboard sections are hidden in settings.",
-                    color = LocalLedgerColors.current.muted,
-                    style = MaterialTheme.typography.bodyMedium,
+                EmptyState(
+                    illustrationRes = R.drawable.empty_data,
+                    title = "No Data",
+                    body = "All dashboard sections are hidden in settings.",
                 )
             }
         }
@@ -1928,11 +1970,19 @@ private fun DailySpendingCard(settings: UserSettings, expenses: List<ExpenseEnti
 
     DashboardCard(title = "Daily Spending") {
         MetricBlock(label = "Today", value = formatMoney(todaySpent, settings.currencyCode))
-        Text(
-            text = if (todaySpent == 0L) "No spending recorded today." else "Today has saved expense activity.",
-            color = LocalLedgerColors.current.muted,
-            style = MaterialTheme.typography.bodyMedium,
-        )
+        if (todaySpent == 0L) {
+            EmptyState(
+                illustrationRes = R.drawable.empty_data,
+                title = "No Data",
+                body = "No spending recorded today.",
+            )
+        } else {
+            Text(
+                text = "Today has saved expense activity.",
+                color = LocalLedgerColors.current.muted,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
     }
 }
 
@@ -2163,10 +2213,10 @@ private fun RecentTransactionsCard(
 
     DashboardCard(title = "Recent Transactions") {
         if (expenses.isEmpty()) {
-            Text(
-                text = "No expenses saved yet.",
-                color = LocalLedgerColors.current.muted,
-                style = MaterialTheme.typography.bodyMedium,
+            EmptyState(
+                illustrationRes = R.drawable.empty_expenses,
+                title = "No Expenses",
+                body = "No expenses saved yet.",
             )
         } else {
             expenses.take(5).forEach { expense ->
@@ -2214,10 +2264,10 @@ private fun CategoryBreakdownCard(
 
     DashboardCard(title = "Category Breakdown") {
         if (expenses.isEmpty()) {
-            Text(
-                text = "Category spending appears after expenses are saved.",
-                color = LocalLedgerColors.current.muted,
-                style = MaterialTheme.typography.bodyMedium,
+            EmptyState(
+                illustrationRes = R.drawable.empty_data,
+                title = "No Data",
+                body = "Category spending appears after expenses are saved.",
             )
         } else {
             DonutChart(
@@ -2410,6 +2460,41 @@ private fun LocalImagePreview(path: String?, label: String) {
                     .clip(RoundedCornerShape(radius)),
             )
         }
+    }
+}
+
+@Composable
+private fun EmptyState(
+    illustrationRes: Int,
+    title: String,
+    body: String,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Image(
+            painter = painterResource(illustrationRes),
+            contentDescription = title,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(128.dp)
+                .padding(horizontal = 16.dp),
+        )
+        Text(
+            text = title,
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = body,
+            color = LocalLedgerColors.current.muted,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
