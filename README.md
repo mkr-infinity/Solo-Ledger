@@ -33,7 +33,7 @@ The theme scaffold includes:
 
 ## Status
 
-Current slice: JSON data import/export foundation.
+Current slice: Expense editing backed by local data.
 
 Implemented foundations:
 
@@ -51,5 +51,6 @@ Implemented foundations:
 12. Settings screen with profile, theme, dashboard controls, coming-soon cards, support, and Architect details
 13. Category management with add, edit, archive, icon name, and color assignment
 14. App-private JSON export/import for categories, expenses, and savings goals
+15. Transaction editing from History with local Room updates
 
 Next slice: Quick Add field visibility controls and form behavior.

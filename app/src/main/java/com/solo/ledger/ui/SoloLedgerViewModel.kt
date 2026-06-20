@@ -336,6 +336,45 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    fun updateExpense(
+        expense: ExpenseEntity,
+        title: String,
+        amountText: String,
+        categoryId: String,
+        dateText: String,
+        timeText: String,
+        notes: String,
+        onSaved: () -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        val cleanTitle = title.trim()
+        val amountMinor = amountText.toMinorAmount()
+        val date = runCatching { LocalDate.parse(dateText.trim()) }.getOrNull()
+        val time = runCatching { LocalTime.parse(timeText.trim()) }.getOrNull()
+
+        when {
+            cleanTitle.isBlank() -> onError("Enter an expense title.")
+            amountMinor == null || amountMinor <= 0L -> onError("Enter a valid amount.")
+            categoryId.isBlank() -> onError("Choose a category.")
+            date == null -> onError("Use date format YYYY-MM-DD.")
+            time == null -> onError("Use time format HH:MM.")
+            else -> viewModelScope.launch {
+                container.expenseRepository.upsert(
+                    expense.copy(
+                        title = cleanTitle,
+                        amountMinor = amountMinor,
+                        categoryId = categoryId,
+                        dateEpochDay = date.toEpochDay(),
+                        timeMinuteOfDay = time.hour * 60 + time.minute,
+                        notes = notes.trim().ifBlank { null },
+                        updatedAtMillis = System.currentTimeMillis(),
+                    ),
+                )
+                onSaved()
+            }
+        }
+    }
+
     private fun String.toMinorAmount(): Long? = runCatching {
         BigDecimal(trim())
             .movePointRight(2)

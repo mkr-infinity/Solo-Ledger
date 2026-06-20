@@ -1158,8 +1158,22 @@ private fun HistoryScreen(ledgerViewModel: SoloLedgerViewModel) {
                     expenses = dayExpenses,
                     currencyCode = activeSettings.currencyCode,
                     categoryNames = categoryNames,
+                    categories = categories,
                     expandedId = expandedId,
                     onExpanded = { expenseId -> expandedId = if (expandedId == expenseId) null else expenseId },
+                    onSave = { expense, title, amount, categoryId, date, time, notes ->
+                        ledgerViewModel.updateExpense(
+                            expense = expense,
+                            title = title,
+                            amountText = amount,
+                            categoryId = categoryId,
+                            dateText = date,
+                            timeText = time,
+                            notes = notes,
+                            onSaved = { message = "Transaction updated." },
+                            onError = { message = it },
+                        )
+                    },
                     onDelete = { expenseId ->
                         ledgerViewModel.moveExpenseToBin(expenseId)
                         expandedId = null
@@ -1363,8 +1377,10 @@ private fun HistoryDateGroup(
     expenses: List<ExpenseEntity>,
     currencyCode: String,
     categoryNames: Map<String, String>,
+    categories: List<CategoryEntity>,
     expandedId: String?,
     onExpanded: (String) -> Unit,
+    onSave: (ExpenseEntity, String, String, String, String, String, String) -> Unit,
     onDelete: (String) -> Unit,
 ) {
     DashboardCard(title = formatDate(epochDay)) {
@@ -1373,8 +1389,12 @@ private fun HistoryDateGroup(
                 expense = expense,
                 currencyCode = currencyCode,
                 categoryName = categoryNames[expense.categoryId] ?: "Other",
+                categories = categories,
                 expanded = expandedId == expense.id,
                 onExpanded = { onExpanded(expense.id) },
+                onSave = { title, amount, categoryId, date, time, notes ->
+                    onSave(expense, title, amount, categoryId, date, time, notes)
+                },
                 onDelete = { onDelete(expense.id) },
             )
         }
@@ -1386,11 +1406,20 @@ private fun HistoryExpenseCard(
     expense: ExpenseEntity,
     currencyCode: String,
     categoryName: String,
+    categories: List<CategoryEntity>,
     expanded: Boolean,
     onExpanded: () -> Unit,
+    onSave: (String, String, String, String, String, String) -> Unit,
     onDelete: () -> Unit,
 ) {
     val ledgerColors = LocalLedgerColors.current
+    var editing by remember(expense.id) { mutableStateOf(false) }
+    var editTitle by remember(expense.id, expense.updatedAtMillis) { mutableStateOf(expense.title) }
+    var editAmount by remember(expense.id, expense.updatedAtMillis) { mutableStateOf((expense.amountMinor / 100.0).toString()) }
+    var editCategoryId by remember(expense.id, expense.updatedAtMillis) { mutableStateOf(expense.categoryId) }
+    var editDate by remember(expense.id, expense.updatedAtMillis) { mutableStateOf(formatDate(expense.dateEpochDay)) }
+    var editTime by remember(expense.id, expense.updatedAtMillis) { mutableStateOf(formatTime(expense.timeMinuteOfDay)) }
+    var editNotes by remember(expense.id, expense.updatedAtMillis) { mutableStateOf(expense.notes.orEmpty()) }
 
     Card(
         modifier = Modifier
@@ -1437,17 +1466,95 @@ private fun HistoryExpenseCard(
 
             AnimatedVisibility(visible = expanded) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DetailLine(label = "Amount", value = formatMoney(expense.amountMinor, currencyCode))
-                    DetailLine(label = "Category", value = categoryName)
-                    DetailLine(label = "Date", value = formatDate(expense.dateEpochDay))
-                    DetailLine(label = "Time", value = formatTime(expense.timeMinuteOfDay))
-                    DetailLine(label = "Notes", value = expense.notes ?: "No notes")
-                    DetailLine(label = "Attachment", value = if (expense.attachmentPath == null) "No attachment" else "Saved locally")
-                    TextButton(
-                        onClick = onDelete,
-                        colors = ButtonDefaults.textButtonColors(contentColor = ledgerColors.error),
-                    ) {
-                        Text(text = "Move To Bin")
+                    if (editing) {
+                        LedgerTextField(
+                            value = editTitle,
+                            onValueChange = { editTitle = it },
+                            label = "Title",
+                            singleLine = true,
+                        )
+                        LedgerTextField(
+                            value = editAmount,
+                            onValueChange = { editAmount = cleanAmountInput(it) },
+                            label = "Amount $currencyCode",
+                            singleLine = true,
+                            keyboardType = KeyboardType.Decimal,
+                        )
+                        CategorySelector(
+                            categories = categories,
+                            selectedCategoryId = editCategoryId,
+                            onSelected = { editCategoryId = it },
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            LedgerTextField(
+                                value = editDate,
+                                onValueChange = { editDate = it },
+                                label = "Date",
+                                singleLine = true,
+                                modifier = Modifier.weight(1f),
+                            )
+                            LedgerTextField(
+                                value = editTime,
+                                onValueChange = { editTime = it },
+                                label = "Time",
+                                singleLine = true,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        LedgerTextField(
+                            value = editNotes,
+                            onValueChange = { editNotes = it },
+                            label = "Notes",
+                            minLines = 2,
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Button(
+                                onClick = {
+                                    onSave(editTitle, editAmount, editCategoryId, editDate, editTime, editNotes)
+                                    editing = false
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = Color.White,
+                                ),
+                            ) {
+                                Text(text = "Save")
+                            }
+                            OutlinedButton(
+                                onClick = { editing = false },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(16.dp),
+                                border = BorderStroke(1.dp, ledgerColors.outline),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = ledgerColors.muted),
+                            ) {
+                                Text(text = "Cancel")
+                            }
+                        }
+                    } else {
+                        DetailLine(label = "Amount", value = formatMoney(expense.amountMinor, currencyCode))
+                        DetailLine(label = "Category", value = categoryName)
+                        DetailLine(label = "Date", value = formatDate(expense.dateEpochDay))
+                        DetailLine(label = "Time", value = formatTime(expense.timeMinuteOfDay))
+                        DetailLine(label = "Notes", value = expense.notes ?: "No notes")
+                        DetailLine(label = "Attachment", value = if (expense.attachmentPath == null) "No attachment" else "Saved locally")
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            TextButton(
+                                onClick = { editing = true },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                            ) {
+                                Text(text = "Edit")
+                            }
+                            TextButton(
+                                onClick = onDelete,
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.textButtonColors(contentColor = ledgerColors.error),
+                            ) {
+                                Text(text = "Move To Bin")
+                            }
+                        }
                     }
                 }
             }
