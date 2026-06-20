@@ -33,7 +33,7 @@ The theme scaffold includes:
 
 ## Status
 
-Current slice: Category icon rendering and attachment editing for expense-only transactions.
+Current slice: Final motion, disabled-state, and asset wiring hardening.
 
 Implemented foundations:
 
@@ -66,5 +66,8 @@ Implemented foundations:
 27. Clickable support and Architect links
 28. Assigned category icons rendered across filters, chips, lists, and category management
 29. Expense attachment replacement and removal from History edit mode
+30. Reduced-motion onboarding and navigation label transitions
+31. Visibly disabled Coming Soon cards
+32. Provided transparent README mark and green app icon assets wired without modification
 
-Next slice: final accessibility polish and production hardening.
+Next slice: GitHub Actions APK validation after CI run.

@@ -150,6 +150,7 @@ fun SoloLedgerApp(ledgerViewModel: SoloLedgerViewModel = viewModel()) {
             ) {
                 composable(AppRoute.Onboarding.route) {
                     OnboardingScreen(
+                        reducedMotion = activeSettings.reducedMotion || !activeSettings.animationsEnabled,
                         onSkip = {
                             ledgerViewModel.completeOnboarding(null)
                             navController.navigate(AppRoute.Main.route) {
@@ -198,6 +199,7 @@ private fun LoadingSurface() {
 
 @Composable
 private fun OnboardingScreen(
+    reducedMotion: Boolean,
     onSkip: () -> Unit,
     onComplete: (BudgetTemplate) -> Unit,
 ) {
@@ -238,8 +240,12 @@ private fun OnboardingScreen(
         AnimatedContent(
             targetState = page,
             transitionSpec = {
-                (fadeIn(spring()) + scaleIn(initialScale = 0.96f)) togetherWith
-                    (fadeOut(spring()) + scaleOut(targetScale = 0.96f))
+                if (reducedMotion) {
+                    fadeIn() togetherWith fadeOut()
+                } else {
+                    (fadeIn(spring()) + scaleIn(initialScale = 0.96f)) togetherWith
+                        (fadeOut(spring()) + scaleOut(targetScale = 0.96f))
+                }
             },
             label = "onboarding-page",
         ) { activePage ->
@@ -441,6 +447,7 @@ private fun MainLedgerShell(
             LedgerBottomBar(
                 selected = selectedTab,
                 onSelected = { selectedTab = it },
+                reducedMotion = reducedMotion,
             )
         },
     ) { innerPadding ->
@@ -992,16 +999,23 @@ private fun ComingSoonCard(title: String) {
     ) {
         Text(
             text = title,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = ledgerColors.muted,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold,
         )
-        Text(
-            text = "COMING SOON",
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold,
-        )
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(999.dp))
+                .background(ledgerColors.card)
+                .padding(horizontal = 10.dp, vertical = 5.dp),
+        ) {
+            Text(
+                text = "COMING SOON",
+                color = ledgerColors.muted,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
     }
 }
 
@@ -3075,6 +3089,7 @@ private fun QuickAddButton(onClick: () -> Unit) {
 private fun LedgerBottomBar(
     selected: LedgerDestination,
     onSelected: (LedgerDestination) -> Unit,
+    reducedMotion: Boolean,
 ) {
     val ledgerColors = LocalLedgerColors.current
     val destinations = LedgerDestination.entries.filterNot { it == LedgerDestination.QuickAdd }
@@ -3095,6 +3110,7 @@ private fun LedgerBottomBar(
                 destination = destination,
                 selected = destination == selected,
                 onClick = { onSelected(destination) },
+                reducedMotion = reducedMotion,
             )
         }
     }
@@ -3105,6 +3121,7 @@ private fun LedgerNavItem(
     destination: LedgerDestination,
     selected: Boolean,
     onClick: () -> Unit,
+    reducedMotion: Boolean,
 ) {
     val ledgerColors = LocalLedgerColors.current
 
@@ -3129,8 +3146,8 @@ private fun LedgerNavItem(
         )
         AnimatedVisibility(
             visible = selected,
-            enter = fadeIn() + scaleIn(initialScale = 0.92f),
-            exit = fadeOut() + scaleOut(targetScale = 0.92f),
+            enter = if (reducedMotion) fadeIn() else fadeIn() + scaleIn(initialScale = 0.92f),
+            exit = if (reducedMotion) fadeOut() else fadeOut() + scaleOut(targetScale = 0.92f),
         ) {
             Text(
                 text = destination.title,
