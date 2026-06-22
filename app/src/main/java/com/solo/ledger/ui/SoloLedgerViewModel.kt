@@ -47,6 +47,12 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         initialValue = emptyList(),
     )
 
+    val allCategories: StateFlow<List<CategoryEntity>> = container.categoryRepository.observeAllCategories().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = emptyList(),
+    )
+
     val activeExpenses: StateFlow<List<ExpenseEntity>> = container.expenseRepository.observeActiveExpenses().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -248,7 +254,7 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         val cleanIcon = iconName.trim().ifBlank { "category" }
         val cleanColor = colorHex.trim().uppercase()
         val validColor = Regex("^#[0-9A-F]{6}$").matches(cleanColor)
-        val duplicateName = categories.value.firstOrNull {
+        val duplicateName = allCategories.value.firstOrNull {
             it.name.equals(cleanName, ignoreCase = true) && it.id != existing?.id
         }
 
