@@ -637,10 +637,6 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
 
                 if (attachmentUri != null && nextAttachmentPath == null) return@launch
 
-                if (attachmentUri != null && previousAttachmentPath != null && previousAttachmentPath != nextAttachmentPath) {
-                    deleteLocalFile(previousAttachmentPath)
-                }
-
                 container.expenseRepository.upsert(
                     expense.copy(
                         title = cleanTitle,
