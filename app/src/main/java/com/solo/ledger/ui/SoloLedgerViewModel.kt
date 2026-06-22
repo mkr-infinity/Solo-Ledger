@@ -4,6 +4,7 @@ import android.app.Application
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
+import android.provider.OpenableColumns
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.solo.ledger.SoloLedgerApplication
@@ -309,6 +310,27 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    fun exportJsonToUri(uri: Uri, onDone: (String) -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val app = getApplication<SoloLedgerApplication>()
+                    val payload = JSONObject()
+                        .put("version", 1)
+                        .put("exportedAtMillis", System.currentTimeMillis())
+                        .put("categories", categories.value.toCategoryJson())
+                        .put("expenses", (activeExpenses.value + deletedExpenses.value).toExpenseJson())
+                        .put("savingsGoals", activeGoals.value.toGoalJson())
+                    app.contentResolver.openOutputStream(uri, "wt")?.use { output ->
+                        output.write(payload.toString(2).toByteArray())
+                    } ?: error("Unable to open export destination.")
+                    resolveDisplayName(uri) ?: "solo-ledger-export.json"
+                }
+            }
+            result.onSuccess { onDone("Exported JSON to $it") }.onFailure { onError(it.message ?: "JSON export failed.") }
+        }
+    }
+
     fun exportPdf(onDone: (String) -> Unit) {
         viewModelScope.launch {
             val path = withContext(Dispatchers.IO) {
@@ -373,6 +395,71 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    fun exportPdfToUri(uri: Uri, onDone: (String) -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val app = getApplication<SoloLedgerApplication>()
+                    val currentSettings = settings.value
+                    val active = activeExpenses.value
+                    val deleted = deletedExpenses.value
+                    val goals = activeGoals.value
+                    val categoryNames = categories.value.associate { it.id to it.name }
+                    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+                    val titlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        textSize = 22f
+                        isFakeBoldText = true
+                    }
+                    val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = 13f }
+                    val document = PdfDocument()
+                    val page = document.startPage(PdfDocument.PageInfo.Builder(595, 842, 1).create())
+                    val canvas = page.canvas
+                    var y = 56f
+
+                    canvas.drawText("Solo Ledger Offline Report", 40f, y, titlePaint)
+                    y += 34f
+                    paint.textSize = 15f
+                    canvas.drawText("Profile: ${currentSettings?.name?.ifBlank { "Local User" } ?: "Local User"}", 40f, y, paint)
+                    y += 24f
+                    canvas.drawText("Currency: ${currentSettings?.currencyCode ?: "INR"}", 40f, y, paint)
+                    y += 24f
+                    canvas.drawText("Active expenses: ${active.size}", 40f, y, paint)
+                    y += 24f
+                    canvas.drawText("Deleted expenses in bin: ${deleted.size}", 40f, y, paint)
+                    y += 30f
+                    canvas.drawText("Recent Transactions", 40f, y, titlePaint)
+                    y += 26f
+
+                    active.take(16).forEach { expense ->
+                        val date = LocalDate.ofEpochDay(expense.dateEpochDay).toString()
+                        val amount = formatMinorForExport(expense.amountMinor, expense.currencyCode)
+                        val category = categoryNames[expense.categoryId] ?: "Other"
+                        canvas.drawText("$date  $amount  $category  ${expense.title}".take(86), 40f, y, labelPaint)
+                        y += 18f
+                    }
+
+                    y += 16f
+                    canvas.drawText("Savings Goals", 40f, y, titlePaint)
+                    y += 26f
+                    goals.take(8).forEach { goal ->
+                        val saved = formatMinorForExport(goal.savedAmountMinor, goal.currencyCode)
+                        val target = formatMinorForExport(goal.targetAmountMinor, goal.currencyCode)
+                        canvas.drawText("${goal.title}: $saved saved of $target".take(86), 40f, y, labelPaint)
+                        y += 18f
+                    }
+
+                    document.finishPage(page)
+                    app.contentResolver.openOutputStream(uri, "wt")?.use { output ->
+                        document.writeTo(output)
+                    } ?: error("Unable to open export destination.")
+                    document.close()
+                    resolveDisplayName(uri) ?: "solo-ledger-report.pdf"
+                }
+            }
+            result.onSuccess { onDone("Exported PDF to $it") }.onFailure { onError(it.message ?: "PDF export failed.") }
+        }
+    }
+
     fun importJson(onDone: (String) -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) {
@@ -403,6 +490,38 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
             }
 
             result.onSuccess(onDone).onFailure { onError(it.message ?: "JSON import failed.") }
+        }
+    }
+
+    fun importJsonFromUri(uri: Uri, onDone: (String) -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val app = getApplication<SoloLedgerApplication>()
+                    val payload = app.contentResolver.openInputStream(uri)?.use { input ->
+                        JSONObject(input.bufferedReader().readText())
+                    } ?: error("Unable to open selected JSON file.")
+
+                    payload.optJSONArray("categories")?.let { categoriesJson ->
+                        for (index in 0 until categoriesJson.length()) {
+                            container.categoryRepository.upsert(categoriesJson.getJSONObject(index).toCategoryEntity())
+                        }
+                    }
+                    payload.optJSONArray("expenses")?.let { expensesJson ->
+                        for (index in 0 until expensesJson.length()) {
+                            container.expenseRepository.upsert(expensesJson.getJSONObject(index).toExpenseEntity())
+                        }
+                    }
+                    payload.optJSONArray("savingsGoals")?.let { goalsJson ->
+                        for (index in 0 until goalsJson.length()) {
+                            container.goalRepository.upsert(goalsJson.getJSONObject(index).toSavingsGoalEntity())
+                        }
+                    }
+
+                    resolveDisplayName(uri) ?: "selected JSON file"
+                }
+            }
+            result.onSuccess { onDone("Imported JSON from $it") }.onFailure { onError(it.message ?: "JSON import failed.") }
         }
     }
 
@@ -559,6 +678,17 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         withContext(Dispatchers.IO) {
             runCatching { File(path).delete() }
         }
+    }
+
+    private fun resolveDisplayName(uri: Uri): String? {
+        val app = getApplication<SoloLedgerApplication>()
+        return runCatching {
+            app.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+                ?.use { cursor ->
+                    val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (index >= 0 && cursor.moveToFirst()) cursor.getString(index) else null
+                }
+        }.getOrNull()
     }
 }
 

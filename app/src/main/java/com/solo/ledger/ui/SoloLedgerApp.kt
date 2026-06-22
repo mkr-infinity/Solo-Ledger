@@ -99,6 +99,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
+import androidx.activity.result.contract.ActivityResultContracts.OpenDocument
 import com.solo.ledger.R
 import com.solo.ledger.data.local.entity.CategoryEntity
 import com.solo.ledger.data.local.entity.ExpenseEntity
@@ -566,6 +568,15 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
         selectedAvatarUri = uri
         if (uri != null) useSvgAvatar = false
     }
+    val jsonExportPicker = rememberLauncherForActivityResult(CreateDocument("application/json")) { uri ->
+        uri?.let { ledgerViewModel.exportJsonToUri(it, onDone = { message = it }, onError = { message = it }) }
+    }
+    val jsonImportPicker = rememberLauncherForActivityResult(OpenDocument()) { uri ->
+        uri?.let { ledgerViewModel.importJsonFromUri(it, onDone = { message = it }, onError = { message = it }) }
+    }
+    val pdfExportPicker = rememberLauncherForActivityResult(CreateDocument("application/pdf")) { uri ->
+        uri?.let { ledgerViewModel.exportPdfToUri(it, onDone = { message = it }, onError = { message = it }) }
+    }
 
     Column(
         modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -969,7 +980,7 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Button(
-                    onClick = { ledgerViewModel.exportJson { message = it } },
+                    onClick = { jsonExportPicker.launch("solo-ledger-export.json") },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(18.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -980,7 +991,7 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
                     Text(text = "Export JSON")
                 }
                 OutlinedButton(
-                    onClick = { ledgerViewModel.importJson(onDone = { message = it }, onError = { message = it }) },
+                    onClick = { jsonImportPicker.launch(arrayOf("application/json")) },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(18.dp),
                     border = BorderStroke(1.dp, LocalLedgerColors.current.outline),
@@ -990,7 +1001,7 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
                 }
             }
             Button(
-                onClick = { ledgerViewModel.exportPdf { message = it } },
+                onClick = { pdfExportPicker.launch("solo-ledger-report.pdf") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
                 colors = ButtonDefaults.buttonColors(
