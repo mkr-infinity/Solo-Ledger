@@ -2044,6 +2044,9 @@ private fun HomeDashboard(ledgerViewModel: SoloLedgerViewModel) {
         if (DashboardWidget.DailySpending in widgets) {
             DailySpendingCard(settings = activeSettings, expenses = expenses)
         }
+        if (DashboardWidget.Insights in widgets) {
+            YearlySpendingCard(settings = activeSettings, expenses = expenses)
+        }
         if (DashboardWidget.SavingsGoalProgress in widgets) {
             SavingsGoalCard(
                 settings = activeSettings,
@@ -2452,6 +2455,30 @@ private fun RecentTransactionsCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun YearlySpendingCard(settings: UserSettings, expenses: List<ExpenseEntity>) {
+    val currentYear = java.time.Year.now().value
+    val yearlyExpenses = expenses.filter { LocalDate.ofEpochDay(it.dateEpochDay).year == currentYear }
+    val months = (1..12).map { month ->
+        yearlyExpenses.filter { expense -> LocalDate.ofEpochDay(expense.dateEpochDay).monthValue == month }
+            .sumOf { it.amountMinor }
+    }
+
+    DashboardCard(title = "Yearly Spending") {
+        Text(
+            text = currentYear.toString(),
+            color = LocalLedgerColors.current.muted,
+            style = MaterialTheme.typography.labelMedium,
+        )
+        LineChart(values = months)
+        Text(
+            text = "Year total ${formatMoney(yearlyExpenses.sumOf { it.amountMinor }, settings.currencyCode)}",
+            color = LocalLedgerColors.current.muted,
+            style = MaterialTheme.typography.bodySmall,
+        )
     }
 }
 
