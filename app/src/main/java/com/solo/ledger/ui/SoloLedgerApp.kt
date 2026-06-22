@@ -9,6 +9,8 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -248,8 +250,8 @@ private fun OnboardingScreen(
                 if (reducedMotion) {
                     fadeIn() togetherWith fadeOut()
                 } else {
-                    (fadeIn(spring()) + scaleIn(initialScale = 0.96f)) togetherWith
-                        (fadeOut(spring()) + scaleOut(targetScale = 0.96f))
+                    (slideInHorizontally { it / 8 } + fadeIn(spring()) + scaleIn(initialScale = 0.96f)) togetherWith
+                        (slideOutHorizontally { -it / 8 } + fadeOut(spring()) + scaleOut(targetScale = 0.96f))
                 }
             },
             label = "onboarding-page",
@@ -462,8 +464,8 @@ private fun MainLedgerShell(
                 if (reducedMotion) {
                     fadeIn() togetherWith fadeOut()
                 } else {
-                    (fadeIn(spring()) + scaleIn(initialScale = 0.98f)) togetherWith
-                        (fadeOut(spring()) + scaleOut(targetScale = 0.98f))
+                    (slideInHorizontally { it / 10 } + fadeIn(spring()) + scaleIn(initialScale = 0.98f)) togetherWith
+                        (slideOutHorizontally { -it / 10 } + fadeOut(spring()) + scaleOut(targetScale = 0.98f))
                 }
             },
             label = "ledger-screen",
@@ -880,8 +882,8 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
             categoryIconOptions.chunked(3).forEach { rowIcons ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     rowIcons.forEach { option ->
-                        SelectionChip(
-                            text = option.label,
+                        IconPresetChip(
+                            option = option,
                             selected = categoryIcon == option.iconName,
                             onClick = { categoryIcon = option.iconName },
                             modifier = Modifier.weight(1f),
@@ -2963,6 +2965,52 @@ private data class CategoryIconOption(
     val label: String,
     val iconName: String,
 )
+
+@Composable
+private fun IconPresetChip(
+    option: CategoryIconOption,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val ledgerColors = LocalLedgerColors.current
+    val radius = LocalLedgerRadius.current
+
+    Card(
+        modifier = modifier
+            .clip(RoundedCornerShape(radius))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) ledgerColors.navSelected else ledgerColors.surface,
+        ),
+        border = BorderStroke(1.dp, if (selected) MaterialTheme.colorScheme.primary else ledgerColors.outline),
+        shape = RoundedCornerShape(radius),
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(
+                imageVector = option.iconName.toCategoryIconVector(),
+                contentDescription = option.label,
+                tint = if (selected) MaterialTheme.colorScheme.primary else ledgerColors.muted,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(
+                text = option.label,
+                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
 
 private val categoryIconOptions = listOf(
     CategoryIconOption("Food", "restaurant"),
