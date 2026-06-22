@@ -43,7 +43,7 @@ jobs:
           SIGNING_KEYSTORE_PATH="$SIGNING_DIR/solo-ledger-debug.jks"
           SIGNING_STORE_PASSWORD="solo-ledger-ci-store-pass"
           SIGNING_KEY_ALIAS="solo-ledger-debug"
-          SIGNING_KEY_PASSWORD="solo-ledger-ci-key-pass"
+          SIGNING_KEY_PASSWORD="$SIGNING_STORE_PASSWORD"
 
           mkdir -p "$SIGNING_DIR"
           keytool -genkeypair \
