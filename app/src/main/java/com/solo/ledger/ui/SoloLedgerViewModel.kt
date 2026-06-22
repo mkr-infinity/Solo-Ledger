@@ -89,6 +89,7 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
 
     fun deleteExpensePermanently(expense: ExpenseEntity) {
         viewModelScope.launch {
+            expense.attachmentPath?.let(::deleteLocalFile)
             container.expenseRepository.deletePermanently(expense)
         }
     }
@@ -481,9 +482,10 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
             date == null -> onError("Use date format YYYY-MM-DD.")
             time == null -> onError("Use time format HH:MM.")
             else -> viewModelScope.launch {
+                val previousAttachmentPath = expense.attachmentPath
                 val nextAttachmentPath = when {
                     removeAttachment -> {
-                        expense.attachmentPath?.let(::deleteLocalFile)
+                        previousAttachmentPath?.let(::deleteLocalFile)
                         null
                     }
                     attachmentUri != null -> copyLocalImage(expense.id, attachmentUri, onError)
@@ -491,6 +493,10 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
                 }
 
                 if (attachmentUri != null && nextAttachmentPath == null) return@launch
+
+                if (attachmentUri != null && previousAttachmentPath != null && previousAttachmentPath != nextAttachmentPath) {
+                    deleteLocalFile(previousAttachmentPath)
+                }
 
                 container.expenseRepository.upsert(
                     expense.copy(

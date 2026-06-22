@@ -2151,7 +2151,12 @@ private fun MonthlyBudgetCard(settings: UserSettings, expenses: List<ExpenseEnti
             )
         }
         MetricBlock(label = "Remaining", value = formatMoney(remaining, settings.currencyCode))
-        AmountBar(progress = progress, color = if (progress < 0.8f) ledgerColors.success else ledgerColors.warning)
+        BudgetPulse(
+            label = "Usage",
+            value = "${(progress * 100).toInt()}%",
+            progress = progress,
+            color = if (progress < 0.8f) ledgerColors.success else ledgerColors.warning,
+        )
     }
 }
 
@@ -2481,7 +2486,9 @@ private fun CategoryBreakdownCard(
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
-                AmountBar(
+                BudgetPulse(
+                    label = "Share",
+                    value = formatMoney(amount, settings.currencyCode),
                     progress = (amount.toFloat() / max.toFloat()).coerceIn(0f, 1f),
                     color = chartPalette[index % chartPalette.size],
                 )
@@ -2592,6 +2599,29 @@ private fun DonutChart(values: List<Long>, colors: List<Color>) {
                 style = MaterialTheme.typography.labelSmall,
             )
         }
+    }
+}
+
+@Composable
+private fun BudgetPulse(
+    label: String,
+    value: String,
+    progress: Float,
+    color: Color,
+) {
+    val target = progress.coerceIn(0f, 1f)
+    val animated = if (LocalLedgerReducedMotion.current) target else animateFloatAsState(targetValue = target, label = label).value
+
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(text = label, color = LocalLedgerColors.current.muted, style = MaterialTheme.typography.labelMedium)
+            Text(text = value, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+        }
+        AmountBar(progress = animated, color = color)
     }
 }
 
