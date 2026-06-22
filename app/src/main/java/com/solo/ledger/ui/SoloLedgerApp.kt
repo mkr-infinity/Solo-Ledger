@@ -651,7 +651,10 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
                         currencyCode = currencyCode,
                         avatarUri = selectedAvatarUri,
                         useSvgAvatar = useSvgAvatar,
-                        onSaved = { message = "Profile saved offline." },
+                        onSaved = {
+                            selectedAvatarUri = null
+                            message = "Profile saved offline."
+                        },
                         onError = { message = it },
                     )
                 },
