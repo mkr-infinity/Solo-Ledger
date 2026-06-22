@@ -1,3 +1,5 @@
+import org.gradle.api.JavaVersion
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
