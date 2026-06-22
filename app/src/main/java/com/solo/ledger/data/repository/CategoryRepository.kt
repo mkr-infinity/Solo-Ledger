@@ -17,6 +17,8 @@ class CategoryRepository(
         }
     }
 
+    suspend fun activeCategoryCount(): Int = categoryDao.countActiveCategories()
+
     suspend fun upsert(category: CategoryEntity) {
         if (categoryDao.exists(category.id) > 0) {
             categoryDao.update(category)

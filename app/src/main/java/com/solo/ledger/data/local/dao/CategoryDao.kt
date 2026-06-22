@@ -20,6 +20,9 @@ interface CategoryDao {
     @Query("SELECT COUNT(*) FROM categories")
     suspend fun countCategories(): Int
 
+    @Query("SELECT COUNT(*) FROM categories WHERE isArchived = 0")
+    suspend fun countActiveCategories(): Int
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(category: CategoryEntity): Long
 

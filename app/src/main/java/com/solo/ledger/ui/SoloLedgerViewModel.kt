@@ -275,12 +275,19 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
 
     fun archiveCategory(categoryId: String) {
         viewModelScope.launch {
+            if (container.categoryRepository.activeCategoryCount() <= 1) {
+                return@launch
+            }
             container.categoryRepository.archive(categoryId, System.currentTimeMillis())
         }
     }
 
     fun deleteCategory(category: CategoryEntity, onDone: (String) -> Unit) {
         viewModelScope.launch {
+            if (container.categoryRepository.activeCategoryCount() <= 1 && !category.isArchived) {
+                onDone("Keep at least one active category for new expenses.")
+                return@launch
+            }
             val result = withContext(Dispatchers.IO) {
                 runCatching { container.categoryRepository.delete(category) }
             }
