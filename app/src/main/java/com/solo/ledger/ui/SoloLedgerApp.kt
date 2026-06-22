@@ -621,6 +621,9 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
             ) {
                 Text(text = "Use SVG Avatar")
             }
+            LaunchedEffect(useSvgAvatar) {
+                if (useSvgAvatar) selectedAvatarUri = null
+            }
             LedgerTextField(
                 value = profileName,
                 onValueChange = { profileName = it },
