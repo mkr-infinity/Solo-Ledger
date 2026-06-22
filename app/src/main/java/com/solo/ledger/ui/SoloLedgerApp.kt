@@ -793,10 +793,13 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
                     )
                     OutlinedButton(
                         onClick = {
-                            val nextWidgets = activeSettings.dashboardWidgets.toMutableList()
-                            val item = nextWidgets.removeAt(index)
-                            nextWidgets.add(index - 1, item)
-                            ledgerViewModel.updateDashboardWidgets(nextWidgets)
+                            val currentWidgets = activeSettings.dashboardWidgets
+                            if (index > 0 && index < currentWidgets.size) {
+                                val nextWidgets = currentWidgets.toMutableList()
+                                val item = nextWidgets.removeAt(index)
+                                nextWidgets.add(index - 1, item)
+                                ledgerViewModel.updateDashboardWidgets(nextWidgets)
+                            }
                         },
                         enabled = index > 0,
                         shape = RoundedCornerShape(16.dp),
@@ -807,10 +810,13 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
                     }
                     OutlinedButton(
                         onClick = {
-                            val nextWidgets = activeSettings.dashboardWidgets.toMutableList()
-                            val item = nextWidgets.removeAt(index)
-                            nextWidgets.add(index + 1, item)
-                            ledgerViewModel.updateDashboardWidgets(nextWidgets)
+                            val currentWidgets = activeSettings.dashboardWidgets
+                            if (index >= 0 && index < currentWidgets.lastIndex) {
+                                val nextWidgets = currentWidgets.toMutableList()
+                                val item = nextWidgets.removeAt(index)
+                                nextWidgets.add(index + 1, item)
+                                ledgerViewModel.updateDashboardWidgets(nextWidgets)
+                            }
                         },
                         enabled = index < activeSettings.dashboardWidgets.lastIndex,
                         shape = RoundedCornerShape(16.dp),

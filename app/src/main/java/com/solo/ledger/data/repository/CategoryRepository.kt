@@ -17,7 +17,13 @@ class CategoryRepository(
         }
     }
 
-    suspend fun upsert(category: CategoryEntity) = categoryDao.upsert(category)
+    suspend fun upsert(category: CategoryEntity) {
+        if (categoryDao.exists(category.id) > 0) {
+            categoryDao.update(category)
+        } else {
+            categoryDao.insert(category)
+        }
+    }
 
     suspend fun archive(id: String, updatedAtMillis: Long) = categoryDao.archive(id, updatedAtMillis)
 
