@@ -191,9 +191,11 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         onSaved: () -> Unit,
         onError: (String) -> Unit,
     ) {
+        val cleanName = name.trim()
         val monthlyBudget = monthlyBudgetText.toMinorAmount()
+        val cleanCurrencyCode = currencyCode.trim().uppercase()
         when {
-            currencyCode.trim().length != 3 -> onError("Use a 3-letter currency code.")
+            cleanCurrencyCode.length != 3 -> onError("Use a 3-letter currency code.")
             monthlyBudget == null || monthlyBudget < 0L -> onError("Enter a valid monthly budget.")
             else -> viewModelScope.launch {
                 val avatarPath = when {
@@ -204,10 +206,10 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
                 if (avatarUri != null && avatarPath == null) return@launch
 
                 container.settingsRepository.updateProfile(
-                    name = name,
+                    name = cleanName,
                     avatarPath = avatarPath,
                     monthlyBudgetMinor = monthlyBudget,
-                    currencyCode = currencyCode,
+                    currencyCode = cleanCurrencyCode,
                 )
                 onSaved()
             }
