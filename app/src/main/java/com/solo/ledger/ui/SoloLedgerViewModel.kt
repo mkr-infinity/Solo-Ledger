@@ -98,7 +98,7 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
     fun deleteExpensePermanently(expense: ExpenseEntity) {
         viewModelScope.launch {
             container.expenseRepository.deletePermanently(expense)
-            expense.attachmentPath?.let(::deleteLocalFile)
+            expense.attachmentPath?.let { path -> deleteLocalFile(path) }
         }
     }
 
@@ -106,7 +106,7 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         viewModelScope.launch {
             val attachmentsToDelete = deletedExpenses.value.mapNotNull { it.attachmentPath }
             container.expenseRepository.clearBin()
-            attachmentsToDelete.forEach(::deleteLocalFile)
+            attachmentsToDelete.forEach { path -> deleteLocalFile(path) }
         }
     }
 
@@ -650,7 +650,7 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
                     ),
                 )
                 if (shouldDeletePreviousAttachment) {
-                    previousAttachmentPath?.let(::deleteLocalFile)
+                    previousAttachmentPath?.let { path -> deleteLocalFile(path) }
                 }
                 onSaved()
             }
