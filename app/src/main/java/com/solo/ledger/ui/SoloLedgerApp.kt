@@ -2026,6 +2026,8 @@ private fun HomeDashboard(ledgerViewModel: SoloLedgerViewModel) {
         modifier = Modifier.verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
+        HomeHeroCard(settings = activeSettings, expenses = expenses)
+
         if (widgets.isEmpty()) {
             DashboardCard(title = "Dashboard Hidden") {
                 EmptyState(
@@ -2068,6 +2070,61 @@ private fun HomeDashboard(ledgerViewModel: SoloLedgerViewModel) {
         }
         if (DashboardWidget.MonthlyGraph in widgets) {
             MonthlyGraphCard(settings = activeSettings, expenses = currentMonthExpenses(expenses))
+        }
+    }
+}
+
+@Composable
+private fun HomeHeroCard(
+    settings: UserSettings,
+    expenses: List<ExpenseEntity>,
+) {
+    val used = currentMonthExpenses(expenses).sumOf { it.amountMinor }
+    val remaining = (settings.monthlyBudgetMinor - used).coerceAtLeast(0L)
+    val progress = if (settings.monthlyBudgetMinor > 0L) {
+        (used.toFloat() / settings.monthlyBudgetMinor.toFloat()).coerceIn(0f, 1f)
+    } else {
+        0f
+    }
+
+    DashboardCard(title = if (settings.selectedBudgetTemplate == null) "Home" else settings.selectedBudgetTemplate.displayName) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(118.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                DonutChart(
+                    values = listOf(used.coerceAtLeast(1L), remaining.coerceAtLeast(1L)),
+                    colors = listOf(MaterialTheme.colorScheme.primary, LocalLedgerColors.current.surface),
+                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = formatMoney(used, settings.currencyCode),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = "Spent",
+                        color = LocalLedgerColors.current.muted,
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
+            }
+
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                MetricBlock(label = "Monthly Budget", value = formatMoney(settings.monthlyBudgetMinor, settings.currencyCode))
+                MetricBlock(label = "Remaining", value = formatMoney(remaining, settings.currencyCode))
+                AmountBar(
+                    progress = progress,
+                    color = if (progress < 0.75f) MaterialTheme.colorScheme.primary else LocalLedgerColors.current.warning,
+                )
+            }
         }
     }
 }
