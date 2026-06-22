@@ -273,6 +273,20 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    fun deleteCategory(category: CategoryEntity, onDone: (String) -> Unit) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching { container.categoryRepository.delete(category) }
+            }
+            result.onSuccess {
+                onDone("Category deleted permanently.")
+            }.onFailure {
+                onDone("Category is used by expenses, so it was archived instead.")
+                container.categoryRepository.archive(category.id, System.currentTimeMillis())
+            }
+        }
+    }
+
     fun exportJson(onDone: (String) -> Unit) {
         viewModelScope.launch {
             val path = withContext(Dispatchers.IO) {

@@ -1,6 +1,7 @@
 package com.solo.ledger.data.local.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -30,4 +31,7 @@ interface CategoryDao {
 
     @Query("UPDATE categories SET isArchived = 1, updatedAtMillis = :updatedAtMillis WHERE id = :id")
     suspend fun archive(id: String, updatedAtMillis: Long)
+
+    @Delete
+    suspend fun delete(category: CategoryEntity)
 }

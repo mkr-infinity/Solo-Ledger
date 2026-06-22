@@ -20,6 +20,8 @@ class CategoryRepository(
     suspend fun upsert(category: CategoryEntity) = categoryDao.upsert(category)
 
     suspend fun archive(id: String, updatedAtMillis: Long) = categoryDao.archive(id, updatedAtMillis)
+
+    suspend fun delete(category: CategoryEntity) = categoryDao.delete(category)
 }
 
 private object DefaultCategories {

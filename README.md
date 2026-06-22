@@ -33,7 +33,7 @@ The theme scaffold includes:
 
 ## Status
 
-Current slice: SVG avatar support and final profile hardening.
+Current slice: Category delete, icon presets, and animated progress polish.
 
 Implemented foundations:
 
@@ -70,5 +70,8 @@ Implemented foundations:
 31. Visibly disabled Coming Soon cards
 32. Provided transparent README mark and green app icon assets wired without modification
 33. Local SVG avatar preset stored through profile settings
+34. Safe category delete with archive fallback for categories used by expenses
+35. Category icon preset selector for Material Symbol-backed vector icons
+36. Budget, breakdown, and graph progress animations respecting reduced motion
 
 Next slice: GitHub Actions APK validation after CI run.

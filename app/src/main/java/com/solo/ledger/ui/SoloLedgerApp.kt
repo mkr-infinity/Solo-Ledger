@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -118,6 +119,7 @@ import kotlin.math.max
 import com.solo.ledger.ui.theme.LedgerTheme
 import com.solo.ledger.ui.theme.LocalLedgerColors
 import com.solo.ledger.ui.theme.LocalLedgerRadius
+import com.solo.ledger.ui.theme.LocalLedgerReducedMotion
 import com.solo.ledger.ui.theme.SoloLedgerTheme
 
 @Composable
@@ -130,6 +132,7 @@ fun SoloLedgerApp(ledgerViewModel: SoloLedgerViewModel = viewModel()) {
         fontScale = activeSettings?.fontScale ?: 1f,
         highContrast = activeSettings?.highContrast ?: false,
         borderRadiusDp = activeSettings?.borderRadiusDp ?: 28,
+        reducedMotion = activeSettings?.reducedMotion ?: false,
     ) {
         if (activeSettings == null) {
             LoadingSurface()
@@ -857,6 +860,25 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
                 label = "Icon Name",
                 singleLine = true,
             )
+            Text(
+                text = "Icon Presets",
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+            )
+            categoryIconOptions.chunked(3).forEach { rowIcons ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    rowIcons.forEach { option ->
+                        SelectionChip(
+                            text = option.label,
+                            selected = categoryIcon == option.iconName,
+                            onClick = { categoryIcon = option.iconName },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    repeat(3 - rowIcons.size) { Box(modifier = Modifier.weight(1f)) }
+                }
+            }
             LedgerTextField(
                 value = categoryColor,
                 onValueChange = { categoryColor = it.take(7).uppercase(Locale.US) },
@@ -923,6 +945,17 @@ private fun SettingsScreen(ledgerViewModel: SoloLedgerViewModel) {
                             categoryColor = "#16A34A"
                         }
                         message = "Category archived."
+                    },
+                    onDelete = {
+                        ledgerViewModel.deleteCategory(category) { resultMessage ->
+                            if (editingCategory?.id == category.id) {
+                                editingCategory = null
+                                categoryName = ""
+                                categoryIcon = "category"
+                                categoryColor = "#16A34A"
+                            }
+                            message = resultMessage
+                        }
                     },
                 )
             }
@@ -1063,6 +1096,7 @@ private fun CategoryManagementRow(
     category: CategoryEntity,
     onEdit: () -> Unit,
     onArchive: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     val ledgerColors = LocalLedgerColors.current
 
@@ -1117,6 +1151,15 @@ private fun CategoryManagementRow(
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
                 ) {
                     Text(text = "Edit")
+                }
+                OutlinedButton(
+                    onClick = onDelete,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, ledgerColors.outline),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = ledgerColors.error),
+                ) {
+                    Text(text = "Delete")
                 }
                 OutlinedButton(
                     onClick = onArchive,
@@ -2413,10 +2456,16 @@ private fun MonthlyGraphCard(settings: UserSettings, expenses: List<ExpenseEntit
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Bottom,
                 ) {
+                    val targetProgress = (amount.toFloat() / max.toFloat()).coerceIn(0f, 1f)
+                    val displayedProgress = if (LocalLedgerReducedMotion.current) {
+                        targetProgress
+                    } else {
+                        animateFloatAsState(targetValue = targetProgress, label = "weekly-bar-$index").value
+                    }
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height((16 + (64 * (amount.toFloat() / max.toFloat()))).dp)
+                            .height((16 + (64 * displayedProgress)).dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(MaterialTheme.colorScheme.primary),
                     )
@@ -2684,6 +2733,11 @@ private fun MetricBlock(
 @Composable
 private fun AmountBar(progress: Float, color: Color) {
     val ledgerColors = LocalLedgerColors.current
+    val displayedProgress = if (LocalLedgerReducedMotion.current) {
+        progress
+    } else {
+        animateFloatAsState(targetValue = progress, label = "amount-progress").value
+    }
 
     Box(
         modifier = Modifier
@@ -2694,7 +2748,7 @@ private fun AmountBar(progress: Float, color: Color) {
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                .fillMaxWidth(displayedProgress.coerceIn(0f, 1f))
                 .height(10.dp)
                 .clip(RoundedCornerShape(999.dp))
                 .background(color),
@@ -2779,6 +2833,23 @@ private val quickAddToggleFields = listOf(
 )
 
 private const val ledgerSvgAvatarPath = "svg:ledger-avatar"
+
+private data class CategoryIconOption(
+    val label: String,
+    val iconName: String,
+)
+
+private val categoryIconOptions = listOf(
+    CategoryIconOption("Food", "restaurant"),
+    CategoryIconOption("Travel", "directions"),
+    CategoryIconOption("Shopping", "shopping_bag"),
+    CategoryIconOption("Bills", "receipt"),
+    CategoryIconOption("Education", "school"),
+    CategoryIconOption("Movies", "movie"),
+    CategoryIconOption("Grocery", "local_grocery_store"),
+    CategoryIconOption("Subscription", "subscriptions"),
+    CategoryIconOption("Other", "category"),
+)
 
 private enum class HistorySort(val label: String) {
     NewestFirst("Newest First"),

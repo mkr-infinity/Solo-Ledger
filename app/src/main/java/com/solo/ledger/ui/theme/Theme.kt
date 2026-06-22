@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 
 val LocalLedgerColors = staticCompositionLocalOf { LedgerTheme.LedgerDark.colors() }
 val LocalLedgerRadius = staticCompositionLocalOf { 28.dp }
+val LocalLedgerReducedMotion = staticCompositionLocalOf { false }
 
 private val LedgerTypography = Typography()
 
@@ -22,6 +23,7 @@ fun SoloLedgerTheme(
     fontScale: Float = 1f,
     highContrast: Boolean = false,
     borderRadiusDp: Int = 28,
+    reducedMotion: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val baseColors = theme.colors()
@@ -39,6 +41,7 @@ fun SoloLedgerTheme(
     CompositionLocalProvider(
         LocalLedgerColors provides ledgerColors,
         LocalLedgerRadius provides borderRadiusDp.coerceIn(12, 40).dp,
+        LocalLedgerReducedMotion provides reducedMotion,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
