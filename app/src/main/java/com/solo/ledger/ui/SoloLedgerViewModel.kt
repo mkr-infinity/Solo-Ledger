@@ -626,11 +626,9 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
             time == null -> onError("Use time format HH:MM.")
             else -> viewModelScope.launch {
                 val previousAttachmentPath = expense.attachmentPath
+                val shouldDeletePreviousAttachment = removeAttachment && previousAttachmentPath != null
                 val nextAttachmentPath = when {
-                    removeAttachment -> {
-                        previousAttachmentPath?.let(::deleteLocalFile)
-                        null
-                    }
+                    removeAttachment -> null
                     attachmentUri != null -> copyLocalImage(expense.id, attachmentUri, onError)
                     else -> expense.attachmentPath
                 }
@@ -653,6 +651,9 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
                         updatedAtMillis = System.currentTimeMillis(),
                     ),
                 )
+                if (shouldDeletePreviousAttachment) {
+                    previousAttachmentPath?.let(::deleteLocalFile)
+                }
                 onSaved()
             }
         }
