@@ -247,10 +247,14 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
         val cleanIcon = iconName.trim().ifBlank { "category" }
         val cleanColor = colorHex.trim().uppercase()
         val validColor = Regex("^#[0-9A-F]{6}$").matches(cleanColor)
+        val duplicateName = categories.value.firstOrNull {
+            it.name.equals(cleanName, ignoreCase = true) && it.id != existing?.id
+        }
 
         when {
             cleanName.isBlank() -> onError("Enter a category name.")
             !validColor -> onError("Use color format #RRGGBB.")
+            duplicateName != null -> onError("Category name already exists.")
             else -> viewModelScope.launch {
                 val now = System.currentTimeMillis()
                 container.categoryRepository.upsert(
