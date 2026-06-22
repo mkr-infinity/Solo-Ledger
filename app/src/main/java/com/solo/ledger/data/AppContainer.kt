@@ -10,6 +10,7 @@ import com.solo.ledger.data.repository.SettingsRepository
 class AppContainer(context: Context) {
     private val database = SoloLedgerDatabase.create(context)
 
+    val ledgerDatabase = database
     val expenseRepository = ExpenseRepository(database.expenseDao())
     val categoryRepository = CategoryRepository(database.categoryDao())
     val goalRepository = GoalRepository(database.goalDao())

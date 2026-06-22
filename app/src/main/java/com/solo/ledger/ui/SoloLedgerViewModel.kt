@@ -7,6 +7,7 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.withTransaction
 import com.solo.ledger.SoloLedgerApplication
 import com.solo.ledger.data.local.entity.CategoryEntity
 import com.solo.ledger.data.local.entity.ExpenseEntity
@@ -480,19 +481,21 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
                     if (!exportFile.exists()) error("No local export file found.")
                     val payload = JSONObject(exportFile.readText())
 
-                    payload.optJSONArray("categories")?.let { categoriesJson ->
-                        for (index in 0 until categoriesJson.length()) {
-                            container.categoryRepository.upsert(categoriesJson.getJSONObject(index).toCategoryEntity())
+                    container.ledgerDatabase.withTransaction {
+                        payload.optJSONArray("categories")?.let { categoriesJson ->
+                            for (index in 0 until categoriesJson.length()) {
+                                container.categoryRepository.upsert(categoriesJson.getJSONObject(index).toCategoryEntity())
+                            }
                         }
-                    }
-                    payload.optJSONArray("expenses")?.let { expensesJson ->
-                        for (index in 0 until expensesJson.length()) {
-                            container.expenseRepository.upsert(expensesJson.getJSONObject(index).toExpenseEntity())
+                        payload.optJSONArray("expenses")?.let { expensesJson ->
+                            for (index in 0 until expensesJson.length()) {
+                                container.expenseRepository.upsert(expensesJson.getJSONObject(index).toExpenseEntity())
+                            }
                         }
-                    }
-                    payload.optJSONArray("savingsGoals")?.let { goalsJson ->
-                        for (index in 0 until goalsJson.length()) {
-                            container.goalRepository.upsert(goalsJson.getJSONObject(index).toSavingsGoalEntity())
+                        payload.optJSONArray("savingsGoals")?.let { goalsJson ->
+                            for (index in 0 until goalsJson.length()) {
+                                container.goalRepository.upsert(goalsJson.getJSONObject(index).toSavingsGoalEntity())
+                            }
                         }
                     }
 
@@ -513,19 +516,21 @@ class SoloLedgerViewModel(application: Application) : AndroidViewModel(applicati
                         JSONObject(input.bufferedReader().readText())
                     } ?: error("Unable to open selected JSON file.")
 
-                    payload.optJSONArray("categories")?.let { categoriesJson ->
-                        for (index in 0 until categoriesJson.length()) {
-                            container.categoryRepository.upsert(categoriesJson.getJSONObject(index).toCategoryEntity())
+                    container.ledgerDatabase.withTransaction {
+                        payload.optJSONArray("categories")?.let { categoriesJson ->
+                            for (index in 0 until categoriesJson.length()) {
+                                container.categoryRepository.upsert(categoriesJson.getJSONObject(index).toCategoryEntity())
+                            }
                         }
-                    }
-                    payload.optJSONArray("expenses")?.let { expensesJson ->
-                        for (index in 0 until expensesJson.length()) {
-                            container.expenseRepository.upsert(expensesJson.getJSONObject(index).toExpenseEntity())
+                        payload.optJSONArray("expenses")?.let { expensesJson ->
+                            for (index in 0 until expensesJson.length()) {
+                                container.expenseRepository.upsert(expensesJson.getJSONObject(index).toExpenseEntity())
+                            }
                         }
-                    }
-                    payload.optJSONArray("savingsGoals")?.let { goalsJson ->
-                        for (index in 0 until goalsJson.length()) {
-                            container.goalRepository.upsert(goalsJson.getJSONObject(index).toSavingsGoalEntity())
+                        payload.optJSONArray("savingsGoals")?.let { goalsJson ->
+                            for (index in 0 until goalsJson.length()) {
+                                container.goalRepository.upsert(goalsJson.getJSONObject(index).toSavingsGoalEntity())
+                            }
                         }
                     }
 
