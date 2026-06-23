@@ -1,77 +1,44 @@
 # Solo Ledger
 
-![Solo Ledger brand mark](assets/transparent-background.png)
+Premium offline-first budgeting app for students & young professionals.
+Kotlin · Jetpack Compose · MVVM · Room · DataStore · Navigation Compose · Material 3.
 
-Solo Ledger is a premium offline-first budgeting app for students and young professionals.
+## Status: feature-complete per PRD (pending your compile in Android Studio)
 
-## Product Direction
+### Themes (8) — all implemented
+Ledger Light/Dark, Emerald Light/Dark, Anime Light/Dark, Spider Light/Dark — all no-blue,
+switchable live in Settings. Themes drive colors, cards, buttons, charts, nav and accents.
 
-Solo Ledger is built as a Kotlin and Jetpack Compose Android application using MVVM, Navigation Compose, Room, DataStore, Kotlin Coroutines, StateFlow, and Material 3.
+### Screens
+- Onboarding (3 screens: About / Setup with budget templates / Permissions with real runtime request)
+- Home dashboard (budget overview, donut + bar charts, insights, category breakdown, recent) with show/hide widgets
+- Quick Add (amount, title, category, date picker, time picker, notes, image attachment)
+- Edit expense (same full field set) + soft delete to Bin
+- History (search incl. notes, sort Newest/Oldest/Highest, category filter, expandable detail with time/notes/attachment)
+- Calendar (month spend heatmap, tappable day → per-day total, donut breakdown, transactions)
+- Analytics (7/30/90-day ranges, donut + bar + animated line charts, category table)
+- Savings Goals (create, contribute, delete, progress)
+- Bin (restore, delete forever, clear all)
+- Categories editor (add/edit/delete, icon grid, color palette)
+- Profile (name, avatar upload, budget, currency)
+- Settings (theme, dark/animations/reduced-motion/high-contrast, font size + corner radius sliders,
+  nav style, dashboard widgets, Quick Add field toggles, JSON import/export, PDF report,
+  Coming Soon badges, working Support links, The Architect card)
 
-The first implementation slice establishes the Android project foundation, app identity, approved theme palette system, and capsule bottom navigation shell. Persistence, expense management, analytics, onboarding, and export features are intentionally handled in later committed slices.
+### Architecture & platform
+- MVVM with StateFlow; manual DI via ServiceLocator (no codegen friction)
+- Room (Expense / Category / Goal) + repository + JSON BackupManager + PdfExporter
+- DataStore for all preferences; offline-first, no backend
+- Edge-to-edge + splash screen; safe-area insets; 6 bottom-nav styles + center Quick Add FAB
+- Custom Canvas charts (donut / bar / line) with theme-aware colors and animation toggle
+- Logo: adaptive icon (your image foreground + #032315 background + monochrome), splash, legacy PNGs, SVG source
 
-## Design Rules
+## CI: GitHub Actions
+`.github/workflows/build-debug-apk.yml` builds a debug-signed APK (auto debug/temp key) on push and
+uploads it as the `solo-ledger-debug-apk` artifact. No wrapper jar or signing setup required.
 
-No emojis are used in the application.
+IMPORTANT: push the CONTENTS of this folder as the repo ROOT (settings.gradle.kts and .github/ at top level).
 
-No generic gradients, crypto styling, excessive glow, blue fintech defaults, gold fintech defaults, or placeholder color systems are used.
-
-The visual direction follows premium wallet-style surfaces, strong contrast, short labels, safe icon spacing, and restrained Material 3 motion.
-
-## Themes
-
-The theme scaffold includes:
-
-1. Ledger Light
-2. Ledger Dark
-3. Emerald Light
-4. Emerald Dark
-5. Anime Light
-6. Anime Dark
-7. Spider Light
-8. Spider Dark
-
-## Status
-
-Current slice: Category delete, icon presets, and animated progress polish.
-
-Implemented foundations:
-
-1. Android Compose project scaffold
-2. Theme system and app identity
-3. GitHub Actions signed debug APK workflow
-4. Room entities, DAOs, database, repositories, and DataStore settings
-5. Onboarding flow with budget template selection stored offline
-6. Quick Add expense form with local image attachment copy and Room persistence
-7. Home dashboard metrics, recent transactions, category breakdown, and monthly graph from saved expenses
-8. History screen with search, category filters, sorting, expandable details, and move-to-bin
-9. Bin section with restore, delete permanently, and clear all actions
-10. Calendar screen with spending-day highlights, date details, and range summaries
-11. Savings goal creation, progress additions, archiving, and Home progress cards
-12. Settings screen with profile, theme, dashboard controls, coming-soon cards, support, and Architect details
-13. Category management with add, edit, archive, icon name, and color assignment
-14. App-private JSON export/import for categories, expenses, and savings goals
-15. Transaction editing from History with local Room updates
-16. Quick Add field visibility controls applied to the form
-17. Appearance controls for font scale, motion, high contrast, and border radius preferences
-18. Dashboard hide/show and reorder controls
-19. Profile avatar upload copied into local app storage
-20. App-private PDF report export
-21. Donut and line chart visuals for category and monthly analytics
-22. Local avatar and receipt or bill image previews
-23. Reduced-motion main navigation transitions
-24. GitHub Actions signed debug APK artifact with temporary CI signing key
-25. Custom SVG empty states for no expenses, no results, and no data
-26. Calendar date detail category breakdown from local expense data
-27. Clickable support and Architect links
-28. Assigned category icons rendered across filters, chips, lists, and category management
-29. Expense attachment replacement and removal from History edit mode
-30. Reduced-motion onboarding and navigation label transitions
-31. Visibly disabled Coming Soon cards
-32. Provided transparent README mark and green app icon assets wired without modification
-33. Local SVG avatar preset stored through profile settings
-34. Safe category delete with archive fallback for categories used by expenses
-35. Category icon preset selector for Material Symbol-backed vector icons
-36. Budget, breakdown, and graph progress animations respecting reduced motion
-
-Next slice: GitHub Actions APK validation after CI run.
+## Build locally
+Open the project root in Android Studio (Koala+), let it sync (it creates the Gradle wrapper), Run.
+minSdk 24, targetSdk 34.

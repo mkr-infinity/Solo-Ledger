@@ -1,10 +1,12 @@
 package com.solo.ledger.ui.theme
 
-import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
-@Immutable
-data class LedgerExtendedColors(
+/**
+ * Extended color roles beyond Material's ColorScheme so cards, charts, accents and
+ * semantic colors stay consistent across every theme.
+ */
+data class LedgerColors(
     val primary: Color,
     val secondary: Color,
     val background: Color,
@@ -16,26 +18,14 @@ data class LedgerExtendedColors(
     val success: Color,
     val warning: Color,
     val error: Color,
+    val onPrimary: Color,
     val outline: Color,
-    val navSelected: Color,
-    val chartOne: Color,
-    val chartTwo: Color,
-    val chartThree: Color,
+    val chart: List<Color>
 )
 
-enum class LedgerTheme {
-    LedgerLight,
-    LedgerDark,
-    EmeraldLight,
-    EmeraldDark,
-    AnimeLight,
-    AnimeDark,
-    SpiderLight,
-    SpiderDark,
-}
-
-internal fun LedgerTheme.colors(): LedgerExtendedColors = when (this) {
-    LedgerTheme.LedgerLight -> LedgerExtendedColors(
+object LedgerPalettes {
+    // ---- Ledger Light (CONFIRMED) ----
+    val LedgerLight = LedgerColors(
         primary = Color(0xFF16A34A),
         secondary = Color(0xFF4ADE80),
         background = Color(0xFFFFFFFF),
@@ -47,13 +37,16 @@ internal fun LedgerTheme.colors(): LedgerExtendedColors = when (this) {
         success = Color(0xFF16A34A),
         warning = Color(0xFFD97706),
         error = Color(0xFFDC2626),
+        onPrimary = Color(0xFFFFFFFF),
         outline = Color(0xFFE2E8F0),
-        navSelected = Color(0xFFE7F8EE),
-        chartOne = Color(0xFF16A34A),
-        chartTwo = Color(0xFF15803D),
-        chartThree = Color(0xFF86EFAC),
+        chart = listOf(
+            Color(0xFF16A34A), Color(0xFF4ADE80), Color(0xFF65A30D),
+            Color(0xFFCA8A04), Color(0xFFEA580C), Color(0xFF0EA5A4)
+        )
     )
-    LedgerTheme.LedgerDark -> LedgerExtendedColors(
+
+    // ---- Ledger Dark (CONFIRMED) ----
+    val LedgerDark = LedgerColors(
         primary = Color(0xFF22C55E),
         secondary = Color(0xFF4ADE80),
         background = Color(0xFF0B0F0C),
@@ -65,118 +58,96 @@ internal fun LedgerTheme.colors(): LedgerExtendedColors = when (this) {
         success = Color(0xFF22C55E),
         warning = Color(0xFFF59E0B),
         error = Color(0xFFEF4444),
-        outline = Color(0xFF26352D),
-        navSelected = Color(0xFF173B25),
-        chartOne = Color(0xFF22C55E),
-        chartTwo = Color(0xFF86EFAC),
-        chartThree = Color(0xFF15803D),
+        onPrimary = Color(0xFF06210F),
+        outline = Color(0xFF26312B),
+        chart = listOf(
+            Color(0xFF22C55E), Color(0xFF4ADE80), Color(0xFF84CC16),
+            Color(0xFFF59E0B), Color(0xFFFB923C), Color(0xFF2DD4BF)
+        )
     )
-    LedgerTheme.EmeraldLight -> LedgerExtendedColors(
+
+    // ---- Emerald Light (CONFIRMED, no-blue jewel-emerald + warm stone neutrals) ----
+    val EmeraldLight = LedgerColors(
         primary = Color(0xFF047857),
-        secondary = Color(0xFF10B981),
-        background = Color(0xFFFAFFFC),
-        surface = Color(0xFFF0FDF4),
+        secondary = Color(0xFF34D399),
+        background = Color(0xFFFCFCFB),
+        surface = Color(0xFFF5F5F4),
         card = Color(0xFFFFFFFF),
-        textPrimary = Color(0xFF062C20),
-        textSecondary = Color(0xFF315D4D),
-        muted = Color(0xFF5F8174),
-        success = Color(0xFF047857),
-        warning = Color(0xFFB45309),
-        error = Color(0xFFB91C1C),
-        outline = Color(0xFFD7F3E2),
-        navSelected = Color(0xFFE2F8EC),
-        chartOne = Color(0xFF047857),
-        chartTwo = Color(0xFF10B981),
-        chartThree = Color(0xFF6EE7B7),
+        textPrimary = Color(0xFF1C1917),
+        textSecondary = Color(0xFF44403C),
+        muted = Color(0xFF78716C),
+        success = Color(0xFF059669),
+        warning = Color(0xFFD97706),
+        error = Color(0xFFDC2626),
+        onPrimary = Color(0xFFFFFFFF),
+        outline = Color(0xFFE7E5E4),
+        chart = listOf(
+            Color(0xFF047857), Color(0xFF34D399), Color(0xFF65A30D),
+            Color(0xFFCA8A04), Color(0xFFEA580C), Color(0xFF0D9488)
+        )
     )
-    LedgerTheme.EmeraldDark -> LedgerExtendedColors(
+
+    // ---- Emerald Dark (CONFIRMED) ----
+    val EmeraldDark = LedgerColors(
         primary = Color(0xFF34D399),
         secondary = Color(0xFF6EE7B7),
-        background = Color(0xFF07130D),
-        surface = Color(0xFF0B1A12),
-        card = Color(0xFF102018),
-        textPrimary = Color(0xFFF1FFF8),
-        textSecondary = Color(0xFFC5EADC),
-        muted = Color(0xFF8DB8A6),
+        background = Color(0xFF0A0F0D),
+        surface = Color(0xFF141A17),
+        card = Color(0xFF1C2420),
+        textPrimary = Color(0xFFF5F5F4),
+        textSecondary = Color(0xFFD6D3D1),
+        muted = Color(0xFFA8A29E),
         success = Color(0xFF34D399),
-        warning = Color(0xFFF59E0B),
+        warning = Color(0xFFFBBF24),
         error = Color(0xFFF87171),
-        outline = Color(0xFF1F3B2E),
-        navSelected = Color(0xFF143625),
-        chartOne = Color(0xFF34D399),
-        chartTwo = Color(0xFF6EE7B7),
-        chartThree = Color(0xFF059669),
+        onPrimary = Color(0xFF052E1B),
+        outline = Color(0xFF2A302C),
+        chart = listOf(
+            Color(0xFF34D399), Color(0xFF6EE7B7), Color(0xFF84CC16),
+            Color(0xFFFBBF24), Color(0xFFFB923C), Color(0xFF2DD4BF)
+        )
     )
-    LedgerTheme.AnimeLight -> LedgerExtendedColors(
-        primary = Color(0xFF7C3AED),
-        secondary = Color(0xFFF97316),
-        background = Color(0xFFFFFBF7),
-        surface = Color(0xFFFFF7ED),
-        card = Color(0xFFFFFFFF),
-        textPrimary = Color(0xFF21122E),
-        textSecondary = Color(0xFF5B456B),
-        muted = Color(0xFF7C688A),
-        success = Color(0xFF16A34A),
-        warning = Color(0xFFF97316),
-        error = Color(0xFFDC2626),
-        outline = Color(0xFFF1D9C5),
-        navSelected = Color(0xFFF3E8FF),
-        chartOne = Color(0xFF7C3AED),
-        chartTwo = Color(0xFFF97316),
-        chartThree = Color(0xFFA78BFA),
+
+    // ---- Anime Light (violet + sakura pink, no blue) ----
+    val AnimeLight = LedgerColors(
+        primary = Color(0xFF7C3AED), secondary = Color(0xFFF472B6),
+        background = Color(0xFFFFFFFF), surface = Color(0xFFFAF5FF), card = Color(0xFFFFFFFF),
+        textPrimary = Color(0xFF1E1B2E), textSecondary = Color(0xFF5B5470), muted = Color(0xFF8B82A6),
+        success = Color(0xFF16A34A), warning = Color(0xFFD97706), error = Color(0xFFE11D48),
+        onPrimary = Color(0xFFFFFFFF), outline = Color(0xFFEDE4FB),
+        chart = listOf(Color(0xFF7C3AED), Color(0xFFF472B6), Color(0xFFA78BFA), Color(0xFFFB7185), Color(0xFFFBBF24), Color(0xFF34D399))
     )
-    LedgerTheme.AnimeDark -> LedgerExtendedColors(
-        primary = Color(0xFFA78BFA),
-        secondary = Color(0xFFFB923C),
-        background = Color(0xFF141018),
-        surface = Color(0xFF1A1321),
-        card = Color(0xFF211827),
-        textPrimary = Color(0xFFFFF7ED),
-        textSecondary = Color(0xFFE9D5FF),
-        muted = Color(0xFFC4B5FD),
-        success = Color(0xFF4ADE80),
-        warning = Color(0xFFFB923C),
-        error = Color(0xFFF87171),
-        outline = Color(0xFF3A2844),
-        navSelected = Color(0xFF332045),
-        chartOne = Color(0xFFA78BFA),
-        chartTwo = Color(0xFFFB923C),
-        chartThree = Color(0xFF7C3AED),
+    val AnimeDark = LedgerColors(
+        primary = Color(0xFFA78BFA), secondary = Color(0xFFF0ABFC),
+        background = Color(0xFF0F0A1A), surface = Color(0xFF18122B), card = Color(0xFF1F1736),
+        textPrimary = Color(0xFFF5F3FF), textSecondary = Color(0xFFCFC6E8), muted = Color(0xFF9A8FC0),
+        success = Color(0xFF34D399), warning = Color(0xFFFBBF24), error = Color(0xFFFB7185),
+        onPrimary = Color(0xFF1A1033), outline = Color(0xFF2C2348),
+        chart = listOf(Color(0xFFA78BFA), Color(0xFFF0ABFC), Color(0xFFC4B5FD), Color(0xFFFB7185), Color(0xFFFBBF24), Color(0xFF6EE7B7))
     )
-    LedgerTheme.SpiderLight -> LedgerExtendedColors(
-        primary = Color(0xFFB91C1C),
-        secondary = Color(0xFF0F172A),
-        background = Color(0xFFFFFFFF),
-        surface = Color(0xFFF8FAFC),
-        card = Color(0xFFFFFFFF),
-        textPrimary = Color(0xFF0F172A),
-        textSecondary = Color(0xFF475569),
-        muted = Color(0xFF64748B),
-        success = Color(0xFF16A34A),
-        warning = Color(0xFFD97706),
-        error = Color(0xFFB91C1C),
-        outline = Color(0xFFE2E8F0),
-        navSelected = Color(0xFFFEE2E2),
-        chartOne = Color(0xFFB91C1C),
-        chartTwo = Color(0xFF0F172A),
-        chartThree = Color(0xFFEF4444),
+    // ---- Spider Light (crimson + graphite, no blue) ----
+    val SpiderLight = LedgerColors(
+        primary = Color(0xFFE11D48), secondary = Color(0xFF111827),
+        background = Color(0xFFFFFFFF), surface = Color(0xFFFEF2F2), card = Color(0xFFFFFFFF),
+        textPrimary = Color(0xFF0A0A0A), textSecondary = Color(0xFF44403C), muted = Color(0xFF78716C),
+        success = Color(0xFF16A34A), warning = Color(0xFFD97706), error = Color(0xFFB91C1C),
+        onPrimary = Color(0xFFFFFFFF), outline = Color(0xFFFADCDC),
+        chart = listOf(Color(0xFFE11D48), Color(0xFF111827), Color(0xFFF43F5E), Color(0xFF78716C), Color(0xFFEA580C), Color(0xFFCA8A04))
     )
-    LedgerTheme.SpiderDark -> LedgerExtendedColors(
-        primary = Color(0xFFF87171),
-        secondary = Color(0xFFCBD5E1),
-        background = Color(0xFF090B10),
-        surface = Color(0xFF0F131B),
-        card = Color(0xFF151923),
-        textPrimary = Color(0xFFF8FAFC),
-        textSecondary = Color(0xFFCBD5E1),
-        muted = Color(0xFF94A3B8),
-        success = Color(0xFF22C55E),
-        warning = Color(0xFFF59E0B),
-        error = Color(0xFFF87171),
-        outline = Color(0xFF262D3B),
-        navSelected = Color(0xFF3B1518),
-        chartOne = Color(0xFFF87171),
-        chartTwo = Color(0xFFCBD5E1),
-        chartThree = Color(0xFFB91C1C),
+    val SpiderDark = LedgerColors(
+        primary = Color(0xFFF43F5E), secondary = Color(0xFFE5E7EB),
+        background = Color(0xFF0A0A0B), surface = Color(0xFF141416), card = Color(0xFF1C1C1F),
+        textPrimary = Color(0xFFF8FAFC), textSecondary = Color(0xFFCBD5C5), muted = Color(0xFF9CA3AF),
+        success = Color(0xFF34D399), warning = Color(0xFFFBBF24), error = Color(0xFFFB7185),
+        onPrimary = Color(0xFF2A0A12), outline = Color(0xFF2A2A2E),
+        chart = listOf(Color(0xFFF43F5E), Color(0xFFE5E7EB), Color(0xFFFB7185), Color(0xFF9CA3AF), Color(0xFFFB923C), Color(0xFFFBBF24))
     )
+
+    fun forId(themeId: String, dark: Boolean): LedgerColors = when (themeId) {
+        "anime" -> if (dark) AnimeDark else AnimeLight
+        "spider" -> if (dark) SpiderDark else SpiderLight
+        "emerald" -> if (dark) EmeraldDark else EmeraldLight
+        // Other theme ids (emerald/anime/spider) fall back to Ledger until confirmed by the user.
+        else -> if (dark) LedgerDark else LedgerLight
+    }
 }
