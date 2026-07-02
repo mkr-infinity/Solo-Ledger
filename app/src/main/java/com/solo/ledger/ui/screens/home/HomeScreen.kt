@@ -36,7 +36,8 @@ fun HomeScreen(
     viewModel: MainViewModel,
     onNavigateToAnalytics: () -> Unit,
     onNavigateToSavings: () -> Unit,
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToHistory: () -> Unit = {}
 ) {
     val userName by viewModel.userName.collectAsStateWithLifecycle()
     val monthlyBudget by viewModel.monthlyBudget.collectAsStateWithLifecycle()
@@ -108,7 +109,7 @@ fun HomeScreen(
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                TextButton(onClick = onNavigateToAnalytics) {
+                TextButton(onClick = onNavigateToHistory) {
                     Text(
                         "View All",
                         style = MaterialTheme.typography.labelLarge,

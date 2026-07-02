@@ -128,7 +128,14 @@ fun SoloLedgerMainApp() {
                         viewModel = viewModel,
                         onNavigateToAnalytics = { navController.navigate(Screen.Analytics.route) },
                         onNavigateToSavings = { navController.navigate(Screen.SavingsGoals.route) },
-                        onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
+                        onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
+                        onNavigateToHistory = {
+                            navController.navigate(Screen.History.route) {
+                                popUpTo(Screen.Home.route) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
                     )
                 }
 

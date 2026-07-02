@@ -44,6 +44,7 @@ fun HistoryScreen(
     var sortDescending by remember { mutableStateOf(true) }
     var selectedCategoryFilter by remember { mutableStateOf<Long?>(null) }
     var selectedExpense by remember { mutableStateOf<Expense?>(null) }
+    var fullScreenImagePath by remember { mutableStateOf<String?>(null) }
 
     val displayedExpenses = if (isSearchActive && searchQuery.isNotBlank()) {
         searchResults
@@ -280,7 +281,8 @@ fun HistoryScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(150.dp)
-                                .clip(RoundedCornerShape(8.dp)),
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable { fullScreenImagePath = expense.attachmentPath },
                             contentScale = ContentScale.Crop
                         )
                     }
@@ -303,6 +305,14 @@ fun HistoryScreen(
                     Text("Delete", color = MaterialTheme.colorScheme.error)
                 }
             }
+        )
+    }
+
+    // Full screen image viewer
+    if (fullScreenImagePath != null) {
+        com.solo.ledger.ui.components.FullScreenImageViewer(
+            imagePath = fullScreenImagePath!!,
+            onDismiss = { fullScreenImagePath = null }
         )
     }
 }
