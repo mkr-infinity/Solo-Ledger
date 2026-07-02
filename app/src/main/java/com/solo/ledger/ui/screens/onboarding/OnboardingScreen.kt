@@ -31,7 +31,7 @@ import androidx.core.content.ContextCompat
 import com.solo.ledger.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun OnboardingScreen(
     viewModel: MainViewModel,
