@@ -238,7 +238,7 @@ fun EditExpenseScreen(
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Date") },
-                        leadingIcon = { Icon(Icons.Filled.CalendarMonth, contentDescription = null) },
+                        leadingIcon = { Icon(Icons.Filled.DateRange, contentDescription = null) },
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .weight(1f)

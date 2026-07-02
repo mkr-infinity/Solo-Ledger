@@ -19,15 +19,15 @@ import androidx.compose.ui.unit.dp
 fun ComingSoonScreen(onNavigateBack: () -> Unit) {
     val features = listOf(
         ComingSoonFeature("Login & Accounts", "Secure authentication", Icons.Filled.Login),
-        ComingSoonFeature("Cloud Sync", "Sync across devices", Icons.Filled.CloudSync),
+        ComingSoonFeature("Cloud Sync", "Sync across devices", Icons.Filled.Cloud),
         ComingSoonFeature("Online Backup", "Automatic backups", Icons.Filled.Backup),
         ComingSoonFeature("Multi Device Sync", "Use on multiple devices", Icons.Filled.Devices),
         ComingSoonFeature("Shared Budgets", "Budget with friends", Icons.Filled.Group),
-        ComingSoonFeature("Family Accounts", "Manage family expenses", Icons.Filled.FamilyRestroom),
-        ComingSoonFeature("AI Insights", "Smart spending analysis", Icons.Filled.AutoAwesome),
+        ComingSoonFeature("Family Accounts", "Manage family expenses", Icons.Filled.People),
+        ComingSoonFeature("AI Insights", "Smart spending analysis", Icons.Filled.Lightbulb),
         ComingSoonFeature("Bank Integration", "Connect bank accounts", Icons.Filled.AccountBalance),
-        ComingSoonFeature("UPI Integration", "Track UPI payments", Icons.Filled.QrCode),
-        ComingSoonFeature("OCR Scanner", "Scan receipts automatically", Icons.Filled.DocumentScanner)
+        ComingSoonFeature("UPI Integration", "Track UPI payments", Icons.Filled.Payment),
+        ComingSoonFeature("OCR Scanner", "Scan receipts automatically", Icons.Filled.CameraAlt)
     )
 
     Scaffold(

@@ -91,7 +91,7 @@ fun SupportScreen(onNavigateBack: () -> Unit) {
             // Buy Me a Coffee
             item {
                 SupportCard(
-                    icon = Icons.Filled.Coffee,
+                    icon = Icons.Filled.LocalCafe,
                     title = "Buy Me a Coffee",
                     subtitle = "Support development with a small donation",
                     onClick = {

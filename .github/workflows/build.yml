@@ -1,0 +1,57 @@
+name: Build Signed Debug APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Generate debug keystore
+        run: |
+          mkdir -p keystore
+          keytool -genkeypair \
+            -alias androiddebugkey \
+            -keypass android \
+            -keystore keystore/debug.keystore \
+            -storepass android \
+            -dname "CN=Solo Ledger,OU=Development,O=Solo Ledger,L=India,S=India,C=IN" \
+            -validity 10000 \
+            -keyalg RSA \
+            -keysize 2048
+
+      - name: Generate Gradle wrapper
+        run: |
+          gradle wrapper --gradle-version=8.5
+
+      - name: Build signed debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Rename APK
+        run: |
+          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/Solo-Ledger-v1.0.0-debug.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Solo-Ledger-v1.0.0-debug
+          path: app/build/outputs/apk/debug/Solo-Ledger-v1.0.0-debug.apk
+          retention-days: 90

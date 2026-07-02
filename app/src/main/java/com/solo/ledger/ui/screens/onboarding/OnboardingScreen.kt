@@ -186,7 +186,7 @@ private fun OnboardingPage1() {
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
-            BenefitItem(icon = Icons.Filled.OfflineBolt, text = "100% Offline — No internet needed")
+            BenefitItem(icon = Icons.Filled.FlashOn, text = "100% Offline — No internet needed")
             BenefitItem(icon = Icons.Filled.Lock, text = "Private — Your data stays on device")
             BenefitItem(icon = Icons.Filled.TrendingUp, text = "Insights — Understand your spending")
         }

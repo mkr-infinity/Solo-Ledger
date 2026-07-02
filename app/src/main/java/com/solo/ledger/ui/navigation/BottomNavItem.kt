@@ -32,8 +32,8 @@ enum class BottomNavItem(
     CALENDAR(
         route = Screen.Calendar.route,
         label = "Calendar",
-        selectedIcon = Icons.Filled.CalendarMonth,
-        unselectedIcon = Icons.Outlined.CalendarMonth
+        selectedIcon = Icons.Filled.DateRange,
+        unselectedIcon = Icons.Outlined.DateRange
     ),
     SETTINGS(
         route = Screen.Settings.route,

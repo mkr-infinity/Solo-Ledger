@@ -189,7 +189,7 @@ fun SettingsScreen(
         }
         item {
             SettingsItem(
-                icon = Icons.Filled.RocketLaunch,
+                icon = Icons.Filled.NewReleases,
                 title = "Coming Soon",
                 subtitle = "Premium features in development",
                 onClick = onNavigateToComingSoon,

@@ -93,7 +93,7 @@ fun DataManagementScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.DataObject,
+                        imageVector = Icons.Filled.Code,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary
                     )
