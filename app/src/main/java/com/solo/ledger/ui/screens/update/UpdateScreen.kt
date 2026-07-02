@@ -226,8 +226,12 @@ fun UpdateScreen(
                                     Divider(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f))
                                     Spacer(modifier = Modifier.height(12.dp))
                                     Text("What's New", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Text(parseChangelog(release.body), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f))
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    MarkdownPreview(
+                                        markdown = release.body,
+                                        textColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f),
+                                        accentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
                                 }
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Button(
@@ -290,14 +294,84 @@ fun UpdateScreen(
     }
 }
 
-private fun parseChangelog(markdown: String): String {
-    return markdown
-        .replace(Regex("^#+\\s*"), "")
-        .replace(Regex("\\*\\*(.+?)\\*\\*"), "$1")
-        .replace(Regex("\\*(.+?)\\*"), "$1")
-        .replace(Regex("^-\\s*", RegexOption.MULTILINE), "  - ")
-        .replace(Regex("`(.+?)`"), "$1")
-        .trim()
+@Composable
+private fun MarkdownPreview(
+    markdown: String,
+    textColor: Color,
+    accentColor: Color
+) {
+    val lines = markdown.trim().lines()
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        lines.forEach { raw ->
+            val line = raw.trimEnd()
+            when {
+                line.isBlank() -> Spacer(modifier = Modifier.height(2.dp))
+                line.startsWith("### ") -> Text(
+                    parseInline(line.removePrefix("### ")),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = accentColor
+                )
+                line.startsWith("## ") -> Text(
+                    parseInline(line.removePrefix("## ")),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = accentColor
+                )
+                line.startsWith("# ") -> Text(
+                    parseInline(line.removePrefix("# ")),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = accentColor
+                )
+                line.trimStart().startsWith("- ") || line.trimStart().startsWith("* ") -> {
+                    Row(verticalAlignment = Alignment.Top) {
+                        Text("•  ", style = MaterialTheme.typography.bodySmall, color = accentColor, fontWeight = FontWeight.Bold)
+                        Text(
+                            parseInline(line.trimStart().removePrefix("- ").removePrefix("* ")),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = textColor
+                        )
+                    }
+                }
+                else -> Text(
+                    parseInline(line),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = textColor
+                )
+            }
+        }
+    }
+}
+
+// Parse inline markdown (bold **text**, code `text`) into AnnotatedString
+private fun parseInline(text: String): androidx.compose.ui.text.AnnotatedString {
+    return androidx.compose.ui.text.buildAnnotatedString {
+        var i = 0
+        while (i < text.length) {
+            when {
+                text.startsWith("**", i) -> {
+                    val end = text.indexOf("**", i + 2)
+                    if (end != -1) {
+                        pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold))
+                        append(text.substring(i + 2, end))
+                        pop()
+                        i = end + 2
+                    } else { append(text[i]); i++ }
+                }
+                text.startsWith("`", i) -> {
+                    val end = text.indexOf("`", i + 1)
+                    if (end != -1) {
+                        pushStyle(androidx.compose.ui.text.SpanStyle(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace))
+                        append(text.substring(i + 1, end))
+                        pop()
+                        i = end + 1
+                    } else { append(text[i]); i++ }
+                }
+                else -> { append(text[i]); i++ }
+            }
+        }
+    }
 }
 
 private fun isNewerVersion(remote: String, current: String): Boolean {

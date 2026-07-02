@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -55,7 +56,7 @@ fun AppToast(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 80.dp),
+                    .padding(horizontal = 24.dp, vertical = 8.dp),
                 contentAlignment = Alignment.BottomCenter
             ) {
                 val containerColor = when (data.type) {
@@ -82,9 +83,10 @@ fun AppToast(
 
                 Row(
                     modifier = Modifier
+                        .shadow(12.dp, RoundedCornerShape(50))
                         .clip(RoundedCornerShape(50))
                         .background(containerColor)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 18.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
