@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="app/src/main/assets/logo/solo_ledger_logo.svg" width="130" alt="Solo Ledger Logo"/>
+  <img src="app/src/main/assets/logo/solo_ledger_logo.svg" width="120" alt="Solo Ledger Logo"/>
 </p>
 
 <h1 align="center">💰 Solo Ledger</h1>
@@ -17,226 +17,92 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Architecture-MVVM-FF6F00?style=flat-square" alt="Architecture"/>
-  <img src="https://img.shields.io/badge/Min%20SDK-26-blue?style=flat-square" alt="Min SDK"/>
-  <img src="https://img.shields.io/badge/Target%20SDK-34-blue?style=flat-square" alt="Target SDK"/>
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="License"/>
+  <img src="https://img.shields.io/badge/Min%20SDK-26-blue?style=flat-square" alt="Min SDK"/>
   <img src="https://img.shields.io/badge/Offline-100%25-success?style=flat-square" alt="Offline"/>
 </p>
 
 <p align="center">
+  <a href="#-overview">Overview</a> ·
   <a href="#-features">Features</a> ·
-  <a href="#-screenshots">Screenshots</a> ·
   <a href="#-tech-stack">Tech Stack</a> ·
-  <a href="#-installation">Install</a> ·
-  <a href="#-release-builds">Release</a> ·
-  <a href="CONTRIBUTING.md">Contribute</a>
+  <a href="CONTRIBUTING.md">Build & Contribute</a>
 </p>
 
 ---
 
 ## 📖 Overview
 
-**Solo Ledger** is a production-quality fintech application built with modern Android development practices. It helps you track expenses, set budgets, manage savings goals, and build real financial awareness — **all completely offline**. No sign-up, no servers, no data ever leaves your device.
+**Solo Ledger** is a production-quality, offline-first budgeting app. Track expenses, set budgets, manage savings goals, and build real financial awareness — **all on-device**. No sign-up, no servers, no data ever leaves your phone.
 
-> 🎨 Inspired by the design quality of **CRED**, **Google Wallet**, and **Pixel's** design language.
+> 🎨 Inspired by the design language of **CRED**, **Google Wallet**, and **Pixel**.
 
 ---
 
 ## ✨ Features
 
-| | Feature | Description |
-|:---:|---|---|
-| 📊 | **Budget Tracking** | Set monthly budgets, monitor spending, and visualize usage |
-| 💸 | **Expense Management** | Add, edit, delete, search, filter, and restore expenses |
-| 🗂️ | **9 Default Categories** | Food, Travel, Shopping, Bills, Education, Entertainment, Groceries, Subscriptions, Other |
-| ➕ | **Custom Categories** | Add unlimited custom categories with icons |
-| 🎯 | **Savings Goals** | Set targets, track progress, add savings incrementally |
-| 📅 | **Calendar View** | Monthly calendar with spending indicators and daily details |
-| 📈 | **Analytics** | Donut charts, bar breakdowns, category analysis, savings progress |
-| 🧩 | **Budget Templates** | Student, Hostel, Saver, Minimal — one-tap apply |
-| 🗑️ | **Bin / Recycle** | Soft-delete with restore or permanent deletion |
-| 💱 | **Multi-Currency** | INR default, supports custom currencies with symbols |
-| 📤 | **Data Export** | JSON and CSV export with share functionality |
-| 📥 | **Data Import** | Restore from JSON backup |
-| 🎨 | **8 Themes** | Ledger Dark/Light, Emerald Dark/Light, Anime Dark/Light, Spider Dark/Light |
-| 🧭 | **7 Nav Styles** | Capsule, Floating, Minimal, Elevated, Pill, Compact, Material Standard |
-| 📴 | **Fully Offline** | No internet required, no cloud dependency |
-| 🌟 | **Premium Feel** | Smooth animations, clean typography, modern card-based UI |
-
----
-
-## 🎨 UI Highlights
-
-- 🧱 Material 3 design system throughout
-- 🍩 Custom donut chart component
-- 🎬 Animated bottom navigation with 7 interchangeable styles
-- 🪄 Expandable cards with smooth transitions
-- 🌈 Consistent color system across all themes
-- ⚙️ Card-based settings with clean hierarchy
-- 📆 Calendar with spending indicators
-- 🕳️ Empty states with contextual messaging
-
----
-
-## 📸 Screenshots
-
-| 🏠 Home | 🧾 History | 📅 Calendar |
-|:---:|:---:|:---:|
-| ![Home](screenshots/home.png) | ![History](screenshots/history.png) | ![Calendar](screenshots/calendar.png) |
-
-| 📈 Analytics | ⚙️ Settings | 🎨 Themes |
-|:---:|:---:|:---:|
-| ![Analytics](screenshots/analytics.png) | ![Settings](screenshots/settings.png) | ![Themes](screenshots/themes.png) |
-
----
-
-## 🌗 Theme Showcase
-
-| 🖤 Ledger Dark | 🤍 Ledger Light | 💚 Emerald Dark | 🕷️ Spider Dark |
-|:---:|:---:|:---:|:---:|
-| Warm charcoal with sage accents | Cream with deep greens | Deep forest green | Red and black cinematic |
+| | Feature | | | Feature |
+|:---:|---|---|:---:|---|
+| 📊 | **Budget Tracking** | | 📅 | **Calendar View** |
+| 💸 | **Expense Management** | | 📈 | **Analytics & Charts** |
+| 🗂️ | **9 + Custom Categories** | | 🧩 | **Budget Templates** |
+| 🎯 | **Savings Goals** | | 🗑️ | **Bin & Restore** |
+| 💱 | **Multi-Currency** | | 🎨 | **8 Themes · 7 Nav Styles** |
+| 📤 | **Export (JSON / CSV)** | | 📥 | **Import Backup** |
+| 📴 | **Fully Offline** | | 🌟 | **Smooth, Premium UI** |
 
 ---
 
 ## 🛠️ Tech Stack
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=flat-square&logo=kotlin&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Jetpack%20Compose-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Material%203-757575?style=flat-square&logo=materialdesign&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Room-DB-FF6F00?style=flat-square&logo=sqlite&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Coroutines-Async-40C4FF?style=flat-square&logo=kotlin&logoColor=white"/>
+</p>
+
 | Layer | Technology |
 |---|---|
 | 🧑‍💻 Language | Kotlin |
-| 🎨 UI | Jetpack Compose |
-| 🧱 Design | Material 3 |
+| 🎨 UI | Jetpack Compose · Material 3 |
 | 🏛️ Architecture | MVVM |
-| 🧭 Navigation | Navigation Compose |
-| 🗄️ Database | Room |
-| ⚙️ Preferences | DataStore |
-| ⚡ Async | Coroutines + StateFlow |
-| 🖼️ Image | Coil |
-| 🔁 Serialization | Gson |
+| 🗄️ Storage | Room · DataStore |
+| ⚡ Async | Coroutines · StateFlow |
+| 🖼️ Extras | Coil · Gson · Navigation Compose |
 
 ---
 
 ## 📱 Device Compatibility
 
-| Requirement | Value |
-|---|---|
-| 🟢 Minimum Android | 8.0 Oreo (API 26) |
-| 🎯 Target Android | 14 (API 34) |
-| ⬆️ Maximum Android | Latest (no upper limit) |
-| 🏗️ Architecture | arm64-v8a, armeabi-v7a, x86_64 |
-| 📐 Screen | All sizes supported |
-
----
-
-## 🚀 Installation
-
-### 📋 Prerequisites
-
-- 🧩 Android Studio Hedgehog or later
-- ☕ JDK 17
-- 📦 Android SDK 34
-
-### 🔨 Build (debug)
-
-```bash
-git clone https://github.com/mkr-infinity/Solo-Ledger.git
-cd Solo-Ledger
-./gradlew assembleDebug
-```
-
-### 📲 Install
-
-```bash
-adb install app/build/outputs/apk/debug/app-debug.apk
-```
-
-> 💡 Or simply open the project in **Android Studio** and hit ▶️ Run.
-
----
-
-## 🔐 Release Builds
-
-Solo Ledger ships as a **signed release APK**. Signing credentials are never committed — they live in a local `keystore.properties` (git-ignored) or, for CI, in GitHub Actions **secrets**.
-
-### 🏠 Local signed release
-
-1. Copy the example config and fill in your keystore values:
-   ```bash
-   cp keystore.properties.example keystore.properties
-   ```
-2. Build:
-   ```bash
-   ./gradlew assembleRelease
-   ```
-   Output → `app/build/outputs/apk/release/app-release.apk`
-
-### ☁️ CI release (GitHub Actions — manual trigger)
-
-The release workflow (`.github/workflows/release.yml`) is **manual only** (`workflow_dispatch`) — it never runs automatically on push or PR.
-
-> Run it from **GitHub → Actions → Build Signed Release APK → Run workflow**.
-
-It requires these repository **secrets**:
-
-| Secret | Description |
-|---|---|
-| `KEYSTORE_BASE64` | Base64-encoded keystore file |
-| `KEYSTORE_PASSWORD` | Keystore (store) password |
-| `KEY_ALIAS` | Key alias (`solo-ledger`) |
-| `KEY_PASSWORD` | Key password |
-
-📄 Full step-by-step signing & secrets guide → **[CONTRIBUTING.md](CONTRIBUTING.md#-release-signing--secrets)**
-
----
-
-## 🗂️ Project Structure
-
-```
-app/src/main/java/com/solo/ledger/
-├── 📱 SoloLedgerApp.kt         # Application class
-├── 🚪 MainActivity.kt          # Entry point
-├── 📂 data/
-│   ├── dao/                    # Room DAOs
-│   ├── database/               # Database definition
-│   ├── model/                  # Entity models
-│   ├── preferences/            # DataStore preferences
-│   └── repository/             # Data repositories
-└── 🎨 ui/
-    ├── components/             # Reusable UI components
-    ├── navigation/             # Nav graph, bottom bar, styles
-    ├── screens/                # All app screens
-    ├── theme/                  # Colors, typography, theme
-    └── viewmodel/              # MVVM ViewModel
-```
+| | Requirement | Value |
+|:---:|---|---|
+| 🟢 | Minimum Android | 8.0 Oreo (API 26) |
+| 🎯 | Target Android | 14 (API 34) |
+| 🏗️ | Architectures | arm64-v8a · armeabi-v7a · x86_64 |
+| 📐 | Screens | All sizes supported |
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome and appreciated! 🎉
+Contributions are welcome! 🎉 Build steps, project structure, and release signing all live in the guide:
 
-Please read the **[Contribution Guide](CONTRIBUTING.md)** for setup, coding standards, and the pull-request workflow.
-
-Quick start:
-
-```bash
-git checkout -b feature/your-feature
-# make your changes
-git commit -m "Add your feature"
-git push origin feature/your-feature
-```
-
-Then open a Pull Request 🚀
+<p align="center">
+  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/📄%20Read%20the-Contribution%20Guide-blueviolet?style=for-the-badge"/></a>
+</p>
 
 ---
 
 ## ❤️ Support
 
-If you find Solo Ledger useful, consider supporting the project:
+If Solo Ledger helps you, consider supporting the project:
 
-- ☕ [Buy Me a Coffee](https://buymeacoffee.com/mkr_infinity)
-- ⭐ [Star on GitHub](https://github.com/mkr-infinity/Solo-Ledger)
-- 📢 Share with friends
+<p align="center">
+  <a href="https://buymeacoffee.com/mkr_infinity"><img src="https://img.shields.io/badge/☕%20Buy%20Me%20a%20Coffee-FFDD00?style=for-the-badge&logoColor=black"/></a>
+  <a href="https://github.com/mkr-infinity/Solo-Ledger"><img src="https://img.shields.io/badge/⭐%20Star%20on-GitHub-181717?style=for-the-badge&logo=github"/></a>
+</p>
 
 ---
 
@@ -244,11 +110,11 @@ If you find Solo Ledger useful, consider supporting the project:
 
 **Mohammad Kaif Raja**
 
-<p align="left">
-  <a href="https://github.com/mkr-infinity"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub"/></a>
-  <a href="https://mkr-infinity.github.io/"><img src="https://img.shields.io/badge/Portfolio-FF7139?style=flat-square&logo=firefox&logoColor=white" alt="Portfolio"/></a>
-  <a href="https://instagram.com/mkr_infinity"><img src="https://img.shields.io/badge/Instagram-E4405F?style=flat-square&logo=instagram&logoColor=white" alt="Instagram"/></a>
-  <a href="https://t.me/mkr_infinity"><img src="https://img.shields.io/badge/Telegram-26A5E4?style=flat-square&logo=telegram&logoColor=white" alt="Telegram"/></a>
+<p align="center">
+  <a href="https://github.com/mkr-infinity"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white"/></a>
+  <a href="https://mkr-infinity.github.io/"><img src="https://img.shields.io/badge/Portfolio-FF7139?style=flat-square&logo=firefox&logoColor=white"/></a>
+  <a href="https://instagram.com/mkr_infinity"><img src="https://img.shields.io/badge/Instagram-E4405F?style=flat-square&logo=instagram&logoColor=white"/></a>
+  <a href="https://t.me/mkr_infinity"><img src="https://img.shields.io/badge/Telegram-26A5E4?style=flat-square&logo=telegram&logoColor=white"/></a>
 </p>
 
 ---
@@ -256,25 +122,5 @@ If you find Solo Ledger useful, consider supporting the project:
 ## 📄 License
 
 Released under the **MIT License** © 2024 Mohammad Kaif Raja.
-
-```
-MIT License
-
-Copyright (c) 2024 Mohammad Kaif Raja
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-```
 
 <p align="center"><sub>Built with ❤️ and Kotlin · Solo Ledger</sub></p>
