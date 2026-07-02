@@ -83,7 +83,7 @@ abstract class SoloLedgerDatabase : RoomDatabase() {
             val templates = listOf(
                 BudgetTemplate(
                     name = "Student Budget",
-                    monthlyBudget = 5000.0,
+                    monthlyBudget = 6000.0,
                     description = "Ideal for college students with limited allowance",
                     isDefault = true
                 ),

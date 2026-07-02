@@ -396,13 +396,13 @@ private fun RoundedPillNavBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 32.dp, vertical = 16.dp),
+            .padding(horizontal = 24.dp, vertical = 16.dp),
         contentAlignment = Alignment.Center
     ) {
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(50))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
                 .padding(6.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically

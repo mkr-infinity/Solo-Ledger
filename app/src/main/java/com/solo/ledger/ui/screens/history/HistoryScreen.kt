@@ -194,30 +194,53 @@ fun HistoryScreen(
                         val category = categories.find { it.id == expense.categoryId }
                         val dismissState = rememberDismissState(
                             confirmValueChange = { dismissValue ->
-                                if (dismissValue == DismissValue.DismissedToStart) {
-                                    viewModel.deleteExpense(expense.id)
-                                    true
-                                } else false
+                                when (dismissValue) {
+                                    DismissValue.DismissedToStart -> {
+                                        viewModel.deleteExpense(expense.id)
+                                        true
+                                    }
+                                    DismissValue.DismissedToEnd -> {
+                                        onEditExpense(expense.id)
+                                        false
+                                    }
+                                    else -> false
+                                }
                             }
                         )
 
                         SwipeToDismiss(
                             state = dismissState,
-                            directions = setOf(DismissDirection.EndToStart),
+                            directions = setOf(DismissDirection.EndToStart, DismissDirection.StartToEnd),
                             background = {
+                                val direction = dismissState.dismissDirection
+                                val isDelete = direction == DismissDirection.EndToStart
                                 Box(
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(MaterialTheme.colorScheme.error.copy(alpha = 0.15f))
-                                        .padding(end = 20.dp),
-                                    contentAlignment = Alignment.CenterEnd
+                                        .background(
+                                            if (isDelete) MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
+                                            else MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                        )
+                                        .padding(horizontal = 20.dp),
+                                    contentAlignment = if (isDelete) Alignment.CenterEnd else Alignment.CenterStart
                                 ) {
-                                    Icon(
-                                        Icons.Filled.Delete,
-                                        contentDescription = "Delete",
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            if (isDelete) Icons.Filled.Delete else Icons.Filled.Edit,
+                                            contentDescription = if (isDelete) "Delete" else "Edit",
+                                            tint = if (isDelete) MaterialTheme.colorScheme.error
+                                            else MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = if (isDelete) "Delete" else "Edit",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            color = if (isDelete) MaterialTheme.colorScheme.error
+                                            else MaterialTheme.colorScheme.primary
+                                        )
+                                    }
                                 }
                             },
                             dismissContent = {

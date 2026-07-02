@@ -6,6 +6,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -38,16 +39,34 @@ fun LogsScreen(
     val context = LocalContext.current
     var showExportSheet by remember { mutableStateOf(false) }
     var showClearConfirm by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+
+    // Terminal colors
+    val terminalBg = Color(0xFF0A0E14)
+    val terminalBorder = Color(0xFF1B2838)
+    val terminalHeaderBg = Color(0xFF0F1923)
+    val terminalCursor = Color(0xFF39BAE6)
+    val terminalDim = Color(0xFF4D5566)
+    val terminalText = Color(0xFFE6E1CF)
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        "Logs",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Filled.Code,
+                            contentDescription = null,
+                            tint = terminalCursor,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "Activity Logs",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -77,52 +96,140 @@ fun LogsScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Filled.Code,
-                        contentDescription = null,
-                        modifier = Modifier.size(56.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(terminalBg),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = ">_",
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = terminalCursor
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "No logs recorded",
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Activity will appear here when logging is enabled",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
                 }
             }
         } else {
-            // Terminal-style log viewer
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
                     .padding(12.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFF0D1117))
             ) {
-                LazyColumn(
+                // Stats bar
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(terminalHeaderBg)
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(Color(0xFF7EE787))
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "RECORDING",
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF7EE787),
+                            letterSpacing = 1.sp
+                        )
+                    }
+                    Text(
+                        text = "${logs.size} entries",
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 11.sp,
+                        color = terminalDim
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Terminal body
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(terminalBg)
                 ) {
-                    item {
-                        TerminalHeader(logCount = logs.size)
-                    }
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(1.dp)
+                    ) {
+                        item {
+                            // Terminal header
+                            Text(
+                                text = "#!/solo-ledger/logs",
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 10.sp,
+                                color = terminalDim
+                            )
+                            Text(
+                                text = "# Session started: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())}",
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 10.sp,
+                                color = terminalDim
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Divider(color = terminalBorder, thickness = 1.dp)
+                            Spacer(modifier = Modifier.height(6.dp))
+                        }
 
-                    items(logs, key = { it.id }) { log ->
-                        TerminalLogLine(log = log)
-                    }
+                        items(logs, key = { it.id }) { log ->
+                            TerminalLogEntry(log = log, terminalDim = terminalDim, terminalText = terminalText)
+                        }
 
-                    item {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "$ _",
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 12.sp,
-                            color = Color(0xFF8B949E)
-                        )
+                        item {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "solo-ledger",
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = terminalCursor
+                                )
+                                Text(
+                                    text = " > ",
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 11.sp,
+                                    color = Color(0xFFFF8F40)
+                                )
+                                Text(
+                                    text = "_",
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 11.sp,
+                                    color = terminalText
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -162,7 +269,7 @@ fun LogsScreen(
         AlertDialog(
             onDismissRequest = { showClearConfirm = false },
             title = { Text("Clear All Logs") },
-            text = { Text("This will permanently delete all ${logs.size} log entries.") },
+            text = { Text("This will permanently delete all ${logs.size} log entries. This action cannot be undone.") },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.clearLogs()
@@ -181,48 +288,33 @@ fun LogsScreen(
 }
 
 @Composable
-private fun TerminalHeader(logCount: Int) {
-    Column {
-        Text(
-            text = "// Solo Ledger Activity Log",
-            fontFamily = FontFamily.Monospace,
-            fontSize = 11.sp,
-            color = Color(0xFF8B949E)
-        )
-        Text(
-            text = "// Total entries: $logCount",
-            fontFamily = FontFamily.Monospace,
-            fontSize = 11.sp,
-            color = Color(0xFF8B949E)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-    }
-}
-
-@Composable
-private fun TerminalLogLine(log: AppLog) {
-    val timeStr = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date(log.timestamp))
-    val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(log.timestamp))
+private fun TerminalLogEntry(
+    log: AppLog,
+    terminalDim: Color,
+    terminalText: Color
+) {
+    val timeStr = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(log.timestamp))
+    val dateStr = SimpleDateFormat("MM-dd", Locale.getDefault()).format(Date(log.timestamp))
 
     val typeColor = when (log.type) {
         LogType.EXPENSE_ADDED, LogType.GOAL_ADDED, LogType.CATEGORY_ADDED -> Color(0xFF7EE787)
         LogType.EXPENSE_EDITED, LogType.GOAL_UPDATED, LogType.SETTINGS_CHANGED,
-        LogType.THEME_CHANGED, LogType.BUDGET_CHANGED -> Color(0xFFF0C14B)
-        LogType.EXPENSE_DELETED, LogType.CATEGORY_DELETED, LogType.BIN_CLEARED -> Color(0xFFF85149)
+        LogType.THEME_CHANGED, LogType.BUDGET_CHANGED -> Color(0xFFE2B340)
+        LogType.EXPENSE_DELETED, LogType.CATEGORY_DELETED, LogType.BIN_CLEARED -> Color(0xFFFF6B6B)
         LogType.EXPENSE_RESTORED -> Color(0xFF79C0FF)
         LogType.DATA_EXPORTED, LogType.DATA_IMPORTED -> Color(0xFFD2A8FF)
-        LogType.APP_OPENED -> Color(0xFF8B949E)
+        LogType.APP_OPENED -> Color(0xFF56D6A6)
     }
 
     val typeTag = when (log.type) {
         LogType.EXPENSE_ADDED -> "ADD"
-        LogType.EXPENSE_EDITED -> "EDT"
+        LogType.EXPENSE_EDITED -> "MOD"
         LogType.EXPENSE_DELETED -> "DEL"
         LogType.EXPENSE_RESTORED -> "RST"
-        LogType.CATEGORY_ADDED -> "CAT+"
-        LogType.CATEGORY_DELETED -> "CAT-"
-        LogType.GOAL_ADDED -> "GOL+"
-        LogType.GOAL_UPDATED -> "GOL~"
+        LogType.CATEGORY_ADDED -> "NEW"
+        LogType.CATEGORY_DELETED -> "RMV"
+        LogType.GOAL_ADDED -> "GOL"
+        LogType.GOAL_UPDATED -> "UPD"
         LogType.BUDGET_CHANGED -> "BDG"
         LogType.THEME_CHANGED -> "THM"
         LogType.DATA_EXPORTED -> "EXP"
@@ -236,36 +328,40 @@ private fun TerminalLogLine(log: AppLog) {
         modifier = Modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
-            .padding(vertical = 1.dp)
+            .padding(vertical = 2.dp)
     ) {
+        // Timestamp
         Text(
-            text = "[$dateStr $timeStr]",
+            text = "$dateStr $timeStr",
             fontFamily = FontFamily.Monospace,
-            fontSize = 11.sp,
-            color = Color(0xFF8B949E)
+            fontSize = 10.sp,
+            color = terminalDim
         )
-        Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.width(8.dp))
+        // Type badge
         Text(
-            text = typeTag.padEnd(5),
+            text = "[${typeTag}]",
             fontFamily = FontFamily.Monospace,
-            fontSize = 11.sp,
+            fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             color = typeColor
         )
-        Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.width(8.dp))
+        // Title
         Text(
             text = log.title,
             fontFamily = FontFamily.Monospace,
             fontSize = 11.sp,
-            color = Color(0xFFE6EDF3)
+            color = terminalText
         )
+        // Details
         if (log.details.isNotBlank()) {
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "| ${log.details}",
+                text = "-- ${log.details}",
                 fontFamily = FontFamily.Monospace,
-                fontSize = 11.sp,
-                color = Color(0xFF8B949E)
+                fontSize = 10.sp,
+                color = terminalDim
             )
         }
     }
@@ -290,7 +386,7 @@ private fun ExportLogsSheet(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Choose time range",
+                text = "Choose time range to export",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

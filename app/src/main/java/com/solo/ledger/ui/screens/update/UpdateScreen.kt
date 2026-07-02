@@ -43,21 +43,24 @@ fun UpdateScreen(
     var latestRelease by remember { mutableStateOf<GithubRelease?>(null) }
     var checkResult by remember { mutableStateOf<String?>(null) }
     var autoCheckEnabled by remember { mutableStateOf(true) }
+    var hasCheckedOnLoad by remember { mutableStateOf(false) }
 
     val currentVersion = "1.0.0"
 
-    // Auto-check on load
-    LaunchedEffect(autoCheckEnabled) {
-        if (autoCheckEnabled) {
+    // Only auto-check once on load, not on every recomposition
+    LaunchedEffect(Unit) {
+        if (autoCheckEnabled && !hasCheckedOnLoad) {
+            hasCheckedOnLoad = true
             isChecking = true
             try {
-                latestRelease = fetchLatestRelease()
-                checkResult = if (latestRelease != null && isNewerVersion(latestRelease!!.tagName, currentVersion)) {
+                val release = fetchLatestRelease()
+                latestRelease = release
+                checkResult = if (release != null && isNewerVersion(release.tagName, currentVersion)) {
                     "update_available"
                 } else {
                     "up_to_date"
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 checkResult = "up_to_date"
             }
             isChecking = false
@@ -165,7 +168,7 @@ fun UpdateScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Check GitHub releases on app open",
+                            text = "Check GitHub releases on screen open",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -183,14 +186,21 @@ fun UpdateScreen(
                     scope.launch {
                         isChecking = true
                         try {
-                            latestRelease = fetchLatestRelease()
-                            checkResult = if (latestRelease != null && isNewerVersion(latestRelease!!.tagName, currentVersion)) {
+                            val release = fetchLatestRelease()
+                            latestRelease = release
+                            checkResult = if (release != null && isNewerVersion(release.tagName, currentVersion)) {
                                 "update_available"
                             } else {
                                 "up_to_date"
                             }
-                        } catch (e: Exception) {
+                            viewModel.showToast(
+                                if (checkResult == "update_available") "New update available"
+                                else "You are up to date",
+                                com.solo.ledger.ui.components.ToastType.INFO
+                            )
+                        } catch (_: Exception) {
                             checkResult = "up_to_date"
+                            viewModel.showToast("Could not check for updates", com.solo.ledger.ui.components.ToastType.WARNING)
                         }
                         isChecking = false
                     }
@@ -299,7 +309,6 @@ fun UpdateScreen(
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
                                     Spacer(modifier = Modifier.height(6.dp))
-                                    // Parse markdown body as plain text (strip markdown syntax)
                                     Text(
                                         text = parseChangelog(release.body),
                                         style = MaterialTheme.typography.bodySmall,
@@ -370,7 +379,6 @@ private suspend fun fetchLatestRelease(): GithubRelease? {
 
             if (connection.responseCode == 200) {
                 val json = connection.inputStream.bufferedReader().readText()
-                // Simple JSON parsing without library
                 val tagName = extractJsonString(json, "tag_name")
                 val name = extractJsonString(json, "name")
                 val body = extractJsonString(json, "body")
@@ -384,8 +392,10 @@ private suspend fun fetchLatestRelease(): GithubRelease? {
                     htmlUrl = htmlUrl,
                     publishedAt = publishedAt
                 )
-            } else null
-        } catch (e: Exception) {
+            } else {
+                null
+            }
+        } catch (_: Exception) {
             null
         }
     }

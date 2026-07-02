@@ -198,7 +198,7 @@ class MainViewModel(
     fun addExpense(expense: Expense) {
         viewModelScope.launch {
             expenseRepository.insertExpense(expense)
-            log(LogType.EXPENSE_ADDED, "Expense added: ${expense.title}", "Amount: ${expense.amount}")
+            log(LogType.EXPENSE_ADDED, "Expense added: ${expense.title}", "Amount: ${currencySymbol.value}${expense.amount} | Category ID: ${expense.categoryId} | Date: ${java.text.SimpleDateFormat("dd-MM-yyyy HH:mm", java.util.Locale.getDefault()).format(java.util.Date(expense.date))} | Notes: ${expense.notes.take(50)}")
             showToast("Expense added", com.solo.ledger.ui.components.ToastType.SUCCESS)
             _totalExpensesAdded.value++
             val count = _totalExpensesAdded.value
@@ -211,23 +211,25 @@ class MainViewModel(
     fun updateExpense(expense: Expense) {
         viewModelScope.launch {
             expenseRepository.updateExpense(expense.copy(updatedAt = System.currentTimeMillis()))
-            log(LogType.EXPENSE_EDITED, "Expense edited: ${expense.title}")
+            log(LogType.EXPENSE_EDITED, "Expense edited: ${expense.title}", "Amount: ${currencySymbol.value}${expense.amount} | ID: ${expense.id}")
             showToast("Expense updated", com.solo.ledger.ui.components.ToastType.INFO)
         }
     }
 
     fun deleteExpense(id: Long) {
         viewModelScope.launch {
+            val expense = expenseRepository.getExpenseById(id)
             expenseRepository.softDeleteExpense(id)
-            log(LogType.EXPENSE_DELETED, "Expense moved to bin", "ID: $id")
+            log(LogType.EXPENSE_DELETED, "Expense moved to bin: ${expense?.title ?: "Unknown"}", "ID: $id | Amount: ${currencySymbol.value}${expense?.amount ?: 0}")
             showToast("Moved to bin", com.solo.ledger.ui.components.ToastType.WARNING)
         }
     }
 
     fun restoreExpense(id: Long) {
         viewModelScope.launch {
+            val expense = expenseRepository.getExpenseById(id)
             expenseRepository.restoreExpense(id)
-            log(LogType.EXPENSE_RESTORED, "Expense restored", "ID: $id")
+            log(LogType.EXPENSE_RESTORED, "Expense restored: ${expense?.title ?: "Unknown"}", "ID: $id")
             showToast("Expense restored", com.solo.ledger.ui.components.ToastType.SUCCESS)
         }
     }
@@ -252,18 +254,21 @@ class MainViewModel(
     fun addCategory(category: Category) {
         viewModelScope.launch {
             categoryRepository.insertCategory(category)
+            log(LogType.CATEGORY_ADDED, "Category added: ${category.name}", "Icon: ${category.icon} | Color: #${Integer.toHexString(category.color.toInt())}")
         }
     }
 
     fun updateCategory(category: Category) {
         viewModelScope.launch {
             categoryRepository.updateCategory(category)
+            log(LogType.SETTINGS_CHANGED, "Category updated: ${category.name}", "ID: ${category.id}")
         }
     }
 
     fun deleteCategory(category: Category) {
         viewModelScope.launch {
             categoryRepository.deleteCategory(category)
+            log(LogType.CATEGORY_DELETED, "Category deleted: ${category.name}", "ID: ${category.id}")
         }
     }
 
@@ -271,18 +276,21 @@ class MainViewModel(
     fun addSavingsGoal(goal: SavingsGoal) {
         viewModelScope.launch {
             savingsGoalRepository.insertGoal(goal)
+            log(LogType.GOAL_ADDED, "Savings goal added: ${goal.name}", "Target: ${currencySymbol.value}${goal.targetAmount}")
         }
     }
 
     fun updateSavingsGoal(goal: SavingsGoal) {
         viewModelScope.launch {
             savingsGoalRepository.updateGoal(goal)
+            log(LogType.GOAL_UPDATED, "Savings goal updated: ${goal.name}", "Saved: ${currencySymbol.value}${goal.savedAmount} / ${currencySymbol.value}${goal.targetAmount}")
         }
     }
 
     fun deleteSavingsGoal(goal: SavingsGoal) {
         viewModelScope.launch {
             savingsGoalRepository.deleteGoal(goal)
+            log(LogType.GOAL_UPDATED, "Savings goal deleted: ${goal.name}", "")
         }
     }
 
@@ -290,6 +298,7 @@ class MainViewModel(
     fun setTheme(themeKey: String) {
         viewModelScope.launch {
             userPreferences.setTheme(themeKey)
+            log(LogType.THEME_CHANGED, "Theme changed to: $themeKey", "")
             val theme = com.solo.ledger.ui.theme.AppTheme.fromKey(themeKey)
             if (theme.isSquare) {
                 userPreferences.setBorderRadius(0f)
@@ -300,7 +309,10 @@ class MainViewModel(
     }
 
     fun setNavigationStyle(styleKey: String) {
-        viewModelScope.launch { userPreferences.setNavigationStyle(styleKey) }
+        viewModelScope.launch {
+            userPreferences.setNavigationStyle(styleKey)
+            log(LogType.SETTINGS_CHANGED, "Navigation style changed", "Style: $styleKey")
+        }
     }
 
     fun completeOnboarding(name: String, budget: Double) {

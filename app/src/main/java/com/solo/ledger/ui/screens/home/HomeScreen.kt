@@ -49,6 +49,7 @@ fun HomeScreen(
     val categorySpending by viewModel.categorySpending.collectAsStateWithLifecycle()
     val savingsGoals by viewModel.savingsGoals.collectAsStateWithLifecycle()
     val borderRadius by viewModel.borderRadius.collectAsStateWithLifecycle()
+    val avatarPath by viewModel.avatarPath.collectAsStateWithLifecycle()
 
     val remaining = monthlyBudget - monthlySpending
     val budgetUsagePercent = if (monthlyBudget > 0) (monthlySpending / monthlyBudget).coerceIn(0.0, 1.0) else 0.0
@@ -77,7 +78,8 @@ fun HomeScreen(
                 userName = userName,
                 currentTime = currentTime,
                 borderRadius = borderRadius,
-                onProfileClick = onNavigateToProfile
+                onProfileClick = onNavigateToProfile,
+                avatarPath = avatarPath
             )
         }
 
@@ -271,7 +273,8 @@ private fun HomeTopBar(
     userName: String,
     currentTime: Long,
     borderRadius: Float,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    avatarPath: String = ""
 ) {
     val dateFormat = SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault())
     val timeFormat = SimpleDateFormat("hh:mm:ss a", Locale.getDefault())
@@ -283,26 +286,10 @@ private fun HomeTopBar(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.clickable { onProfileClick() }
+            modifier = Modifier
+                .weight(1f)
+                .clickable { onProfileClick() }
         ) {
-            // Profile avatar
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = userName.firstOrNull()?.uppercase() ?: "U",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
             Column {
                 Text(
                     text = "Hello, ${userName.ifBlank { "there" }}",
@@ -318,20 +305,32 @@ private fun HomeTopBar(
             }
         }
 
-        // Live clock display
-        Surface(
-            shape = RoundedCornerShape(borderRadius.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            tonalElevation = 2.dp
+        // Profile avatar on right
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .clickable { onProfileClick() },
+            contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = timeFormat.format(Date(currentTime)),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                letterSpacing = 1.sp
-            )
+            if (avatarPath.isNotBlank()) {
+                coil.compose.AsyncImage(
+                    model = java.io.File(avatarPath),
+                    contentDescription = "Profile",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+            } else {
+                Text(
+                    text = userName.firstOrNull()?.uppercase() ?: "U",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
         }
     }
 }

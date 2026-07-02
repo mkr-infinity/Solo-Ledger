@@ -16,16 +16,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
-    var architectExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -57,7 +60,7 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
-            // App info with logo
+            // App info card
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -72,7 +75,6 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // App Logo
                         Box(
                             modifier = Modifier
                                 .size(72.dp)
@@ -110,7 +112,6 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Device compatibility
                         Card(
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surface
@@ -157,107 +158,128 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                 }
             }
 
-            // The Architect
+            // The Architect - Reference Image Style
             item {
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { architectExpanded = !architectExpanded },
+                    modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     ),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(20.dp)
                 ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Avatar placeholder
+                        Box(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                            contentAlignment = Alignment.Center
                         ) {
-                            // Architect avatar with app logo
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primaryContainer),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.AccountBalanceWallet,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(24.dp),
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(14.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "The Architect",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    text = "Mohammad Kaif Raja",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-
                             Icon(
-                                imageVector = if (architectExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                                contentDescription = "Expand",
+                                imageVector = Icons.Filled.Person,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
-                        AnimatedVisibility(
-                            visible = architectExpanded,
-                            enter = expandVertically() + fadeIn(),
-                            exit = shrinkVertically() + fadeOut()
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Badge
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                         ) {
-                            Column(
-                                modifier = Modifier.padding(top = 16.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            Text(
+                                text = "SOLO LEDGER PRO",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                letterSpacing = 1.sp
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = "Mohammad Kaif Raja",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "\"Crafting digital legacies with architectural precision and code.\"",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontStyle = FontStyle.Italic,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // 2x2 Grid of links
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                ArchitectLink(
-                                    icon = Icons.Filled.Code,
-                                    label = "GitHub",
-                                    subtitle = "@mkr-infinity",
-                                    onClick = {
-                                        context.startActivity(
-                                            Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/mkr-infinity"))
-                                        )
-                                    }
-                                )
-                                ArchitectLink(
+                                ArchitectLinkCard(
+                                    modifier = Modifier.weight(1f),
+                                    label = "PORTFOLIO",
+                                    title = "Website",
                                     icon = Icons.Filled.Language,
-                                    label = "Portfolio",
-                                    subtitle = "mkr-infinity.github.io",
                                     onClick = {
                                         context.startActivity(
                                             Intent(Intent.ACTION_VIEW, Uri.parse("https://mkr-infinity.github.io/"))
                                         )
                                     }
                                 )
-                                ArchitectLink(
+                                ArchitectLinkCard(
+                                    modifier = Modifier.weight(1f),
+                                    label = "VISUALS",
+                                    title = "Instagram",
                                     icon = Icons.Filled.CameraAlt,
-                                    label = "Instagram",
-                                    subtitle = "@mkr_infinity",
                                     onClick = {
                                         context.startActivity(
                                             Intent(Intent.ACTION_VIEW, Uri.parse("https://instagram.com/mkr_infinity"))
                                         )
                                     }
                                 )
-                                ArchitectLink(
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                ArchitectLinkCard(
+                                    modifier = Modifier.weight(1f),
+                                    label = "CHAT",
+                                    title = "Telegram",
                                     icon = Icons.Filled.Send,
-                                    label = "Telegram",
-                                    subtitle = "@mkr_infinity",
                                     onClick = {
                                         context.startActivity(
                                             Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/mkr_infinity"))
+                                        )
+                                    }
+                                )
+                                ArchitectLinkCard(
+                                    modifier = Modifier.weight(1f),
+                                    label = "SOURCE",
+                                    title = "GitHub",
+                                    icon = Icons.Filled.Code,
+                                    onClick = {
+                                        context.startActivity(
+                                            Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/mkr-infinity"))
                                         )
                                     }
                                 )
@@ -328,18 +350,20 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ArchitectLink(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+private fun ArchitectLinkCard(
+    modifier: Modifier = Modifier,
     label: String,
-    subtitle: String,
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit
 ) {
     Card(
         onClick = onClick,
+        modifier = modifier,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(14.dp)
     ) {
         Row(
             modifier = Modifier
@@ -351,35 +375,37 @@ private fun ArchitectLink(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                    .background(MaterialTheme.colorScheme.surface),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = 0.5.sp,
+                    fontSize = 9.sp
+                )
+                Text(
+                    text = title,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Icon(
                 imageVector = Icons.Filled.OpenInNew,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                modifier = Modifier.size(16.dp)
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.size(14.dp)
             )
         }
     }

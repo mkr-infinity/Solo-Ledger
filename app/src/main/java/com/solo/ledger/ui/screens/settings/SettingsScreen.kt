@@ -1,13 +1,10 @@
 package com.solo.ledger.ui.screens.settings
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,7 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.solo.ledger.ui.navigation.NavigationStyle
 import com.solo.ledger.ui.theme.AppTheme
 import com.solo.ledger.ui.viewmodel.MainViewModel
 
@@ -46,8 +42,8 @@ fun SettingsScreen(
 ) {
     val animationsEnabled by viewModel.animationsEnabled.collectAsStateWithLifecycle()
     val currentThemeKey by viewModel.currentTheme.collectAsStateWithLifecycle()
-    val currentNavStyle by viewModel.navigationStyle.collectAsStateWithLifecycle()
     val borderRadius by viewModel.borderRadius.collectAsStateWithLifecycle()
+    val logsEnabled by viewModel.logsEnabled.collectAsStateWithLifecycle()
 
     val cardShape = RoundedCornerShape(borderRadius.dp)
 
@@ -55,184 +51,304 @@ fun SettingsScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Header
         item {
-            Text(
-                text = "Settings",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            Column {
+                Text(
+                    text = "WORKSPACE PREFERENCES",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = 1.5.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Settings",
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
         }
 
-        // Theme Selection with horizontal preview carousel
+        // Appearance Section - Theme Grid
         item {
-            SettingsSectionHeader("Appearance")
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Appearance",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    TextButton(onClick = onNavigateToTheme) {
+                        Text(
+                            "SELECT THEME",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            letterSpacing = 1.sp
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                ThemeGrid(
+                    currentThemeKey = currentThemeKey,
+                    onThemeSelected = { viewModel.setTheme(it) },
+                    cardShape = cardShape
+                )
+            }
         }
 
+        // Bin - standalone row
         item {
-            Text(
-                text = "Theme",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-            ThemeCarousel(
-                currentThemeKey = currentThemeKey,
-                onThemeSelected = { viewModel.setTheme(it) },
-                cardShape = cardShape
-            )
-        }
-
-        // Navigation Style with horizontal preview carousel
-        item {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Navigation",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-            NavigationStyleCarousel(
-                currentStyleKey = currentNavStyle,
-                onStyleSelected = { viewModel.setNavigationStyle(it) },
-                cardShape = cardShape
-            )
-        }
-
-        // Animations toggle
-        item {
-            SettingsToggleItem(
-                icon = Icons.Filled.Animation,
-                title = "Animations",
-                subtitle = "Enable smooth transitions",
-                checked = animationsEnabled,
-                onCheckedChange = { viewModel.updateAnimationsEnabled(it) },
-                cardShape = cardShape
-            )
-        }
-
-        // Profile Section
-        item {
-            SettingsSectionHeader("Account")
-        }
-        item {
-            SettingsItem(
-                icon = Icons.Filled.Person,
-                title = "Profile",
-                subtitle = "Name, avatar, currency",
-                onClick = onNavigateToProfile,
-                cardShape = cardShape
-            )
-        }
-
-        // Budget Section
-        item {
-            SettingsSectionHeader("Budget")
-        }
-        item {
-            SettingsItem(
-                icon = Icons.Filled.Category,
-                title = "Categories",
-                subtitle = "Manage expense categories",
-                onClick = onNavigateToCategories,
-                cardShape = cardShape
-            )
-        }
-        item {
-            SettingsItem(
-                icon = Icons.Filled.Description,
-                title = "Budget Templates",
-                subtitle = "Pre-made budget plans",
-                onClick = onNavigateToBudgetTemplates,
-                cardShape = cardShape
-            )
-        }
-        item {
-            SettingsItem(
-                icon = Icons.Filled.Savings,
-                title = "Savings Goals",
-                subtitle = "Track your savings targets",
-                onClick = onNavigateToSavingsGoals,
-                cardShape = cardShape
-            )
-        }
-
-        // Data Section
-        item {
-            SettingsSectionHeader("Data")
-        }
-        item {
-            SettingsItem(
-                icon = Icons.Filled.ImportExport,
-                title = "Import / Export",
-                subtitle = "Backup and restore data",
-                onClick = onNavigateToData,
-                cardShape = cardShape
-            )
-        }
-        item {
-            SettingsItem(
+            SettingsRowItem(
                 icon = Icons.Filled.DeleteSweep,
                 title = "Bin",
-                subtitle = "Recover deleted expenses",
+                subtitle = "Manage deleted transactions",
                 onClick = onNavigateToBin,
                 cardShape = cardShape
             )
         }
 
-        // Other Section
+        // Base Currency card
         item {
-            SettingsSectionHeader("Other")
-        }
-        item {
-            val logsEnabled by viewModel.logsEnabled.collectAsStateWithLifecycle()
-            SettingsToggleItem(
-                icon = Icons.Filled.History,
-                title = "Activity Logging",
-                subtitle = "Record all actions in the app",
-                checked = logsEnabled,
-                onCheckedChange = { viewModel.setLogsEnabled(it) },
+            SettingsRowItem(
+                icon = Icons.Filled.Payment,
+                title = "Base Currency",
+                subtitle = "Set default currency for all records",
+                onClick = onNavigateToProfile,
                 cardShape = cardShape
             )
         }
+
+        // Budget Customization grouped card
         item {
-            SettingsItem(
-                icon = Icons.Filled.Article,
-                title = "Logs",
-                subtitle = "View activity history and export",
-                onClick = onNavigateToLogs,
-                cardShape = cardShape
-            )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                shape = cardShape
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Filled.TrendingUp,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Budget Customization",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Set your financial limits and track spending efficiency.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Categories
+                    SettingsInlineItem(
+                        icon = Icons.Filled.Category,
+                        title = "Categories",
+                        onClick = onNavigateToCategories
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    // Templates
+                    SettingsInlineItem(
+                        icon = Icons.Filled.Description,
+                        title = "Budget Templates",
+                        onClick = onNavigateToBudgetTemplates
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    // Savings Goals
+                    SettingsInlineItem(
+                        icon = Icons.Filled.Savings,
+                        title = "Savings Goals",
+                        onClick = onNavigateToSavingsGoals
+                    )
+                }
+            }
         }
+
+        // Quick Add Customization - Toggles
         item {
-            SettingsItem(
-                icon = Icons.Filled.Update,
-                title = "Updates",
-                subtitle = "Check for new versions",
-                onClick = onNavigateToUpdates,
-                cardShape = cardShape
-            )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                shape = cardShape
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "Quick Add Customization",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Toggle which fields appear when creating a new record.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    SettingsInlineToggle(
+                        icon = Icons.Filled.Animation,
+                        title = "Animations",
+                        checked = animationsEnabled,
+                        onCheckedChange = { viewModel.updateAnimationsEnabled(it) }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    SettingsInlineToggle(
+                        icon = Icons.Filled.History,
+                        title = "Activity Logging",
+                        checked = logsEnabled,
+                        onCheckedChange = { viewModel.setLogsEnabled(it) }
+                    )
+                }
+            }
         }
+
+        // Data Management grouped card
         item {
-            SettingsItem(
-                icon = Icons.Filled.Favorite,
-                title = "Support",
-                subtitle = "Help us grow",
-                onClick = onNavigateToSupport,
-                cardShape = cardShape
-            )
+            Column {
+                Text(
+                    text = "Data Management",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    shape = cardShape
+                ) {
+                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                        SettingsCardRow(
+                            icon = Icons.Filled.FileDownload,
+                            title = "Import JSON",
+                            subtitle = "Restore your data from a file",
+                            onClick = onNavigateToData
+                        )
+                        Divider(
+                            modifier = Modifier.padding(horizontal = 20.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                        )
+                        SettingsCardRow(
+                            icon = Icons.Filled.FileUpload,
+                            title = "Export JSON",
+                            subtitle = "Backup your workspace data",
+                            onClick = onNavigateToData
+                        )
+                    }
+                }
+            }
         }
+
+        // Support & Feedback section
         item {
-            SettingsItem(
-                icon = Icons.Filled.Info,
-                title = "About",
-                subtitle = "App info and developer",
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                shape = cardShape
+            ) {
+                Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                    SettingsCardRow(
+                        icon = Icons.Filled.LocalCafe,
+                        title = "Buy me a coffee",
+                        subtitle = "Fuel future development",
+                        onClick = onNavigateToSupport
+                    )
+                    Divider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                    )
+                    SettingsCardRow(
+                        icon = Icons.Filled.Lightbulb,
+                        title = "Request feature",
+                        subtitle = "Suggest the next big addition",
+                        onClick = onNavigateToSupport
+                    )
+                    Divider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                    )
+                    SettingsCardRow(
+                        icon = Icons.Filled.BugReport,
+                        title = "Report bug",
+                        subtitle = "Encountered an issue? Report it",
+                        onClick = onNavigateToSupport
+                    )
+                }
+            }
+        }
+
+        // Other section
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                shape = cardShape
+            ) {
+                Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                    SettingsCardRow(
+                        icon = Icons.Filled.Article,
+                        title = "Logs",
+                        subtitle = "View activity history",
+                        onClick = onNavigateToLogs
+                    )
+                    Divider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                    )
+                    SettingsCardRow(
+                        icon = Icons.Filled.Update,
+                        title = "Updates",
+                        subtitle = "Check for new versions",
+                        onClick = onNavigateToUpdates
+                    )
+                }
+            }
+        }
+
+        // Developer Profile - Architect
+        item {
+            Text(
+                text = "Developer Profile",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            SettingsRowItem(
+                icon = Icons.Filled.Person,
+                title = "The Architect",
+                subtitle = "Mohammad Kaif Raja",
                 onClick = onNavigateToAbout,
                 cardShape = cardShape
             )
@@ -265,13 +381,12 @@ private fun VersionEasterEgg(cardShape: RoundedCornerShape, viewModel: MainViewM
         "Achievement unlocked: Version Tapper."
     )
 
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
                 tapCount++
                 if (tapCount == 5) {
-                    // First time reaching 5 taps - show support popup
                     viewModel.showSupportPopup.value = true
                 } else if (tapCount > 5) {
                     viewModel.showToast(
@@ -279,377 +394,339 @@ private fun VersionEasterEgg(cardShape: RoundedCornerShape, viewModel: MainViewM
                         com.solo.ledger.ui.components.ToastType.FUN
                     )
                 }
-            },
+            }
+            .padding(vertical = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "v1.0.0",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+        )
+    }
+}
+
+@Composable
+private fun ThemeGrid(
+    currentThemeKey: String,
+    onThemeSelected: (String) -> Unit,
+    cardShape: RoundedCornerShape
+) {
+    val themes = AppTheme.entries.take(4) // Show first 4 in grid
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        for (row in themes.chunked(2)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                row.forEach { theme ->
+                    val themeKey = AppTheme.toKey(theme)
+                    val isSelected = themeKey == currentThemeKey
+                    val colorScheme = com.solo.ledger.ui.theme.getColorScheme(theme)
+                    val previewRadius = if (theme.isSquare) 0.dp else 14.dp
+
+                    Card(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(90.dp)
+                            .clickable { onThemeSelected(themeKey) }
+                            .then(
+                                if (isSelected) Modifier.border(
+                                    2.dp,
+                                    MaterialTheme.colorScheme.primary,
+                                    RoundedCornerShape(previewRadius)
+                                ) else Modifier
+                            ),
+                        colors = CardDefaults.cardColors(
+                            containerColor = colorScheme.background
+                        ),
+                        shape = RoundedCornerShape(previewRadius)
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(10.dp),
+                                verticalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(10.dp)
+                                        .clip(RoundedCornerShape(5.dp))
+                                        .background(colorScheme.primary)
+                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(20.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(colorScheme.surface)
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(20.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(colorScheme.surfaceVariant)
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(10.dp)
+                                        .clip(RoundedCornerShape(5.dp))
+                                        .background(colorScheme.primaryContainer)
+                                )
+                            }
+                            // Active badge
+                            if (isSelected) {
+                                Surface(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(6.dp),
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = MaterialTheme.colorScheme.primary
+                                ) {
+                                    Text(
+                                        text = "ACTIVE",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        fontSize = 8.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                // Fill remaining space if odd
+                if (row.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+        // Theme name labels
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            themes.take(2).forEach { theme ->
+                Text(
+                    text = theme.displayName,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsRowItem(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    cardShape: RoundedCornerShape
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
         shape = cardShape
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "v1.0.0",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                imageVector = Icons.Filled.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                modifier = Modifier.size(20.dp)
             )
         }
     }
 }
 
 @Composable
-private fun ThemeCarousel(
-    currentThemeKey: String,
-    onThemeSelected: (String) -> Unit,
-    cardShape: RoundedCornerShape
+private fun SettingsInlineItem(
+    icon: ImageVector,
+    title: String,
+    onClick: () -> Unit
 ) {
-    val scrollState = rememberScrollState()
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .horizontalScroll(scrollState),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .clickable { onClick() }
+            .padding(vertical = 10.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        AppTheme.entries.forEach { theme ->
-            val themeKey = AppTheme.toKey(theme)
-            val isSelected = themeKey == currentThemeKey
-            val colorScheme = com.solo.ledger.ui.theme.getColorScheme(theme)
-            val previewRadius = if (theme.isSquare) 0.dp else 12.dp
-
-            Column(
-                modifier = Modifier
-                    .width(100.dp)
-                    .clickable { onThemeSelected(themeKey) },
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Mini preview card
-                Card(
-                    modifier = Modifier
-                        .width(100.dp)
-                        .height(70.dp)
-                        .then(
-                            if (isSelected) Modifier.border(
-                                2.dp,
-                                MaterialTheme.colorScheme.primary,
-                                RoundedCornerShape(previewRadius)
-                            ) else Modifier
-                        ),
-                    colors = CardDefaults.cardColors(
-                        containerColor = colorScheme.background
-                    ),
-                    shape = RoundedCornerShape(previewRadius)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(8.dp),
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        // Mini header
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(8.dp)
-                                .clip(RoundedCornerShape(previewRadius / 2))
-                                .background(colorScheme.primary)
-                        )
-                        // Mini cards
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(16.dp)
-                                    .clip(RoundedCornerShape(previewRadius / 3))
-                                    .background(colorScheme.surface)
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(16.dp)
-                                    .clip(RoundedCornerShape(previewRadius / 3))
-                                    .background(colorScheme.surfaceVariant)
-                            )
-                        }
-                        // Mini nav
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(8.dp)
-                                .clip(RoundedCornerShape(previewRadius / 2))
-                                .background(colorScheme.primaryContainer)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = theme.displayName,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (isSelected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    maxLines = 1,
-                    fontSize = 10.sp
-                )
-            }
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp)
+            )
         }
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+        Icon(
+            imageVector = Icons.Filled.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 
 @Composable
-private fun NavigationStyleCarousel(
-    currentStyleKey: String,
-    onStyleSelected: (String) -> Unit,
-    cardShape: RoundedCornerShape
+private fun SettingsInlineToggle(
+    icon: ImageVector,
+    title: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
 ) {
-    val scrollState = rememberScrollState()
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .horizontalScroll(scrollState),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+            .padding(vertical = 6.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        NavigationStyle.entries.forEach { style ->
-            val isSelected = style.key == currentStyleKey
-
-            Column(
-                modifier = Modifier
-                    .width(110.dp)
-                    .clickable { onStyleSelected(style.key) },
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Nav preview
-                Card(
-                    modifier = Modifier
-                        .width(110.dp)
-                        .height(50.dp)
-                        .then(
-                            if (isSelected) Modifier.border(
-                                2.dp,
-                                MaterialTheme.colorScheme.primary,
-                                cardShape
-                            ) else Modifier
-                        ),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    ),
-                    shape = cardShape
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(8.dp),
-                        contentAlignment = Alignment.BottomCenter
-                    ) {
-                        // Simulated nav bar preview
-                        NavigationPreviewMini(style)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = style.displayName,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (isSelected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    maxLines = 1,
-                    fontSize = 10.sp
-                )
-            }
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp)
+            )
         }
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
     }
 }
 
 @Composable
-private fun NavigationPreviewMini(style: NavigationStyle) {
-    val dotCount = 5
-    when (style) {
-        NavigationStyle.CAPSULE -> {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(20.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(horizontal = 4.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                repeat(dotCount) { i ->
-                    Box(
-                        modifier = Modifier
-                            .size(if (i == 0) 16.dp else 6.dp, 6.dp)
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(
-                                if (i == 0) MaterialTheme.colorScheme.primaryContainer
-                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-                            )
-                    )
-                }
-            }
+private fun SettingsCardRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 20.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp)
+            )
         }
-        NavigationStyle.FLOATING -> {
-            Row(
-                modifier = Modifier
-                    .width(80.dp)
-                    .height(18.dp)
-                    .clip(RoundedCornerShape(9.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(horizontal = 4.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                repeat(dotCount) {
-                    Box(
-                        modifier = Modifier
-                            .size(5.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
-                    )
-                }
-            }
+        Spacer(modifier = Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-        NavigationStyle.MINIMAL_FLAT -> {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(18.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                repeat(dotCount) {
-                    Box(
-                        modifier = Modifier
-                            .size(5.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
-                    )
-                }
-            }
-        }
-        NavigationStyle.ELEVATED -> {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(20.dp)
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(horizontal = 4.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                repeat(dotCount) { i ->
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(
-                                if (i == 0) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-                            )
-                    )
-                }
-            }
-        }
-        NavigationStyle.ROUNDED_PILL -> {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(18.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(horizontal = 4.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                repeat(dotCount) { i ->
-                    Box(
-                        modifier = Modifier
-                            .size(if (i == 0) 8.dp else 5.dp)
-                            .clip(CircleShape)
-                            .background(
-                                if (i == 0) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-                            )
-                    )
-                }
-            }
-        }
-        NavigationStyle.COMPACT -> {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(18.dp)
-                    .background(MaterialTheme.colorScheme.surface),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                repeat(dotCount) { i ->
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .clip(CircleShape)
-                            .background(
-                                if (i == 0) MaterialTheme.colorScheme.primaryContainer
-                                else Color.Transparent
-                            )
-                            .border(
-                                1.dp,
-                                if (i == 0) Color.Transparent
-                                else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                                CircleShape
-                            )
-                    )
-                }
-            }
-        }
-        NavigationStyle.MATERIAL_STANDARD -> {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(22.dp)
-                    .background(MaterialTheme.colorScheme.surface),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                repeat(dotCount) { i ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(
-                            modifier = Modifier
-                                .size(5.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    if (i == 0) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-                                )
-                        )
-                        Spacer(modifier = Modifier.height(1.dp))
-                        Box(
-                            modifier = Modifier
-                                .size(width = 10.dp, height = 2.dp)
-                                .clip(RoundedCornerShape(1.dp))
-                                .background(
-                                    if (i == 0) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                                    else Color.Transparent
-                                )
-                        )
-                    }
-                }
-            }
-        }
+        Icon(
+            imageVector = Icons.Filled.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 
+// Keep these for any other files that reference them
 @Composable
 fun SettingsSectionHeader(title: String) {
     Text(
