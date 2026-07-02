@@ -50,11 +50,15 @@ fun UpdateScreen(
     LaunchedEffect(autoCheckEnabled) {
         if (autoCheckEnabled) {
             isChecking = true
-            latestRelease = fetchLatestRelease()
-            checkResult = if (latestRelease != null && isNewerVersion(latestRelease!!.tagName, currentVersion)) {
-                "update_available"
-            } else {
-                "up_to_date"
+            try {
+                latestRelease = fetchLatestRelease()
+                checkResult = if (latestRelease != null && isNewerVersion(latestRelease!!.tagName, currentVersion)) {
+                    "update_available"
+                } else {
+                    "up_to_date"
+                }
+            } catch (e: Exception) {
+                checkResult = "up_to_date"
             }
             isChecking = false
         }
@@ -178,11 +182,15 @@ fun UpdateScreen(
                 onClick = {
                     scope.launch {
                         isChecking = true
-                        latestRelease = fetchLatestRelease()
-                        checkResult = if (latestRelease != null && isNewerVersion(latestRelease!!.tagName, currentVersion)) {
-                            "update_available"
-                        } else {
-                            "up_to_date"
+                        try {
+                            latestRelease = fetchLatestRelease()
+                            checkResult = if (latestRelease != null && isNewerVersion(latestRelease!!.tagName, currentVersion)) {
+                                "update_available"
+                            } else {
+                                "up_to_date"
+                            }
+                        } catch (e: Exception) {
+                            checkResult = "up_to_date"
                         }
                         isChecking = false
                     }

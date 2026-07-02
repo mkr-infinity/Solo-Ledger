@@ -35,7 +35,8 @@ import java.util.*
 fun HomeScreen(
     viewModel: MainViewModel,
     onNavigateToAnalytics: () -> Unit,
-    onNavigateToSavings: () -> Unit
+    onNavigateToSavings: () -> Unit,
+    onNavigateToProfile: () -> Unit = {}
 ) {
     val userName by viewModel.userName.collectAsStateWithLifecycle()
     val monthlyBudget by viewModel.monthlyBudget.collectAsStateWithLifecycle()
@@ -74,7 +75,8 @@ fun HomeScreen(
             HomeTopBar(
                 userName = userName,
                 currentTime = currentTime,
-                borderRadius = borderRadius
+                borderRadius = borderRadius,
+                onProfileClick = onNavigateToProfile
             )
         }
 
@@ -158,17 +160,21 @@ fun HomeScreen(
 private fun HomeTopBar(
     userName: String,
     currentTime: Long,
-    borderRadius: Float
+    borderRadius: Float,
+    onProfileClick: () -> Unit
 ) {
     val dateFormat = SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault())
-    val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+    val timeFormat = SimpleDateFormat("hh:mm:ss a", Locale.getDefault())
 
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.clickable { onProfileClick() }
+        ) {
             // Profile avatar
             Box(
                 modifier = Modifier

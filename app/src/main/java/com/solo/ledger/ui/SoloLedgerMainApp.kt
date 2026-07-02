@@ -127,7 +127,8 @@ fun SoloLedgerMainApp() {
                     HomeScreen(
                         viewModel = viewModel,
                         onNavigateToAnalytics = { navController.navigate(Screen.Analytics.route) },
-                        onNavigateToSavings = { navController.navigate(Screen.SavingsGoals.route) }
+                        onNavigateToSavings = { navController.navigate(Screen.SavingsGoals.route) },
+                        onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
                     )
                 }
 
@@ -274,11 +275,11 @@ fun SoloLedgerMainApp() {
             }
         }
 
-        // Toast overlay
+        // Toast overlay at bottom
         val toastData by viewModel.currentToast.collectAsStateWithLifecycle()
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
+            contentAlignment = Alignment.BottomCenter
         ) {
             com.solo.ledger.ui.components.AppToast(
                 toastData = toastData,

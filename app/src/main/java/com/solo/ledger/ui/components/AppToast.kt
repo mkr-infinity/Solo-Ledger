@@ -43,11 +43,11 @@ fun AppToast(
     AnimatedVisibility(
         visible = toastData != null,
         enter = slideInVertically(
-            initialOffsetY = { -it },
+            initialOffsetY = { it },
             animationSpec = spring(dampingRatio = 0.7f, stiffness = 500f)
         ) + fadeIn(),
         exit = slideOutVertically(
-            targetOffsetY = { -it },
+            targetOffsetY = { it },
             animationSpec = tween(300)
         ) + fadeOut()
     ) {
@@ -55,8 +55,8 @@ fun AppToast(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 8.dp),
-                contentAlignment = Alignment.TopCenter
+                    .padding(horizontal = 24.dp, vertical = 80.dp),
+                contentAlignment = Alignment.BottomCenter
             ) {
                 val containerColor = when (data.type) {
                     ToastType.SUCCESS -> MaterialTheme.colorScheme.secondaryContainer
