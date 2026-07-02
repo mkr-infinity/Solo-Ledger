@@ -15,11 +15,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.solo.ledger.data.model.Expense
+import com.solo.ledger.data.repository.PdfExporter
 import com.solo.ledger.ui.screens.home.formatAmount
 import com.solo.ledger.ui.screens.home.getCategoryIcon
 import com.solo.ledger.ui.viewmodel.MainViewModel
@@ -31,6 +33,7 @@ fun CalendarScreen(viewModel: MainViewModel) {
     val allExpenses by viewModel.allExpenses.collectAsStateWithLifecycle()
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val currencySymbol by viewModel.currencySymbol.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     var currentMonth by remember { mutableStateOf(Calendar.getInstance()) }
     var selectedDate by remember { mutableStateOf<Long?>(null) }
@@ -78,14 +81,37 @@ fun CalendarScreen(viewModel: MainViewModel) {
             .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
-        // Header
-        Text(
-            text = "Calendar",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
-        )
+        // Header with export
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp, bottom = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Calendar",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            IconButton(onClick = {
+                // Export current month as PDF statement
+                val monthExpenses = allExpenses.filter { expense ->
+                    val cal = Calendar.getInstance()
+                    cal.timeInMillis = expense.date
+                    cal.get(Calendar.YEAR) == currentMonth.get(Calendar.YEAR) &&
+                            cal.get(Calendar.MONTH) == currentMonth.get(Calendar.MONTH)
+                }
+                val monthName = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(currentMonth.time)
+                PdfExporter.exportTransactionsAsPdf(
+                    context, monthExpenses, categories, currencySymbol,
+                    "Solo Ledger Statement - $monthName"
+                )
+            }) {
+                Icon(Icons.Filled.PictureAsPdf, contentDescription = "Export PDF")
+            }
+        }
 
         // Month navigation
         Card(
