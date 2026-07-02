@@ -130,7 +130,14 @@ fun AddExpenseScreen(
             // Title
             OutlinedTextField(
                 value = title,
-                onValueChange = { title = it },
+                onValueChange = { newTitle ->
+                    title = newTitle
+                    // Auto-detect category from title
+                    val detected = com.solo.ledger.data.repository.CategoryDetector.detectCategory(newTitle, categories)
+                    if (detected != null) {
+                        selectedCategory = detected
+                    }
+                },
                 label = { Text("Title") },
                 leadingIcon = { Icon(Icons.Filled.Edit, contentDescription = null) },
                 singleLine = true,

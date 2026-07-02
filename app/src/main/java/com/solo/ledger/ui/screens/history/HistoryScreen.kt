@@ -41,6 +41,7 @@ fun HistoryScreen(
     var isSearchActive by remember { mutableStateOf(false) }
     var sortDescending by remember { mutableStateOf(true) }
     var selectedCategoryFilter by remember { mutableStateOf<Long?>(null) }
+    var selectedExpense by remember { mutableStateOf<Expense?>(null) }
 
     val displayedExpenses = if (isSearchActive && searchQuery.isNotBlank()) {
         searchResults
@@ -132,7 +133,6 @@ fun HistoryScreen(
                     label = { Text("All") },
                     shape = RoundedCornerShape(20.dp)
                 )
-                // Show only categories that have expenses
                 val usedCategoryIds = allExpenses.map { it.categoryId }.distinct()
                 categories.filter { it.id in usedCategoryIds }.take(4).forEach { cat ->
                     FilterChip(
@@ -189,17 +189,127 @@ fun HistoryScreen(
 
                     items(expenses, key = { it.id }) { expense ->
                         val category = categories.find { it.id == expense.categoryId }
-                        HistoryExpenseItem(
-                            expense = expense,
-                            category = category,
-                            currencySymbol = currencySymbol,
-                            onClick = { onEditExpense(expense.id) },
-                            onDelete = { viewModel.deleteExpense(expense.id) }
+                        val dismissState = rememberDismissState(
+                            confirmValueChange = { dismissValue ->
+                                if (dismissValue == DismissValue.DismissedToStart) {
+                                    viewModel.deleteExpense(expense.id)
+                                    true
+                                } else false
+                            }
+                        )
+
+                        SwipeToDismiss(
+                            state = dismissState,
+                            directions = setOf(DismissDirection.EndToStart),
+                            background = {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(MaterialTheme.colorScheme.error.copy(alpha = 0.15f))
+                                        .padding(end = 20.dp),
+                                    contentAlignment = Alignment.CenterEnd
+                                ) {
+                                    Icon(
+                                        Icons.Filled.Delete,
+                                        contentDescription = "Delete",
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            },
+                            dismissContent = {
+                                HistoryExpenseItem(
+                                    expense = expense,
+                                    category = category,
+                                    currencySymbol = currencySymbol,
+                                    onClick = { selectedExpense = expense }
+                                )
+                            }
                         )
                     }
                 }
             }
         }
+    }
+
+    // Transaction detail popup
+    if (selectedExpense != null) {
+        val expense = selectedExpense!!
+        val category = categories.find { it.id == expense.categoryId }
+
+        AlertDialog(
+            onDismissRequest = { selectedExpense = null },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (category != null) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(category.color).copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                getCategoryIcon(category.icon),
+                                contentDescription = null,
+                                tint = Color(category.color),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                    }
+                    Text(expense.title, fontWeight = FontWeight.Bold)
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    DetailRow("Amount", "$currencySymbol${formatAmount(expense.amount)}")
+                    DetailRow("Category", category?.name ?: "Other")
+                    DetailRow("Date", SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(expense.date)))
+                    DetailRow("Time", expense.time)
+                    if (expense.notes.isNotBlank()) {
+                        DetailRow("Notes", expense.notes)
+                    }
+                    DetailRow("Created", SimpleDateFormat("dd MMM yyyy HH:mm", Locale.getDefault()).format(Date(expense.createdAt)))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    selectedExpense = null
+                    onEditExpense(expense.id)
+                }) {
+                    Text("Edit")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    viewModel.deleteExpense(expense.id)
+                    selectedExpense = null
+                }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun DetailRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 
@@ -208,11 +318,8 @@ private fun HistoryExpenseItem(
     expense: Expense,
     category: com.solo.ledger.data.model.Category?,
     currencySymbol: String,
-    onClick: () -> Unit,
-    onDelete: () -> Unit
+    onClick: () -> Unit
 ) {
-    var showDeleteConfirm by remember { mutableStateOf(false) }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -225,7 +332,7 @@ private fun HistoryExpenseItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(14.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -260,17 +367,8 @@ private fun HistoryExpenseItem(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    if (expense.notes.isNotBlank()) {
-                        Text(
-                            text = expense.notes,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            maxLines = 1
-                        )
-                    }
                 }
             }
-
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "-$currencySymbol${formatAmount(expense.amount)}",
@@ -278,39 +376,12 @@ private fun HistoryExpenseItem(
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.error
                 )
-                IconButton(
-                    onClick = { showDeleteConfirm = true },
-                    modifier = Modifier.size(24.dp)
-                ) {
-                    Icon(
-                        Icons.Filled.DeleteOutline,
-                        contentDescription = "Delete",
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Text(
+                    text = SimpleDateFormat("dd MMM", Locale.getDefault()).format(Date(expense.date)),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
-    }
-
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete Expense") },
-            text = { Text("Move \"${expense.title}\" to bin?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    onDelete()
-                    showDeleteConfirm = false
-                }) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
     }
 }
