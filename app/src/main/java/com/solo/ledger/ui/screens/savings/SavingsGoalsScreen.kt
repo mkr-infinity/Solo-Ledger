@@ -97,6 +97,51 @@ fun SavingsGoalsScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(vertical = 16.dp)
             ) {
+                // Summary card
+                item {
+                    val totalSaved = savingsGoals.sumOf { it.savedAmount }
+                    val totalTarget = savingsGoals.sumOf { it.targetAmount }
+                    val overallProgress = if (totalTarget > 0) (totalSaved / totalTarget * 100).toInt() else 0
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                "Total Savings",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                "$currencySymbol${formatAmount(totalSaved)}",
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            LinearProgressIndicator(
+                                progress = (overallProgress / 100f).coerceIn(0f, 1f),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(6.dp)
+                                    .clip(RoundedCornerShape(3.dp)),
+                                color = MaterialTheme.colorScheme.secondary,
+                                trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.12f)
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                "$overallProgress% of $currencySymbol${formatAmount(totalTarget)} goal",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                }
+
                 items(savingsGoals, key = { it.id }) { goal ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
