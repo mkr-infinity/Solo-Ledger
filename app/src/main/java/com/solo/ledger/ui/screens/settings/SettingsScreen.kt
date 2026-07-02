@@ -221,15 +221,6 @@ fun SettingsScreen(
         }
         item {
             SettingsItem(
-                icon = Icons.Filled.NewReleases,
-                title = "Coming Soon",
-                subtitle = "Premium features in development",
-                onClick = onNavigateToComingSoon,
-                cardShape = cardShape
-            )
-        }
-        item {
-            SettingsItem(
                 icon = Icons.Filled.Favorite,
                 title = "Support",
                 subtitle = "Help us grow",

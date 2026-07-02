@@ -263,10 +263,11 @@ fun AddExpenseScreen(
             Button(
                 onClick = {
                     val amountValue = amount.toDoubleOrNull() ?: 0.0
-                    if (title.isNotBlank() && amountValue > 0 && selectedCategory != null) {
+                    if (amountValue > 0 && selectedCategory != null) {
+                        val finalTitle = title.trim().ifBlank { selectedCategory!!.name }
                         viewModel.addExpense(
                             Expense(
-                                title = title.trim(),
+                                title = finalTitle,
                                 amount = amountValue,
                                 categoryId = selectedCategory!!.id,
                                 date = selectedDate,
@@ -277,7 +278,7 @@ fun AddExpenseScreen(
                         onNavigateBack()
                     }
                 },
-                enabled = title.isNotBlank() && amount.isNotBlank() && (amount.toDoubleOrNull() ?: 0.0) > 0,
+                enabled = amount.isNotBlank() && (amount.toDoubleOrNull() ?: 0.0) > 0,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
