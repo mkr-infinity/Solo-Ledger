@@ -816,8 +816,10 @@ fun getCategoryIcon(iconName: String?): androidx.compose.ui.graphics.vector.Imag
         "more_horiz" -> Icons.Filled.MoreHoriz
         "home" -> Icons.Filled.Home
         "health_and_safety" -> Icons.Filled.LocalHospital
+        "local_hospital" -> Icons.Filled.LocalHospital
         "fitness_center" -> Icons.Filled.FitnessCenter
         "coffee" -> Icons.Filled.LocalCafe
+        "local_cafe" -> Icons.Filled.LocalCafe
         "flight" -> Icons.Filled.Flight
         "pets" -> Icons.Filled.Pets
         else -> Icons.Filled.Category
