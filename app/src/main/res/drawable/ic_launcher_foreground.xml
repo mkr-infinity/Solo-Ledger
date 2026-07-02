@@ -4,16 +4,13 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Abstract ledger + vault icon - placeholder for user's logo -->
-    <!-- Safe zone: 66dp (inner 61%) centered in 108dp -->
     <group
         android:translateX="27"
         android:translateY="27">
         <!-- Vault/shield shape -->
         <path
             android:fillColor="#E8E0D4"
-            android:pathData="M27,6 C27,6 42,2 27,2 C12,2 6,8 6,8 L6,38 C6,46 14,52 27,54 C40,52 48,46 48,38 L48,8 C48,8 42,2 27,2z"
-            android:strokeWidth="0"/>
+            android:pathData="M27,6 C27,6 42,2 27,2 C12,2 6,8 6,8 L6,38 C6,46 14,52 27,54 C40,52 48,46 48,38 L48,8 C48,8 42,2 27,2z"/>
         <!-- Ledger lines -->
         <path
             android:fillColor="#0F0F0F"
@@ -26,10 +23,9 @@
             android:pathData="M16,32h16v2.5h-16z"/>
         <!-- Checkmark -->
         <path
-            android:fillColor="#8FA68A"
+            android:fillColor="#00000000"
             android:pathData="M35,32 L38,35 L43,28"
             android:strokeWidth="2.5"
-            android:strokeColor="#8FA68A"
-            android:fillColor="#00000000"/>
+            android:strokeColor="#8FA68A"/>
     </group>
 </vector>
