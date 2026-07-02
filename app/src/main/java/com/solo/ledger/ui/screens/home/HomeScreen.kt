@@ -242,6 +242,16 @@ private fun HomeTopBar(
 ) {
     val dateFormat = SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault())
     val timeFormat = SimpleDateFormat("hh:mm:ss a", Locale.getDefault())
+    val hour = remember(currentTime) {
+        val cal = Calendar.getInstance().apply { timeInMillis = currentTime }
+        cal.get(Calendar.HOUR_OF_DAY)
+    }
+    val greeting = when (hour) {
+        in 5..11 -> "Good morning"
+        in 12..16 -> "Good afternoon"
+        in 17..20 -> "Good evening"
+        else -> "Good night"
+    }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -256,15 +266,15 @@ private fun HomeTopBar(
         ) {
             Column {
                 Text(
-                    text = "Hello, ${userName.ifBlank { "there" }}",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
+                    text = "$greeting,",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = dateFormat.format(Date(currentTime)),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = userName.ifBlank { "there" },
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
         }

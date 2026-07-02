@@ -49,6 +49,7 @@ fun SettingsScreen(
     val currencySymbol by viewModel.currencySymbol.collectAsStateWithLifecycle()
     val currencyCode by viewModel.currencyCode.collectAsStateWithLifecycle()
     val monthlyBudget by viewModel.monthlyBudget.collectAsStateWithLifecycle()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     val cardShape = RoundedCornerShape(borderRadius.dp)
 
@@ -297,15 +298,15 @@ fun SettingsScreen(
             }
         }
 
-        // Quick Add Customization
+        // Preferences (toggles)
         item {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = cardShape) {
                 Column(modifier = Modifier.padding(18.dp)) {
-                    Text("Quick Add Customization", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                    Text("Toggle which fields appear when creating a new record.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Preferences", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    Text("Control app behavior and data recording.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(14.dp))
                     QuickToggleRow(icon = Icons.Filled.Animation, title = "Animations", checked = animationsEnabled, onCheckedChange = { viewModel.updateAnimationsEnabled(it) })
-                    QuickToggleRow(icon = Icons.Filled.History, title = "Activity Logging", checked = logsEnabled, onCheckedChange = { viewModel.setLogsEnabled(it) })
+                    QuickToggleRow(icon = Icons.Filled.Article, title = "Activity Logging", checked = logsEnabled, onCheckedChange = { viewModel.setLogsEnabled(it) })
                 }
             }
         }
@@ -346,9 +347,13 @@ fun SettingsScreen(
         item {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = cardShape) {
                 Column {
-                    SettingsCardRow(icon = Icons.Filled.Lightbulb, title = "Request feature", subtitle = "Suggest the next big addition to your workspace.", onClick = onNavigateToSupport)
+                    SettingsCardRow(icon = Icons.Filled.Lightbulb, title = "Request feature", subtitle = "Suggest the next big addition to your workspace.", onClick = {
+                        openUrl(context, buildFeatureRequestUrl())
+                    })
                     Divider(Modifier.padding(horizontal = 18.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
-                    SettingsCardRow(icon = Icons.Filled.BugReport, title = "Report bug", subtitle = "Encountered an issue? Our team is on standby.", onClick = onNavigateToSupport)
+                    SettingsCardRow(icon = Icons.Filled.BugReport, title = "Report bug", subtitle = "Encountered an issue? Our team is on standby.", onClick = {
+                        openUrl(context, buildBugReportUrl())
+                    })
                 }
             }
         }
@@ -548,6 +553,28 @@ private fun getCurrencyName(code: String): String {
         "CAD" -> "Canadian Dollar"
         else -> code
     }
+}
+
+private fun openUrl(context: android.content.Context, url: String) {
+    try {
+        context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
+    } catch (_: Exception) {}
+}
+
+private fun buildBugReportUrl(): String {
+    val title = android.net.Uri.encode("[Bug] ")
+    val body = android.net.Uri.encode(
+        "## Describe the bug\n\n\n## Steps to reproduce\n1. \n2. \n\n## Expected behavior\n\n\n## Device info\n- Device: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}\n- Android: ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})\n- App Version: 1.0.0\n"
+    )
+    return "https://github.com/mkr-infinity/Solo-Ledger/issues/new?labels=bug&title=$title&body=$body"
+}
+
+private fun buildFeatureRequestUrl(): String {
+    val title = android.net.Uri.encode("[Feature] ")
+    val body = android.net.Uri.encode(
+        "## Feature description\n\n\n## Why is this useful?\n\n\n## Additional context\n\n\n---\nApp Version: 1.0.0\n"
+    )
+    return "https://github.com/mkr-infinity/Solo-Ledger/issues/new?labels=enhancement&title=$title&body=$body"
 }
 
 // Keep public for other files that reference them
