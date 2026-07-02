@@ -35,7 +35,7 @@
 
 **Solo Ledger** is a production-quality, offline-first budgeting app. Track expenses, set budgets, manage savings goals, and build real financial awareness — **all on-device**. No sign-up, no servers, no data ever leaves your phone.
 
-> 🎨 Inspired by the design language of **CRED**, **Google Wallet**, and **Pixel**.
+> 🎨 A personal project for any solo person like me.
 
 ---
 
