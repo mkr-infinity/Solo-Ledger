@@ -386,30 +386,53 @@ private fun RoundedPillNavBar(
         ) {
             items.forEach { item ->
                 val isSelected = currentRoute == item.route
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(50))
-                        .then(
-                            if (isSelected) Modifier.background(MaterialTheme.colorScheme.primary)
-                            else Modifier
+                val isAddButton = item == BottomNavItem.ADD
+
+                if (isAddButton) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { onItemClick(item) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "Add",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(22.dp)
                         )
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) { onItemClick(item) }
-                        .padding(vertical = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                        contentDescription = item.label,
-                        tint = if (isSelected)
-                            MaterialTheme.colorScheme.onPrimary
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(22.dp)
-                    )
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(50))
+                            .then(
+                                if (isSelected) Modifier.background(MaterialTheme.colorScheme.primary)
+                                else Modifier
+                            )
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { onItemClick(item) }
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                            contentDescription = item.label,
+                            tint = if (isSelected)
+                                MaterialTheme.colorScheme.onPrimary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
             }
         }
@@ -437,14 +460,16 @@ private fun CompactNavBar(
         ) {
             items.forEach { item ->
                 val isSelected = currentRoute == item.route
+                val isAddButton = item == BottomNavItem.ADD
+
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(if (isAddButton) 44.dp else 40.dp)
                         .clip(CircleShape)
                         .then(
-                            if (isSelected) Modifier.background(
-                                MaterialTheme.colorScheme.primaryContainer
-                            ) else Modifier
+                            if (isAddButton) Modifier.background(MaterialTheme.colorScheme.primary)
+                            else if (isSelected) Modifier.background(MaterialTheme.colorScheme.primaryContainer)
+                            else Modifier
                         )
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
@@ -453,13 +478,13 @@ private fun CompactNavBar(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                        imageVector = if (isAddButton) Icons.Filled.Add
+                        else if (isSelected) item.selectedIcon else item.unselectedIcon,
                         contentDescription = item.label,
-                        tint = if (isSelected)
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
+                        tint = if (isAddButton) MaterialTheme.colorScheme.onPrimary
+                        else if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(if (isAddButton) 24.dp else 20.dp)
                     )
                 }
             }
