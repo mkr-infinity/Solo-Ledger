@@ -15,9 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.solo.ledger.data.model.Expense
 import com.solo.ledger.ui.screens.home.formatAmount
 import com.solo.ledger.ui.screens.home.getCategoryIcon
@@ -269,6 +271,18 @@ fun HistoryScreen(
                     DetailRow("Time", expense.time)
                     if (expense.notes.isNotBlank()) {
                         DetailRow("Notes", expense.notes)
+                    }
+                    if (!expense.attachmentPath.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        AsyncImage(
+                            model = java.io.File(expense.attachmentPath!!),
+                            contentDescription = "Receipt",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(150.dp)
+                                .clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Crop
+                        )
                     }
                     DetailRow("Created", SimpleDateFormat("dd MMM yyyy HH:mm", Locale.getDefault()).format(Date(expense.createdAt)))
                 }

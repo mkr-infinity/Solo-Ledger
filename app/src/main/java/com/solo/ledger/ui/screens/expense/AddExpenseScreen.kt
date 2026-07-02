@@ -2,6 +2,9 @@ package com.solo.ledger.ui.screens.expense
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,15 +20,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.solo.ledger.data.model.Category
 import com.solo.ledger.data.model.Expense
 import com.solo.ledger.ui.screens.home.getCategoryIcon
 import com.solo.ledger.ui.viewmodel.MainViewModel
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -43,9 +49,25 @@ fun AddExpenseScreen(
     var amount by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<Category?>(null) }
     var notes by remember { mutableStateOf("") }
+    var attachmentPath by remember { mutableStateOf<String?>(null) }
     var selectedDate by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var selectedTime by remember { mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())) }
     var showCategoryDropdown by remember { mutableStateOf(false) }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val dir = File(context.filesDir, "attachments")
+                dir.mkdirs()
+                val file = File(dir, "img_${System.currentTimeMillis()}.jpg")
+                inputStream?.use { input -> file.outputStream().use { output -> input.copyTo(output) } }
+                attachmentPath = file.absolutePath
+            } catch (_: Exception) {}
+        }
+    }
 
     // Set default category
     LaunchedEffect(categories) {
@@ -264,6 +286,43 @@ fun AddExpenseScreen(
                 maxLines = 4
             )
 
+            // Image attachment
+            if (attachmentPath != null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        AsyncImage(
+                            model = File(attachmentPath!!),
+                            contentDescription = "Attachment",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                                .clip(RoundedCornerShape(12.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                        IconButton(
+                            onClick = { attachmentPath = null },
+                            modifier = Modifier.align(Alignment.TopEnd)
+                        ) {
+                            Icon(Icons.Filled.Close, contentDescription = "Remove", tint = Color.White)
+                        }
+                    }
+                }
+            }
+
+            OutlinedButton(
+                onClick = { imagePickerLauncher.launch("image/*") },
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Filled.Image, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(if (attachmentPath != null) "Change Image" else "Attach Receipt")
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
 
             // Save button
@@ -279,7 +338,8 @@ fun AddExpenseScreen(
                                 categoryId = selectedCategory!!.id,
                                 date = selectedDate,
                                 time = selectedTime,
-                                notes = notes.trim()
+                                notes = notes.trim(),
+                                attachmentPath = attachmentPath
                             )
                         )
                         onNavigateBack()
