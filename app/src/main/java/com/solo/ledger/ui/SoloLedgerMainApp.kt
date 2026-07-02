@@ -67,6 +67,16 @@ fun SoloLedgerMainApp() {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
+        // Log navigation changes
+        LaunchedEffect(currentRoute) {
+            currentRoute?.let { route ->
+                viewModel.log(
+                    com.solo.ledger.data.model.LogType.SCREEN_OPENED,
+                    "Screen: $route"
+                )
+            }
+        }
+
         val bottomNavRoutes = listOf(
             Screen.Home.route,
             Screen.History.route,

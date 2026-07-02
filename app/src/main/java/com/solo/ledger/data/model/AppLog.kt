@@ -23,5 +23,9 @@ enum class LogType {
     DATA_IMPORTED,
     SETTINGS_CHANGED,
     APP_OPENED,
-    BIN_CLEARED
+    BIN_CLEARED,
+    CRASH,
+    ERROR,
+    NAV_CHANGED,
+    SCREEN_OPENED
 }

@@ -60,8 +60,13 @@ fun UpdateScreen(
                 } else {
                     "up_to_date"
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
                 checkResult = "up_to_date"
+                viewModel.log(
+                    com.solo.ledger.data.model.LogType.ERROR,
+                    "Update check failed",
+                    "Error: ${e.message?.take(100) ?: "Unknown"}"
+                )
             }
             isChecking = false
         }
@@ -198,9 +203,14 @@ fun UpdateScreen(
                                 else "You are up to date",
                                 com.solo.ledger.ui.components.ToastType.INFO
                             )
-                        } catch (_: Exception) {
+                        } catch (e: Exception) {
                             checkResult = "up_to_date"
                             viewModel.showToast("Could not check for updates", com.solo.ledger.ui.components.ToastType.WARNING)
+                            viewModel.log(
+                                com.solo.ledger.data.model.LogType.ERROR,
+                                "Manual update check failed",
+                                "Error: ${e.message?.take(100) ?: "Unknown"}"
+                            )
                         }
                         isChecking = false
                     }

@@ -12,7 +12,6 @@ import com.solo.ledger.data.model.SavingsGoal
 import com.solo.ledger.data.preferences.UserPreferences
 import com.solo.ledger.data.repository.CategoryRepository
 import com.solo.ledger.data.repository.ExpenseRepository
-import com.solo.ledger.data.repository.LogRepository
 import com.solo.ledger.data.repository.SavingsGoalRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -25,7 +24,7 @@ class MainViewModel(
     private val userPreferences: UserPreferences
 ) : ViewModel() {
 
-    private val logRepository = LogRepository()
+    private val logRepository = com.solo.ledger.SoloLedgerApp.instance.logRepository
 
     // Logs
     val appLogs: StateFlow<List<AppLog>> = logRepository.logs

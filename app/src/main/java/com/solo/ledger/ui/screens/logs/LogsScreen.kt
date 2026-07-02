@@ -304,6 +304,8 @@ private fun TerminalLogEntry(
         LogType.EXPENSE_RESTORED -> Color(0xFF79C0FF)
         LogType.DATA_EXPORTED, LogType.DATA_IMPORTED -> Color(0xFFD2A8FF)
         LogType.APP_OPENED -> Color(0xFF56D6A6)
+        LogType.CRASH, LogType.ERROR -> Color(0xFFFF4444)
+        LogType.NAV_CHANGED, LogType.SCREEN_OPENED -> Color(0xFF8B949E)
     }
 
     val typeTag = when (log.type) {
@@ -322,6 +324,10 @@ private fun TerminalLogEntry(
         LogType.SETTINGS_CHANGED -> "SET"
         LogType.APP_OPENED -> "SYS"
         LogType.BIN_CLEARED -> "CLR"
+        LogType.CRASH -> "!!!"
+        LogType.ERROR -> "ERR"
+        LogType.NAV_CHANGED -> "NAV"
+        LogType.SCREEN_OPENED -> "SCR"
     }
 
     Row(
