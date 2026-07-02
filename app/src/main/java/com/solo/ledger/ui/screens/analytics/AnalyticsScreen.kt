@@ -34,6 +34,7 @@ fun AnalyticsScreen(
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val currencySymbol by viewModel.currencySymbol.collectAsStateWithLifecycle()
     val savingsGoals by viewModel.savingsGoals.collectAsStateWithLifecycle()
+    val allExpenses by viewModel.allExpenses.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -107,6 +108,41 @@ fun AnalyticsScreen(
                             else MaterialTheme.colorScheme.secondary,
                             trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                         )
+                    }
+                }
+            }
+
+            // Quick insights
+            if (categorySpending.isNotEmpty()) {
+                item {
+                    val topCategory = categorySpending.firstOrNull()
+                    val topCatName = categories.find { it.id == topCategory?.categoryId }?.name ?: "None"
+                    val avgPerTransaction = if (allExpenses.isNotEmpty()) monthlySpending / allExpenses.size else 0.0
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Card(
+                            modifier = Modifier.weight(1f),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text("Top Category", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(topCatName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            }
+                        }
+                        Card(
+                            modifier = Modifier.weight(1f),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text("Avg/Transaction", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("$currencySymbol${formatAmount(avgPerTransaction)}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            }
+                        }
                     }
                 }
             }
