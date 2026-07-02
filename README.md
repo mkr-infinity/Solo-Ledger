@@ -85,19 +85,41 @@
 
 ---
 
-## 🤝 Contributing
-
-Contributions are welcome! 🎉 Build steps, project structure, and release signing all live in the guide:
+<h2 align="center">🔒 Privacy First, Always</h2>
 
 <p align="center">
-  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/📄%20Read%20the-Contribution%20Guide-blueviolet?style=for-the-badge"/></a>
+  <sub>Your money is your business. Solo Ledger keeps it that way.</sub>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/🚫%20No%20Sign--up-000000?style=for-the-badge"/>
+  <img src="https://img.shields.io/badge/☁️%20No%20Cloud-000000?style=for-the-badge"/>
+  <img src="https://img.shields.io/badge/📡%20No%20Tracking-000000?style=for-the-badge"/>
+  <img src="https://img.shields.io/badge/🔐%20On--device%20Only-000000?style=for-the-badge"/>
+</p>
+
+<p align="center"><sub>✦ ✦ ✦</sub></p>
+
+---
+
+<h2 align="center">🤝 Contributing</h2>
+
+<p align="center">
+  Contributions are welcome! 🎉<br/>
+  <sub>Build steps, project structure & release signing all live in the guide.</sub>
+</p>
+
+<p align="center">
+  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/📄%20Read%20the-Contribution%20Guide-8A2BE2?style=for-the-badge"/></a>
 </p>
 
 ---
 
-## ❤️ Support
+<h2 align="center">❤️ Support the Project</h2>
 
-If Solo Ledger helps you, consider supporting the project:
+<p align="center">
+  <sub>If Solo Ledger helps you, a little support goes a long way.</sub>
+</p>
 
 <p align="center">
   <a href="https://buymeacoffee.com/mkr_infinity"><img src="https://img.shields.io/badge/☕%20Buy%20Me%20a%20Coffee-FFDD00?style=for-the-badge&logoColor=black"/></a>
@@ -108,7 +130,13 @@ If Solo Ledger helps you, consider supporting the project:
 
 ## 👨‍💻 Developer
 
-**Mohammad Kaif Raja**
+<p align="center">
+  <b>Mohammad Kaif Raja</b>
+</p>
+
+<p align="center">
+  <sub>Android Developer · Kotlin & Compose</sub>
+</p>
 
 <p align="center">
   <a href="https://github.com/mkr-infinity"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white"/></a>
@@ -121,6 +149,16 @@ If Solo Ledger helps you, consider supporting the project:
 
 ## 📄 License
 
-Released under the **MIT License** © 2024 Mohammad Kaif Raja.
+<p align="center">
+  Released under the <b>MIT License</b> · © 2024 Mohammad Kaif Raja
+</p>
 
-<p align="center"><sub>Built with ❤️ and Kotlin · Solo Ledger</sub></p>
+<br/>
+
+<p align="center">
+  <img src="app/src/main/assets/logo/solo_ledger_logo.svg" width="48" alt="Solo Ledger"/>
+</p>
+
+<p align="center"><sub>Built with ❤️ and Kotlin · <b>Solo Ledger</b></sub></p>
+
+<p align="center"><sub>⭐ If you like it, leave a star — it really helps! ⭐</sub></p>
