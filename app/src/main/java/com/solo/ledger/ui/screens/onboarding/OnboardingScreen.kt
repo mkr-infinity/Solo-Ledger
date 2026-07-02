@@ -2,8 +2,6 @@
 
 package com.solo.ledger.ui.screens.onboarding
 
-
-
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -11,9 +9,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -27,15 +24,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.solo.ledger.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
-
 
 @Composable
 fun OnboardingScreen(
@@ -59,31 +58,37 @@ fun OnboardingScreen(
                 .fillMaxSize()
                 .systemBarsPadding()
         ) {
-            // Page indicators
+            // Progress indicator - step line
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 24.dp),
-                horizontalArrangement = Arrangement.Center
+                    .padding(horizontal = 32.dp, vertical = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 repeat(3) { index ->
+                    val isActive = index <= pagerState.currentPage
                     Box(
                         modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .size(
-                                width = if (index == pagerState.currentPage) 28.dp else 8.dp,
-                                height = 8.dp
-                            )
-                            .clip(CircleShape)
+                            .weight(1f)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
                             .background(
-                                if (index == pagerState.currentPage)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                                if (isActive) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
                             )
                     )
                 }
             }
+
+            // Step label
+            Text(
+                text = "Step ${pagerState.currentPage + 1} of 3",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 32.dp),
+                letterSpacing = 1.sp
+            )
 
             // Swipeable pager
             HorizontalPager(
@@ -95,12 +100,12 @@ fun OnboardingScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(24.dp),
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     when (page) {
-                        0 -> OnboardingPage1()
-                        1 -> OnboardingPage2(
+                        0 -> OnboardingWelcome()
+                        1 -> OnboardingProfile(
                             userName = userName,
                             onNameChange = { userName = it },
                             monthlyBudget = monthlyBudget,
@@ -110,29 +115,42 @@ fun OnboardingScreen(
                             currencyCode = currencyCode,
                             onCurrencyCodeChange = { currencyCode = it }
                         )
-                        2 -> OnboardingPage3()
+                        2 -> OnboardingPermissions()
                     }
                 }
             }
 
-            // Navigation buttons
-            Row(
+            // Bottom action area
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 24.dp, vertical = 20.dp)
             ) {
+                // Back button (left)
                 if (pagerState.currentPage > 0) {
-                    TextButton(onClick = {
-                        scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
-                    }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Back")
+                    IconButton(
+                        onClick = {
+                            scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Icon(
+                            Icons.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
-                } else {
-                    Spacer(modifier = Modifier.width(1.dp))
+                }
+
+                // Primary action button (right/center)
+                val isLastPage = pagerState.currentPage == 2
+                val isEnabled = when (pagerState.currentPage) {
+                    1 -> userName.isNotBlank() && monthlyBudget.isNotBlank()
+                    else -> true
                 }
 
                 Button(
@@ -149,25 +167,37 @@ fun OnboardingScreen(
                             onComplete()
                         }
                     },
-                    enabled = when (pagerState.currentPage) {
-                        1 -> userName.isNotBlank() && monthlyBudget.isNotBlank()
-                        else -> true
-                    },
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.height(48.dp),
+                    enabled = isEnabled,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .align(if (pagerState.currentPage > 0) Alignment.CenterEnd else Alignment.Center)
+                        .then(
+                            if (pagerState.currentPage == 0) Modifier.fillMaxWidth()
+                            else Modifier
+                        )
+                        .height(52.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Text(
-                        text = if (pagerState.currentPage == 2) "Get Started" else "Continue",
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                        fontWeight = FontWeight.SemiBold
+                        text = when {
+                            isLastPage -> "Launch Solo Ledger"
+                            pagerState.currentPage == 0 -> "Get Started"
+                            else -> "Continue"
+                        },
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 15.sp,
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     )
-                    if (pagerState.currentPage < 2) {
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(Icons.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp))
+                    if (!isLastPage) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            Icons.Filled.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                 }
             }
@@ -175,29 +205,41 @@ fun OnboardingScreen(
     }
 }
 
+// Page 1: Welcome / Brand
 @Composable
-private fun OnboardingPage1() {
+private fun OnboardingWelcome() {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
     ) {
-        Box(
-            modifier = Modifier
-                .size(100.dp)
-                .clip(RoundedCornerShape(24.dp))
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Filled.AccountBalanceWallet,
-                contentDescription = null,
-                modifier = Modifier.size(48.dp),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
+        // App icon with decorative ring
+        Box(contentAlignment = Alignment.Center) {
+            // Outer ring
+            Box(
+                modifier = Modifier
+                    .size(130.dp)
+                    .clip(RoundedCornerShape(32.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))
             )
+            // Inner icon
+            Box(
+                modifier = Modifier
+                    .size(96.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.AccountBalanceWallet,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(36.dp))
 
         Text(
             text = "Solo Ledger",
@@ -206,60 +248,90 @@ private fun OnboardingPage1() {
             color = MaterialTheme.colorScheme.onBackground
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Your personal offline budget tracker.\nTrack spending, set goals, build financial discipline.",
+            text = "Take control of your finances",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 16.dp)
+            textAlign = TextAlign.Center
         )
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        Column(
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-            modifier = Modifier.padding(horizontal = 8.dp)
-        ) {
-            BenefitItem(icon = Icons.Filled.FlashOn, text = "100% Offline — No internet needed")
-            BenefitItem(icon = Icons.Filled.Lock, text = "Private — Your data stays on device")
-            BenefitItem(icon = Icons.Filled.TrendingUp, text = "Insights — Understand your spending")
+        // Feature cards
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            FeatureCard(
+                icon = Icons.Filled.FlashOn,
+                title = "100% Offline",
+                description = "No internet, no cloud, no tracking",
+                accentColor = MaterialTheme.colorScheme.tertiary
+            )
+            FeatureCard(
+                icon = Icons.Filled.Lock,
+                title = "Private by Design",
+                description = "Your financial data never leaves your device",
+                accentColor = MaterialTheme.colorScheme.secondary
+            )
+            FeatureCard(
+                icon = Icons.Filled.TrendingUp,
+                title = "Smart Insights",
+                description = "Understand spending patterns at a glance",
+                accentColor = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
 
 @Composable
-private fun BenefitItem(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
+private fun FeatureCard(
+    icon: ImageVector,
+    title: String,
+    description: String,
+    accentColor: Color
+) {
     Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
                 .size(42.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.secondaryContainer),
+                .background(accentColor.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                tint = accentColor,
                 modifier = Modifier.size(20.dp)
             )
         }
         Spacer(modifier = Modifier.width(14.dp))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Column {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
+// Page 2: Profile + Budget
 @Composable
-private fun OnboardingPage2(
+private fun OnboardingProfile(
     userName: String,
     onNameChange: (String) -> Unit,
     monthlyBudget: String,
@@ -271,96 +343,128 @@ private fun OnboardingPage2(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
     ) {
-        Icon(
-            imageVector = Icons.Filled.Person,
-            contentDescription = null,
-            modifier = Modifier.size(56.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
-
         Spacer(modifier = Modifier.height(20.dp))
 
+        // Header icon
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Person,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Text(
-            text = "Set Up Your Profile",
+            text = "Your Profile",
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
         )
 
-        Spacer(modifier = Modifier.height(6.dp))
-
         Text(
-            text = "Personalize your experience",
+            text = "Set up your budget identity",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(28.dp))
 
+        // Name field
         OutlinedTextField(
             value = userName,
             onValueChange = onNameChange,
-            label = { Text("Your Name") },
+            label = { Text("What should we call you?") },
             leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
             singleLine = true,
             shape = RoundedCornerShape(14.dp),
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // Currency - fully custom input
-        Row(
+        // Currency section with card styling
+        Card(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            ),
+            shape = RoundedCornerShape(14.dp)
         ) {
-            OutlinedTextField(
-                value = currencySymbol,
-                onValueChange = onCurrencySymbolChange,
-                label = { Text("Symbol") },
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier.weight(1f)
-            )
-            OutlinedTextField(
-                value = currencyCode,
-                onValueChange = { onCurrencyCodeChange(it.uppercase()) },
-                label = { Text("Code") },
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Quick currency chips
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            listOf(
-                "\u20B9" to "INR",
-                "$" to "USD",
-                "\u20AC" to "EUR",
-                "\u00A3" to "GBP"
-            ).forEach { (symbol, code) ->
-                FilterChip(
-                    selected = currencyCode == code,
-                    onClick = {
-                        onCurrencySymbolChange(symbol)
-                        onCurrencyCodeChange(code)
-                    },
-                    label = { Text("$symbol $code") },
-                    shape = RoundedCornerShape(20.dp)
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Currency",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    OutlinedTextField(
+                        value = currencySymbol,
+                        onValueChange = onCurrencySymbolChange,
+                        label = { Text("Symbol") },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = currencyCode,
+                        onValueChange = { onCurrencyCodeChange(it.uppercase()) },
+                        label = { Text("Code") },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Quick currency presets
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(
+                        "\u20B9" to "INR",
+                        "$" to "USD",
+                        "\u20AC" to "EUR",
+                        "\u00A3" to "GBP"
+                    ).forEach { (symbol, code) ->
+                        val isSelected = currencyCode == code
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                onCurrencySymbolChange(symbol)
+                                onCurrencyCodeChange(code)
+                            },
+                            label = {
+                                Text(
+                                    "$symbol $code",
+                                    fontSize = 12.sp
+                                )
+                            },
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                    }
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
+        // Budget field
         OutlinedTextField(
             value = monthlyBudget,
             onValueChange = { value ->
@@ -373,6 +477,8 @@ private fun OnboardingPage2(
                 Text(
                     text = currencySymbol,
                     style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(start = 12.dp)
                 )
             },
@@ -385,15 +491,16 @@ private fun OnboardingPage2(
         Spacer(modifier = Modifier.height(10.dp))
 
         Text(
-            text = "You can change these anytime in Settings",
+            text = "You can always change these in Settings later",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         )
     }
 }
 
+// Page 3: Permissions
 @Composable
-private fun OnboardingPage3() {
+private fun OnboardingPermissions() {
     val context = LocalContext.current
     var storageGranted by remember { mutableStateOf(false) }
 
@@ -413,56 +520,70 @@ private fun OnboardingPage3() {
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
     ) {
-        Icon(
-            imageVector = Icons.Filled.Security,
-            contentDescription = null,
-            modifier = Modifier.size(56.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
-
         Spacer(modifier = Modifier.height(20.dp))
 
+        // Header icon
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Security,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.secondary
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Text(
-            text = "Permissions",
+            text = "Almost There",
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
         )
 
-        Spacer(modifier = Modifier.height(6.dp))
-
         Text(
-            text = "Solo Ledger needs minimal permissions",
+            text = "Grant minimal permissions for full functionality",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(28.dp))
 
+        // Permission cards
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                containerColor = MaterialTheme.colorScheme.surface
             ),
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                PermissionItem(
+                PermissionRow(
                     icon = Icons.Filled.Storage,
                     title = "Storage Access",
-                    description = "To export budgets, save receipts, and backup data",
+                    description = "Export budgets, save receipts, backup data",
                     granted = storageGranted
                 )
-                PermissionItem(
+                Divider(
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+                PermissionRow(
                     icon = Icons.Filled.Image,
                     title = "Media Access",
-                    description = "To attach receipt photos to transactions",
+                    description = "Attach receipt photos to transactions",
                     granted = storageGranted
                 )
             }
@@ -483,53 +604,81 @@ private fun OnboardingPage3() {
                     }
                     permissionLauncher.launch(permissions)
                 },
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
             ) {
-                Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(Icons.Filled.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Grant Permissions")
+                Text("Grant Permissions", fontWeight = FontWeight.Medium)
             }
         } else {
             Card(
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     Icon(
                         Icons.Filled.CheckCircle,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(20.dp)
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        "Permissions granted",
+                        "All permissions granted",
                         style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        Text(
-            text = "All data stays on your device. No cloud. No tracking.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
+        // Privacy note card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Filled.Lock,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "All data stays on your device. No cloud. No tracking. Ever.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 
 @Composable
-private fun PermissionItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+private fun PermissionRow(
+    icon: ImageVector,
     title: String,
     description: String,
     granted: Boolean
@@ -537,33 +686,42 @@ private fun PermissionItem(
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
-                .size(44.dp)
+                .size(42.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .background(
-                    if (granted) MaterialTheme.colorScheme.secondaryContainer
-                    else MaterialTheme.colorScheme.primaryContainer
+                    if (granted) MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                    else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                 ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = if (granted) Icons.Filled.CheckCircle else icon,
                 contentDescription = null,
-                tint = if (granted) MaterialTheme.colorScheme.onSecondaryContainer
-                else MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(22.dp)
+                tint = if (granted) MaterialTheme.colorScheme.secondary
+                else MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
             )
         }
-        Spacer(modifier = Modifier.width(16.dp))
-        Column {
+        Spacer(modifier = Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        if (granted) {
+            Icon(
+                Icons.Filled.Check,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.size(18.dp)
             )
         }
     }

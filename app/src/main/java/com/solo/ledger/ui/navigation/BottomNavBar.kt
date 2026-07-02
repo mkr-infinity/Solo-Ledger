@@ -3,6 +3,7 @@ package com.solo.ledger.ui.navigation
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,15 +51,20 @@ private fun CapsuleNavBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 20.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center
     ) {
         Row(
             modifier = Modifier
-                .clip(RoundedCornerShape(28.dp))
+                .clip(RoundedCornerShape(26.dp))
                 .background(MaterialTheme.colorScheme.surface)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(26.dp)
+                )
                 .padding(horizontal = 8.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             items.forEach { item ->
@@ -65,12 +72,18 @@ private fun CapsuleNavBar(
                 val isAddButton = item == BottomNavItem.ADD
 
                 if (isAddButton) {
-                    // Special elevated center button
                     Box(
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(46.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                                    )
+                                )
+                            )
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null
@@ -81,12 +94,12 @@ private fun CapsuleNavBar(
                             imageVector = Icons.Filled.Add,
                             contentDescription = "Add",
                             tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(26.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 } else {
                     val animatedWeight by animateFloatAsState(
-                        targetValue = if (isSelected) 1.5f else 1f,
+                        targetValue = if (isSelected) 1.4f else 1f,
                         animationSpec = spring(dampingRatio = 0.8f, stiffness = 400f),
                         label = "weight"
                     )
@@ -94,10 +107,11 @@ private fun CapsuleNavBar(
                     Box(
                         modifier = Modifier
                             .weight(animatedWeight)
-                            .clip(RoundedCornerShape(20.dp))
+                            .clip(RoundedCornerShape(18.dp))
                             .then(
-                                if (isSelected) Modifier.background(MaterialTheme.colorScheme.primaryContainer)
-                                else Modifier
+                                if (isSelected) Modifier.background(
+                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                                ) else Modifier
                             )
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
@@ -114,10 +128,10 @@ private fun CapsuleNavBar(
                                 imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
                                 contentDescription = item.label,
                                 tint = if (isSelected)
-                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                    MaterialTheme.colorScheme.primary
                                 else
-                                    MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(22.dp)
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                modifier = Modifier.size(20.dp)
                             )
                             AnimatedVisibility(
                                 visible = isSelected,
@@ -126,9 +140,10 @@ private fun CapsuleNavBar(
                             ) {
                                 Text(
                                     text = item.label,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.padding(start = 6.dp)
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(start = 5.dp),
+                                    fontSize = 11.sp
                                 )
                             }
                         }
@@ -149,15 +164,20 @@ private fun FloatingNavBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(horizontal = 28.dp, vertical = 14.dp),
         contentAlignment = Alignment.Center
     ) {
         Row(
             modifier = Modifier
-                .shadow(8.dp, RoundedCornerShape(24.dp))
-                .clip(RoundedCornerShape(24.dp))
+                .shadow(12.dp, RoundedCornerShape(22.dp))
+                .clip(RoundedCornerShape(22.dp))
                 .background(MaterialTheme.colorScheme.surface)
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f),
+                    RoundedCornerShape(22.dp)
+                )
+                .padding(horizontal = 10.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -169,6 +189,7 @@ private fun FloatingNavBar(
                     Box(
                         modifier = Modifier
                             .size(44.dp)
+                            .shadow(6.dp, CircleShape)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.primary)
                             .clickable(
@@ -181,14 +202,14 @@ private fun FloatingNavBar(
                             imageVector = Icons.Filled.Add,
                             contentDescription = "Add",
                             tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(22.dp)
                         )
                     }
                 } else {
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(14.dp))
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null
@@ -196,23 +217,21 @@ private fun FloatingNavBar(
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(
                                 imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
                                 contentDescription = item.label,
                                 tint = if (isSelected)
                                     MaterialTheme.colorScheme.primary
                                 else
-                                    MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(24.dp)
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                modifier = Modifier.size(22.dp)
                             )
                             if (isSelected) {
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Box(
                                     modifier = Modifier
-                                        .size(4.dp)
+                                        .size(5.dp)
                                         .clip(CircleShape)
                                         .background(MaterialTheme.colorScheme.primary)
                                 )
@@ -282,17 +301,18 @@ private fun MinimalFlatNavBar(
                             tint = if (isSelected)
                                 MaterialTheme.colorScheme.primary
                             else
-                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            modifier = Modifier.size(24.dp)
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.size(22.dp)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = item.label,
                             style = MaterialTheme.typography.labelSmall,
+                            fontSize = 10.sp,
                             color = if (isSelected)
                                 MaterialTheme.colorScheme.primary
                             else
-                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
                     }
                 }
@@ -311,13 +331,13 @@ private fun ElevatedNavBar(
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 6.dp,
+        tonalElevation = 4.dp,
         shadowElevation = 4.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
+                .padding(horizontal = 6.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -341,7 +361,7 @@ private fun ElevatedNavBar(
                             imageVector = Icons.Filled.Add,
                             contentDescription = "Add",
                             tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(22.dp)
                         )
                     }
                 } else {
@@ -350,7 +370,7 @@ private fun ElevatedNavBar(
                             .clip(RoundedCornerShape(12.dp))
                             .then(
                                 if (isSelected) Modifier.background(
-                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
                                 ) else Modifier
                             )
                             .clickable(
@@ -364,10 +384,10 @@ private fun ElevatedNavBar(
                             imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
                             contentDescription = item.label,
                             tint = if (isSelected)
-                                MaterialTheme.colorScheme.onPrimaryContainer
+                                MaterialTheme.colorScheme.primary
                             else
-                                MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(22.dp)
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
@@ -375,9 +395,9 @@ private fun ElevatedNavBar(
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 10.sp,
                             color = if (isSelected)
-                                MaterialTheme.colorScheme.onPrimaryContainer
+                                MaterialTheme.colorScheme.primary
                             else
-                                MaterialTheme.colorScheme.onSurfaceVariant
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -396,15 +416,21 @@ private fun RoundedPillNavBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(horizontal = 24.dp, vertical = 14.dp),
         contentAlignment = Alignment.Center
     ) {
         Row(
             modifier = Modifier
+                .shadow(8.dp, RoundedCornerShape(50))
                 .clip(RoundedCornerShape(50))
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f))
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.1f),
+                    RoundedCornerShape(50)
+                )
                 .padding(6.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             items.forEach { item ->
@@ -416,7 +442,14 @@ private fun RoundedPillNavBar(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                                    )
+                                )
+                            )
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null
@@ -427,7 +460,7 @@ private fun RoundedPillNavBar(
                             imageVector = Icons.Filled.Add,
                             contentDescription = "Add",
                             tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 } else {
@@ -436,8 +469,9 @@ private fun RoundedPillNavBar(
                             .weight(1f)
                             .clip(RoundedCornerShape(50))
                             .then(
-                                if (isSelected) Modifier.background(MaterialTheme.colorScheme.primary)
-                                else Modifier
+                                if (isSelected) Modifier.background(
+                                    MaterialTheme.colorScheme.primary
+                                ) else Modifier
                             )
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
@@ -452,8 +486,8 @@ private fun RoundedPillNavBar(
                             tint = if (isSelected)
                                 MaterialTheme.colorScheme.onPrimary
                             else
-                                MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(22.dp)
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
@@ -487,11 +521,13 @@ private fun CompactNavBar(
 
                 Box(
                     modifier = Modifier
-                        .size(if (isAddButton) 44.dp else 40.dp)
+                        .size(if (isAddButton) 44.dp else 38.dp)
                         .clip(CircleShape)
                         .then(
                             if (isAddButton) Modifier.background(MaterialTheme.colorScheme.primary)
-                            else if (isSelected) Modifier.background(MaterialTheme.colorScheme.primaryContainer)
+                            else if (isSelected) Modifier.background(
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                            )
                             else Modifier
                         )
                         .clickable(
@@ -505,9 +541,9 @@ private fun CompactNavBar(
                         else if (isSelected) item.selectedIcon else item.unselectedIcon,
                         contentDescription = item.label,
                         tint = if (isAddButton) MaterialTheme.colorScheme.onPrimary
-                        else if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(if (isAddButton) 24.dp else 20.dp)
+                        else if (isSelected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(if (isAddButton) 22.dp else 20.dp)
                     )
                 }
             }
@@ -545,11 +581,11 @@ private fun MaterialStandardNavBar(
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                 )
             )
         }
