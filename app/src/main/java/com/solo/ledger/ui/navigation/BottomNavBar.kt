@@ -8,6 +8,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -54,60 +56,81 @@ private fun CapsuleNavBar(
             modifier = Modifier
                 .clip(RoundedCornerShape(28.dp))
                 .background(MaterialTheme.colorScheme.surface)
-                .padding(horizontal = 8.dp, vertical = 8.dp),
+                .padding(horizontal = 8.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             items.forEach { item ->
                 val isSelected = currentRoute == item.route
-                val animatedWeight by animateFloatAsState(
-                    targetValue = if (isSelected) 1.5f else 1f,
-                    animationSpec = spring(dampingRatio = 0.8f, stiffness = 400f),
-                    label = "weight"
-                )
+                val isAddButton = item == BottomNavItem.ADD
 
-                Box(
-                    modifier = Modifier
-                        .weight(animatedWeight)
-                        .clip(RoundedCornerShape(20.dp))
-                        .then(
-                            if (isSelected) {
-                                Modifier.background(
-                                    MaterialTheme.colorScheme.primaryContainer
-                                )
-                            } else Modifier
-                        )
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) { onItemClick(item) }
-                        .padding(vertical = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                if (isAddButton) {
+                    // Special elevated center button
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { onItemClick(item) },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                            contentDescription = item.label,
-                            tint = if (isSelected)
-                                MaterialTheme.colorScheme.onPrimaryContainer
-                            else
-                                MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(22.dp)
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "Add",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(26.dp)
                         )
-                        AnimatedVisibility(
-                            visible = isSelected,
-                            enter = fadeIn() + expandHorizontally(),
-                            exit = fadeOut() + shrinkHorizontally()
-                        ) {
-                            Text(
-                                text = item.label,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.padding(start = 6.dp)
+                    }
+                } else {
+                    val animatedWeight by animateFloatAsState(
+                        targetValue = if (isSelected) 1.5f else 1f,
+                        animationSpec = spring(dampingRatio = 0.8f, stiffness = 400f),
+                        label = "weight"
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .weight(animatedWeight)
+                            .clip(RoundedCornerShape(20.dp))
+                            .then(
+                                if (isSelected) Modifier.background(MaterialTheme.colorScheme.primaryContainer)
+                                else Modifier
                             )
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { onItemClick(item) }
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                                contentDescription = item.label,
+                                tint = if (isSelected)
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            AnimatedVisibility(
+                                visible = isSelected,
+                                enter = fadeIn() + expandHorizontally(),
+                                exit = fadeOut() + shrinkHorizontally()
+                            ) {
+                                Text(
+                                    text = item.label,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.padding(start = 6.dp)
+                                )
+                            }
                         }
                     }
                 }
