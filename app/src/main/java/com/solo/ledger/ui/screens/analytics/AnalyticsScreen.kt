@@ -98,7 +98,7 @@ fun AnalyticsScreen(
 
                         val usage = if (monthlyBudget > 0) (monthlySpending / monthlyBudget).coerceIn(0.0, 1.0) else 0.0
                         LinearProgressIndicator(
-                            progress = { usage.toFloat() },
+                            progress = usage.toFloat(),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(10.dp)
@@ -243,7 +243,7 @@ fun AnalyticsScreen(
                                     }
                                     Spacer(modifier = Modifier.height(4.dp))
                                     LinearProgressIndicator(
-                                        progress = { goal.progressPercent / 100f },
+                                        progress = goal.progressPercent / 100f,
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(6.dp)

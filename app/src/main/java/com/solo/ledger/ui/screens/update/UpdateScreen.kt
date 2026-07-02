@@ -281,7 +281,7 @@ fun UpdateScreen(
 
                                 if (release.body.isNotBlank()) {
                                     Spacer(modifier = Modifier.height(16.dp))
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f))
+                                    Divider(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f))
                                     Spacer(modifier = Modifier.height(12.dp))
 
                                     Text(

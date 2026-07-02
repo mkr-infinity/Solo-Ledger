@@ -364,7 +364,7 @@ private fun OnboardingPage3() {
                     title = "Storage Access",
                     description = "To save receipt images and export data"
                 )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
                 PermissionItem(
                     icon = Icons.Filled.Image,
                     title = "Media Access",

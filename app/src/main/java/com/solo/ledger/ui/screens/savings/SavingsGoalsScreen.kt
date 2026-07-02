@@ -145,7 +145,7 @@ fun SavingsGoalsScreen(
                             Spacer(modifier = Modifier.height(12.dp))
 
                             LinearProgressIndicator(
-                                progress = { goal.progressPercent / 100f },
+                                progress = goal.progressPercent / 100f,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(8.dp)

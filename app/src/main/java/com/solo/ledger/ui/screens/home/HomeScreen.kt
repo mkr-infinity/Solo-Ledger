@@ -325,7 +325,7 @@ private fun BudgetCardFront(
             // Progress
             Column {
                 LinearProgressIndicator(
-                    progress = { usagePercent },
+                    progress = usagePercent,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(6.dp)
@@ -620,7 +620,7 @@ private fun SavingsGoalPreview(
                         )
                     }
                     CircularProgressIndicator(
-                        progress = { goal.progressPercent / 100f },
+                        progress = goal.progressPercent / 100f,
                         modifier = Modifier.size(36.dp),
                         strokeWidth = 4.dp,
                         color = MaterialTheme.colorScheme.secondary,
