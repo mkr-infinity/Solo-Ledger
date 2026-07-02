@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -173,19 +174,18 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Avatar placeholder
+                        // Architect avatar - app logo
                         Box(
                             modifier = Modifier
                                 .size(100.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(MaterialTheme.colorScheme.primaryContainer),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.Filled.Person,
-                                contentDescription = null,
-                                modifier = Modifier.size(48.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            Image(
+                                painter = androidx.compose.ui.res.painterResource(id = com.solo.ledger.R.drawable.ic_launcher_foreground),
+                                contentDescription = "Solo Ledger",
+                                modifier = Modifier.size(96.dp)
                             )
                         }
 

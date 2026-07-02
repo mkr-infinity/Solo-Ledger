@@ -104,66 +104,30 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Today's spending
-                Card(
+                QuickStatCard(
                     modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = cardShape
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Text(
-                            "Today",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            "$currencySymbol${formatAmount(todaySpending)}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-                // Total transactions
-                Card(
+                    icon = Icons.Filled.Today,
+                    label = "Today",
+                    value = "$currencySymbol${formatAmount(todaySpending)}",
+                    accent = MaterialTheme.colorScheme.tertiary,
+                    cardShape = cardShape
+                )
+                QuickStatCard(
                     modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = cardShape
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Text(
-                            "Transactions",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            "${allExpenses.size}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-                // Goals
-                Card(
+                    icon = Icons.Filled.ReceiptLong,
+                    label = "Transactions",
+                    value = "${allExpenses.size}",
+                    accent = MaterialTheme.colorScheme.secondary,
+                    cardShape = cardShape
+                )
+                QuickStatCard(
                     modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = cardShape
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Text(
-                            "Goals",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            "${savingsGoals.size}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
+                    icon = Icons.Filled.Savings,
+                    label = "Goals",
+                    value = "${savingsGoals.size}",
+                    accent = MaterialTheme.colorScheme.primary,
+                    cardShape = cardShape
+                )
             }
         }
 
@@ -324,11 +288,10 @@ private fun HomeTopBar(
                     contentScale = androidx.compose.ui.layout.ContentScale.Crop
                 )
             } else {
-                Text(
-                    text = userName.firstOrNull()?.uppercase() ?: "U",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(id = com.solo.ledger.R.drawable.ic_launcher_foreground),
+                    contentDescription = "Profile",
+                    modifier = Modifier.fillMaxSize()
                 )
             }
         }
@@ -405,12 +368,30 @@ private fun BudgetCardFront(
         ),
         shape = cardShape
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            // Subtle decorative circle
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    androidx.compose.ui.graphics.Brush.linearGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primaryContainer,
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+                        )
+                    )
+                )
+        ) {
+            // Decorative circles for depth
             Box(
                 modifier = Modifier
-                    .size(120.dp)
-                    .offset(x = 220.dp, y = (-20).dp)
+                    .size(160.dp)
+                    .offset(x = 210.dp, y = (-50).dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+            )
+            Box(
+                modifier = Modifier
+                    .size(90.dp)
+                    .offset(x = (-30).dp, y = 150.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
             )
@@ -808,6 +789,47 @@ private fun EmptyStateCard(cardShape: RoundedCornerShape) {
                 text = "Tap the + button to add your first expense",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuickStatCard(
+    modifier: Modifier = Modifier,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    value: String,
+    accent: Color,
+    cardShape: RoundedCornerShape
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = cardShape
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Box(
+                modifier = Modifier
+                    .size(30.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(accent.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(16.dp))
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                value,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
             )
         }
     }

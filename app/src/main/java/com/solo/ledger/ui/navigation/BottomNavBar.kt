@@ -56,12 +56,13 @@ private fun CapsuleNavBar(
     ) {
         Row(
             modifier = Modifier
-                .clip(RoundedCornerShape(26.dp))
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.88f))
+                .shadow(16.dp, RoundedCornerShape(28.dp), spotColor = MaterialTheme.colorScheme.scrim)
+                .clip(RoundedCornerShape(28.dp))
+                .background(MaterialTheme.colorScheme.surface)
                 .border(
                     width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f),
-                    shape = RoundedCornerShape(26.dp)
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(28.dp)
                 )
                 .padding(horizontal = 8.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -169,12 +170,12 @@ private fun FloatingNavBar(
     ) {
         Row(
             modifier = Modifier
-                .shadow(12.dp, RoundedCornerShape(22.dp))
+                .shadow(16.dp, RoundedCornerShape(22.dp), spotColor = MaterialTheme.colorScheme.scrim)
                 .clip(RoundedCornerShape(22.dp))
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                .background(MaterialTheme.colorScheme.surface)
                 .border(
                     1.dp,
-                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.1f),
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
                     RoundedCornerShape(22.dp)
                 )
                 .padding(horizontal = 10.dp, vertical = 8.dp),
@@ -421,12 +422,12 @@ private fun RoundedPillNavBar(
     ) {
         Row(
             modifier = Modifier
-                .shadow(8.dp, RoundedCornerShape(50))
+                .shadow(16.dp, RoundedCornerShape(50), spotColor = MaterialTheme.colorScheme.scrim)
                 .clip(RoundedCornerShape(50))
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f))
+                .background(MaterialTheme.colorScheme.surface)
                 .border(
                     1.dp,
-                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.1f),
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
                     RoundedCornerShape(50)
                 )
                 .padding(6.dp),

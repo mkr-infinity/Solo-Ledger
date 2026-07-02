@@ -304,7 +304,9 @@ fun SoloLedgerMainApp() {
         // Toast overlay at bottom
         val toastData by viewModel.currentToast.collectAsStateWithLifecycle()
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = if (showBottomBar) 90.dp else 24.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
             com.solo.ledger.ui.components.AppToast(

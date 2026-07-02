@@ -3,9 +3,13 @@ package com.solo.ledger.data.repository
 import android.content.Context
 import com.solo.ledger.data.model.AppLog
 import com.solo.ledger.data.model.LogType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -18,10 +22,11 @@ class LogRepository(private val context: Context? = null) {
 
     private val maxLogs = 2000
     private val logFile: File? get() = context?.let { File(it.filesDir, "solo_ledger_logs.txt") }
+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     init {
-        // Load persisted logs on startup
-        loadPersistedLogs()
+        // Load persisted logs on startup (off main thread)
+        ioScope.launch { loadPersistedLogs() }
     }
 
     fun addLog(type: LogType, title: String, details: String = "") {
@@ -34,13 +39,16 @@ class LogRepository(private val context: Context? = null) {
         )
         val updated = (listOf(log) + _logs.value).take(maxLogs)
         _logs.value = updated
-        persistLog(log)
+        // Persist off the main thread
+        ioScope.launch { persistLog(log) }
     }
 
     fun clearLogs() {
         _logs.value = emptyList()
-        logFile?.let { file ->
-            try { file.delete() } catch (_: Exception) {}
+        ioScope.launch {
+            logFile?.let { file ->
+                try { file.delete() } catch (_: Exception) {}
+            }
         }
     }
 
@@ -70,6 +78,7 @@ class LogRepository(private val context: Context? = null) {
         return sb.toString()
     }
 
+    @Synchronized
     private fun persistLog(log: AppLog) {
         logFile?.let { file ->
             try {
@@ -112,7 +121,7 @@ class LogRepository(private val context: Context? = null) {
                             )
                         } else null
                     } catch (_: Exception) { null }
-                }.reversed() // Most recent first
+                }.reversed()
                 _logs.value = loaded
             } catch (_: Exception) {
                 // Silently fail
