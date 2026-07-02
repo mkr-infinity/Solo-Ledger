@@ -1,5 +1,6 @@
 package com.solo.ledger.ui.screens.budget
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -78,6 +80,14 @@ fun BudgetTemplatesScreen(
             }
 
             items(templates) { template ->
+                val templateIcon = when {
+                    template.name.contains("Student", true) -> Icons.Filled.School
+                    template.name.contains("Hostel", true) -> Icons.Filled.Apartment
+                    template.name.contains("Saver", true) -> Icons.Filled.Savings
+                    template.name.contains("Minimal", true) -> Icons.Filled.MoneyOff
+                    else -> Icons.Filled.Description
+                }
+
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -88,9 +98,23 @@ fun BudgetTemplatesScreen(
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.primaryContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    templateIcon,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(14.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = template.name,
@@ -114,13 +138,17 @@ fun BudgetTemplatesScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        OutlinedButton(
+                        Button(
                             onClick = {
                                 viewModel.updateMonthlyBudget(template.monthlyBudget)
                                 onNavigateBack()
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
                         ) {
                             Text("Apply Template")
                         }
