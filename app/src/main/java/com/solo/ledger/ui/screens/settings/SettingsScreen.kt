@@ -280,10 +280,8 @@ private fun VersionEasterEgg(cardShape: RoundedCornerShape, viewModel: MainViewM
             .clickable {
                 tapCount++
                 if (tapCount == 5) {
-                    viewModel.showToast(
-                        "Need help? Check the About section.",
-                        com.solo.ledger.ui.components.ToastType.INFO
-                    )
+                    // First time reaching 5 taps - show support popup
+                    viewModel.showSupportPopup.value = true
                 } else if (tapCount > 5) {
                     viewModel.showToast(
                         messages[(tapCount - 6) % messages.size],
