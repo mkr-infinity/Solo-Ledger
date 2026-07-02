@@ -1,9 +1,12 @@
 package com.solo.ledger.ui.screens.categories
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -130,12 +133,12 @@ fun CategoriesScreen(
         CategoryDialog(
             title = "Add Category",
             onDismiss = { showAddDialog = false },
-            onConfirm = { name, icon ->
+            onConfirm = { name, icon, color ->
                 viewModel.addCategory(
                     Category(
                         name = name,
                         icon = icon,
-                        color = 0xFF90A4AE
+                        color = color
                     )
                 )
                 showAddDialog = false
@@ -149,9 +152,10 @@ fun CategoriesScreen(
             title = "Edit Category",
             initialName = editingCategory!!.name,
             initialIcon = editingCategory!!.icon,
+            initialColor = editingCategory!!.color,
             onDismiss = { editingCategory = null },
-            onConfirm = { name, icon ->
-                viewModel.updateCategory(editingCategory!!.copy(name = name, icon = icon))
+            onConfirm = { name, icon, color ->
+                viewModel.updateCategory(editingCategory!!.copy(name = name, icon = icon, color = color))
                 editingCategory = null
             }
         )
@@ -163,17 +167,25 @@ private fun CategoryDialog(
     title: String,
     initialName: String = "",
     initialIcon: String = "category",
+    initialColor: Long = 0xFF90A4AE,
     onDismiss: () -> Unit,
-    onConfirm: (String, String) -> Unit
+    onConfirm: (String, String, Long) -> Unit
 ) {
     var name by remember { mutableStateOf(initialName) }
     var icon by remember { mutableStateOf(initialIcon) }
+    var selectedColor by remember { mutableLongStateOf(initialColor) }
 
     val iconOptions = listOf(
         "restaurant", "directions_car", "shopping_bag", "receipt_long",
         "school", "movie", "local_grocery_store", "subscriptions",
-        "home", "health_and_safety", "fitness_center", "coffee",
-        "flight", "pets", "more_horiz"
+        "home", "fitness_center", "flight", "pets", "more_horiz",
+        "local_cafe", "local_hospital"
+    )
+
+    val colorOptions = listOf(
+        0xFFE57373, 0xFF81C784, 0xFF64B5F6, 0xFFFFB74D,
+        0xFF9575CD, 0xFF4DD0E1, 0xFFA5D6A7, 0xFFFF8A65,
+        0xFF90A4AE, 0xFFF06292, 0xFFAED581, 0xFF7986CB
     )
 
     AlertDialog(
@@ -189,21 +201,65 @@ private fun CategoryDialog(
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                Text(
+                    text = "Color",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    colorOptions.take(6).forEach { color ->
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(Color(color))
+                                .then(
+                                    if (selectedColor == color) Modifier.border(
+                                        2.dp, MaterialTheme.colorScheme.onSurface, CircleShape
+                                    ) else Modifier
+                                )
+                                .clickable { selectedColor = color }
+                        )
+                    }
+                }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    colorOptions.drop(6).forEach { color ->
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(Color(color))
+                                .then(
+                                    if (selectedColor == color) Modifier.border(
+                                        2.dp, MaterialTheme.colorScheme.onSurface, CircleShape
+                                    ) else Modifier
+                                )
+                                .clickable { selectedColor = color }
+                        )
+                    }
+                }
+
                 Text(
                     text = "Icon",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                // Simple icon selector - first few options
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     iconOptions.take(5).forEach { iconName ->
                         IconButton(
                             onClick = { icon = iconName },
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(36.dp)
                                 .clip(RoundedCornerShape(8.dp))
                                 .then(
                                     if (icon == iconName) Modifier.background(
@@ -223,7 +279,7 @@ private fun CategoryDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { if (name.isNotBlank()) onConfirm(name.trim(), icon) },
+                onClick = { if (name.isNotBlank()) onConfirm(name.trim(), icon, selectedColor) },
                 enabled = name.isNotBlank()
             ) {
                 Text("Save")
