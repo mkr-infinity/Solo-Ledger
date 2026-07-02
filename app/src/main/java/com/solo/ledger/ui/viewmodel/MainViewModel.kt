@@ -1,6 +1,5 @@
 package com.solo.ledger.ui.viewmodel
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -40,7 +39,9 @@ class MainViewModel(
     }
 
     fun log(type: LogType, title: String, details: String = "") {
-        logRepository.addLog(type, title, details)
+        if (_logsEnabled.value) {
+            logRepository.addLog(type, title, details)
+        }
     }
 
     fun clearLogs() {
@@ -53,6 +54,31 @@ class MainViewModel(
 
     fun dismissSupportPopup() {
         showSupportPopup.value = false
+    }
+
+    // Toast system
+    private val _currentToast = MutableStateFlow<com.solo.ledger.ui.components.ToastData?>(null)
+    val currentToast: StateFlow<com.solo.ledger.ui.components.ToastData?> = _currentToast.asStateFlow()
+
+    fun showToast(message: String, type: com.solo.ledger.ui.components.ToastType = com.solo.ledger.ui.components.ToastType.INFO) {
+        _currentToast.value = com.solo.ledger.ui.components.ToastData(message = message, type = type)
+    }
+
+    fun dismissToast() {
+        _currentToast.value = null
+    }
+
+    // Logs enabled toggle
+    private val _logsEnabled = MutableStateFlow(true)
+    val logsEnabled: StateFlow<Boolean> = _logsEnabled.asStateFlow()
+
+    fun setLogsEnabled(enabled: Boolean) {
+        _logsEnabled.value = enabled
+        if (!enabled) {
+            logRepository.addLog(LogType.SETTINGS_CHANGED, "Logging disabled")
+        } else {
+            logRepository.addLog(LogType.SETTINGS_CHANGED, "Logging enabled")
+        }
     }
 
     // Preferences
@@ -172,7 +198,8 @@ class MainViewModel(
     fun addExpense(expense: Expense) {
         viewModelScope.launch {
             expenseRepository.insertExpense(expense)
-            logRepository.addLog(LogType.EXPENSE_ADDED, "Expense added: ${expense.title}", "Amount: ${expense.amount}")
+            log(LogType.EXPENSE_ADDED, "Expense added: ${expense.title}", "Amount: ${expense.amount}")
+            showToast("Expense added", com.solo.ledger.ui.components.ToastType.SUCCESS)
             _totalExpensesAdded.value++
             val count = _totalExpensesAdded.value
             if (count == 10 || count == 100 || count == 500) {
@@ -184,21 +211,24 @@ class MainViewModel(
     fun updateExpense(expense: Expense) {
         viewModelScope.launch {
             expenseRepository.updateExpense(expense.copy(updatedAt = System.currentTimeMillis()))
-            logRepository.addLog(LogType.EXPENSE_EDITED, "Expense edited: ${expense.title}")
+            log(LogType.EXPENSE_EDITED, "Expense edited: ${expense.title}")
+            showToast("Expense updated", com.solo.ledger.ui.components.ToastType.INFO)
         }
     }
 
     fun deleteExpense(id: Long) {
         viewModelScope.launch {
             expenseRepository.softDeleteExpense(id)
-            logRepository.addLog(LogType.EXPENSE_DELETED, "Expense moved to bin", "ID: $id")
+            log(LogType.EXPENSE_DELETED, "Expense moved to bin", "ID: $id")
+            showToast("Moved to bin", com.solo.ledger.ui.components.ToastType.WARNING)
         }
     }
 
     fun restoreExpense(id: Long) {
         viewModelScope.launch {
             expenseRepository.restoreExpense(id)
-            logRepository.addLog(LogType.EXPENSE_RESTORED, "Expense restored", "ID: $id")
+            log(LogType.EXPENSE_RESTORED, "Expense restored", "ID: $id")
+            showToast("Expense restored", com.solo.ledger.ui.components.ToastType.SUCCESS)
         }
     }
 
@@ -211,7 +241,8 @@ class MainViewModel(
     fun clearBin() {
         viewModelScope.launch {
             expenseRepository.clearBin()
-            logRepository.addLog(LogType.BIN_CLEARED, "Bin cleared")
+            log(LogType.BIN_CLEARED, "Bin cleared")
+            showToast("Bin cleared", com.solo.ledger.ui.components.ToastType.INFO)
         }
     }
 

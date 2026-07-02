@@ -191,6 +191,17 @@ fun SettingsScreen(
             SettingsSectionHeader("Other")
         }
         item {
+            val logsEnabled by viewModel.logsEnabled.collectAsStateWithLifecycle()
+            SettingsToggleItem(
+                icon = Icons.Filled.History,
+                title = "Activity Logging",
+                subtitle = "Record all actions in the app",
+                checked = logsEnabled,
+                onCheckedChange = { viewModel.setLogsEnabled(it) },
+                cardShape = cardShape
+            )
+        }
+        item {
             SettingsItem(
                 icon = Icons.Filled.Article,
                 title = "Logs",
@@ -238,16 +249,14 @@ fun SettingsScreen(
 
         // Version easter egg
         item {
-            VersionEasterEgg(cardShape = cardShape)
+            VersionEasterEgg(cardShape = cardShape, viewModel = viewModel)
         }
     }
 }
 
 @Composable
-private fun VersionEasterEgg(cardShape: RoundedCornerShape) {
+private fun VersionEasterEgg(cardShape: RoundedCornerShape, viewModel: MainViewModel) {
     var tapCount by remember { mutableIntStateOf(0) }
-    var showMessage by remember { mutableStateOf(false) }
-    var currentMessage by remember { mutableStateOf("") }
 
     val messages = listOf(
         "Stop poking me!",
@@ -271,11 +280,15 @@ private fun VersionEasterEgg(cardShape: RoundedCornerShape) {
             .clickable {
                 tapCount++
                 if (tapCount == 5) {
-                    currentMessage = "Hey there! Need help? Check the About section."
-                    showMessage = true
+                    viewModel.showToast(
+                        "Need help? Check the About section.",
+                        com.solo.ledger.ui.components.ToastType.INFO
+                    )
                 } else if (tapCount > 5) {
-                    currentMessage = messages[(tapCount - 6) % messages.size]
-                    showMessage = true
+                    viewModel.showToast(
+                        messages[(tapCount - 6) % messages.size],
+                        com.solo.ledger.ui.components.ToastType.FUN
+                    )
                 }
             },
         colors = CardDefaults.cardColors(
@@ -294,15 +307,6 @@ private fun VersionEasterEgg(cardShape: RoundedCornerShape) {
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            AnimatedVisibility(visible = showMessage) {
-                Text(
-                    text = currentMessage,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
         }
     }
 }

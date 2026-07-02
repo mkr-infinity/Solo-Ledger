@@ -5,6 +5,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -271,6 +272,18 @@ fun SoloLedgerMainApp() {
                     )
                 }
             }
+        }
+
+        // Toast overlay
+        val toastData by viewModel.currentToast.collectAsStateWithLifecycle()
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            com.solo.ledger.ui.components.AppToast(
+                toastData = toastData,
+                onDismiss = { viewModel.dismissToast() }
+            )
         }
 
         // Support popup
