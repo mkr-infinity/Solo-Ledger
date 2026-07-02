@@ -160,7 +160,7 @@ fun AddExpenseScreen(
                         selectedCategory = detected
                     }
                 },
-                label = { Text("Title") },
+                label = { Text("Title (auto-detects category)") },
                 leadingIcon = { Icon(Icons.Filled.Edit, contentDescription = null) },
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
