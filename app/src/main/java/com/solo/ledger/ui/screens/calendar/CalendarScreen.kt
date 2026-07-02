@@ -281,7 +281,7 @@ fun CalendarScreen(viewModel: MainViewModel) {
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp)
+                    contentPadding = PaddingValues(bottom = 90.dp)
                 ) {
                     items(selectedDateExpenses, key = { it.id }) { expense ->
                         val category = categories.find { it.id == expense.categoryId }

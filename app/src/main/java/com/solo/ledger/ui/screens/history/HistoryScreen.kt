@@ -177,7 +177,7 @@ fun HistoryScreen(
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
-                contentPadding = PaddingValues(bottom = 16.dp)
+                contentPadding = PaddingValues(bottom = 90.dp)
             ) {
                 groupedExpenses.forEach { (dateLabel, expenses) ->
                     item {

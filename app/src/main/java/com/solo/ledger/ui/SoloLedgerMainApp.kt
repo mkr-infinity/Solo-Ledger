@@ -87,41 +87,21 @@ fun SoloLedgerMainApp() {
 
         val showBottomBar = currentRoute in bottomNavRoutes
 
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            containerColor = MaterialTheme.colorScheme.background,
-            bottomBar = {
-                if (showBottomBar) {
-                    SoloLedgerBottomBar(
-                        items = BottomNavItem.entries.toList(),
-                        currentRoute = currentRoute,
-                        navigationStyle = navigationStyle,
-                        onItemClick = { item ->
-                            if (item.route == Screen.AddExpense.route) {
-                                navController.navigate(Screen.AddExpense.route) {
-                                    launchSingleTop = true
-                                }
-                            } else {
-                                navController.navigate(item.route) {
-                                    popUpTo(Screen.Home.route) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        }
-                    )
-                }
-            }
-        ) { paddingValues ->
-            NavHost(
-                navController = navController,
-                startDestination = startDestination,
-                modifier = Modifier.padding(paddingValues),
-                enterTransition = { fadeIn(animationSpec = tween(300)) },
-                exitTransition = { fadeOut(animationSpec = tween(300)) },
-                popEnterTransition = { fadeIn(animationSpec = tween(300)) },
-                popExitTransition = { fadeOut(animationSpec = tween(300)) }
-            ) {
+        // Use Box instead of Scaffold bottomBar to overlay nav on content
+        Box(modifier = Modifier.fillMaxSize()) {
+            Scaffold(
+                modifier = Modifier.fillMaxSize(),
+                containerColor = MaterialTheme.colorScheme.background
+            ) { paddingValues ->
+                NavHost(
+                    navController = navController,
+                    startDestination = startDestination,
+                    modifier = Modifier.padding(paddingValues),
+                    enterTransition = { fadeIn(animationSpec = tween(300)) },
+                    exitTransition = { fadeOut(animationSpec = tween(300)) },
+                    popEnterTransition = { fadeIn(animationSpec = tween(300)) },
+                    popExitTransition = { fadeOut(animationSpec = tween(300)) }
+                ) {
                 composable(Screen.Onboarding.route) {
                     OnboardingScreen(
                         viewModel = viewModel,
@@ -287,6 +267,35 @@ fun SoloLedgerMainApp() {
                     com.solo.ledger.ui.screens.update.UpdateScreen(
                         viewModel = viewModel,
                         onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+            }
+        }
+
+            // Navigation bar overlay - floats on top of content
+            if (showBottomBar) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                ) {
+                    SoloLedgerBottomBar(
+                        items = BottomNavItem.entries.toList(),
+                        currentRoute = currentRoute,
+                        navigationStyle = navigationStyle,
+                        onItemClick = { item ->
+                            if (item.route == Screen.AddExpense.route) {
+                                navController.navigate(Screen.AddExpense.route) {
+                                    launchSingleTop = true
+                                }
+                            } else {
+                                navController.navigate(item.route) {
+                                    popUpTo(Screen.Home.route) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        }
                     )
                 }
             }

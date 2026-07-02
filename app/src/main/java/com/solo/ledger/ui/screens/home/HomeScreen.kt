@@ -69,7 +69,7 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp),
+        contentPadding = PaddingValues(top = 16.dp, bottom = 90.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Top bar: Profile image + Greeting + Live time

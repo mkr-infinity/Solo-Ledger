@@ -57,10 +57,10 @@ private fun CapsuleNavBar(
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(26.dp))
-                .background(MaterialTheme.colorScheme.surface)
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.88f))
                 .border(
                     width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f),
                     shape = RoundedCornerShape(26.dp)
                 )
                 .padding(horizontal = 8.dp, vertical = 6.dp),
@@ -171,10 +171,10 @@ private fun FloatingNavBar(
             modifier = Modifier
                 .shadow(12.dp, RoundedCornerShape(22.dp))
                 .clip(RoundedCornerShape(22.dp))
-                .background(MaterialTheme.colorScheme.surface)
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
                 .border(
                     1.dp,
-                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f),
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.1f),
                     RoundedCornerShape(22.dp)
                 )
                 .padding(horizontal = 10.dp, vertical = 8.dp),
@@ -253,7 +253,7 @@ private fun MinimalFlatNavBar(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.background,
+        color = Color.Transparent,
         tonalElevation = 0.dp
     ) {
         Row(
@@ -330,7 +330,7 @@ private fun ElevatedNavBar(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
         tonalElevation = 4.dp,
         shadowElevation = 4.dp
     ) {
@@ -505,7 +505,7 @@ private fun CompactNavBar(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
         tonalElevation = 2.dp
     ) {
         Row(
@@ -560,7 +560,7 @@ private fun MaterialStandardNavBar(
 ) {
     NavigationBar(
         modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
         tonalElevation = 3.dp
     ) {
         items.forEach { item ->
