@@ -212,6 +212,46 @@ fun HomeScreen(
             }
         }
 
+        // Spending insight
+        if (allExpenses.isNotEmpty()) {
+            item {
+                val insight = remember(monthlySpending, monthlyBudget, todaySpending) {
+                    when {
+                        budgetUsagePercent > 0.9 -> "You have used over 90% of your budget. Consider reducing spending."
+                        budgetUsagePercent > 0.7 -> "Budget usage is high. Plan your remaining days carefully."
+                        todaySpending > monthlyBudget / 30 * 2 -> "Today's spending is above your daily average."
+                        monthlySpending == 0.0 -> "No spending recorded this month. Start tracking!"
+                        else -> "You are on track. Keep maintaining your budget discipline."
+                    }
+                }
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
+                    ),
+                    shape = cardShape
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.Lightbulb,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = insight,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+        }
+
         // Savings Goals quick view
         if (savingsGoals.isNotEmpty()) {
             item {
