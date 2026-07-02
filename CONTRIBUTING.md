@@ -260,11 +260,23 @@ base64 keystore/solo-ledger-release.p12
 
 Copy the entire output string into the `KEYSTORE_BASE64` secret.
 
+### 🎛️ Workflow inputs
+
+When you click **Run workflow**, you'll see two inputs:
+
+| Input | Description |
+|---|---|
+| `version_name` | Version used for the tag (`v<version>`) and APK file name |
+| `publish_release` | ☑️ **Checkbox — unticked by default.** Leave it **off** to only build the APK (download it from the run's *Artifacts* for testing). **Tick it** to also publish a **GitHub Release**: it creates the `v<version>` tag, attaches the signed APK, and adds nicely formatted release notes. |
+
+> 🧪 **Testing tip:** keep `publish_release` **unticked** while iterating — you get the signed APK as a build artifact without touching the Releases section. When you're happy, run it again with the box **ticked** to publish.
+
 During the run, the workflow:
 1. 🔓 Decodes `KEYSTORE_BASE64` back into a keystore file
 2. 🧱 Builds `assembleRelease` using the other secrets as env vars
-3. 📦 Uploads the signed APK as a build artifact
-4. 🧹 Deletes the decoded keystore afterwards
+3. 📦 Uploads the signed APK as a build artifact (always)
+4. 🚀 Publishes a tagged GitHub Release with the APK **only if `publish_release` is ticked**
+5. 🧹 Deletes the decoded keystore afterwards
 
 > 🔒 GitHub masks secret values in logs, and the keystore file only exists on the ephemeral runner during the build.
 

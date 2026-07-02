@@ -5,9 +5,18 @@ on:
   workflow_dispatch:
     inputs:
       version_name:
-        description: "Version name to embed in the APK file name"
-        required: false
+        description: "Version name (used for tag & APK file name, e.g. 1.0.0)"
+        required: true
         default: "1.0.0"
+      publish_release:
+        description: "Publish to GitHub Releases (leave UNTICKED to only build the APK for testing)"
+        type: boolean
+        required: true
+        default: false
+
+# Needed so the workflow can create a GitHub Release + tag.
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -59,12 +68,78 @@ jobs:
           mv app/build/outputs/apk/release/app-release.apk \
              "app/build/outputs/apk/release/Solo-Ledger-v${{ github.event.inputs.version_name }}-release.apk"
 
+      # Always available for download from the workflow run (great for testing).
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: Solo-Ledger-v${{ github.event.inputs.version_name }}-release
           path: app/build/outputs/apk/release/Solo-Ledger-v${{ github.event.inputs.version_name }}-release.apk
           retention-days: 90
+
+      # ----- Release publishing (only when the checkbox is ticked) -----
+      - name: Prepare release notes
+        if: ${{ github.event.inputs.publish_release == 'true' }}
+        run: |
+          cat > RELEASE_NOTES.md <<'EOF'
+          <p align="center">
+            <img src="https://raw.githubusercontent.com/mkr-infinity/Solo-Ledger/main/app/src/main/assets/logo/solo_ledger_logo.svg" width="96" alt="Solo Ledger"/>
+          </p>
+
+          <h1 align="center">💰 Solo Ledger v__VERSION__</h1>
+
+          <p align="center">
+            <b>A premium, offline-first budgeting app for students & young professionals.</b><br/>
+            <sub>Track expenses · Set budgets · Hit savings goals — 100% offline, zero cloud, zero tracking.</sub>
+          </p>
+
+          ---
+
+          ## ✨ Highlights
+
+          - 📊 **Budget Tracking** with live usage indicators
+          - 💸 **Expense Management** — add, edit, search, filter, restore
+          - 🎯 **Savings Goals** with progress tracking
+          - 📅 **Calendar View** with daily spending breakdowns
+          - 📈 **Analytics** — donut charts & category insights
+          - 🧩 **Budget Templates** — Student · Hostel · Saver · Minimal
+          - 💱 **Multi-Currency** support
+          - 📤 **Export / Import** (JSON · CSV)
+          - 🎨 **8 Themes · 7 Navigation Styles**
+          - 📴 **Fully Offline** — no account, no cloud, no tracking
+
+          ---
+
+          ## 📥 Installation
+
+          1. Download **`Solo-Ledger-v__VERSION__-release.apk`** below.
+          2. On your Android device, enable **Install unknown apps** for your browser / file manager.
+          3. Open the APK and tap **Install**.
+
+          > 📱 Requires **Android 8.0 (API 26)** or newer.
+
+          ---
+
+          ## 🐞 Known Issues
+
+          - ⚠️ **The app crashes when tapping the "Check for updates" button in Settings.** A fix is planned for the next release. Please avoid that button for now.
+
+          ---
+
+          <p align="center"><sub>Built with ❤️ and Kotlin · Solo Ledger</sub></p>
+          EOF
+          sed -i "s/__VERSION__/${{ github.event.inputs.version_name }}/g" RELEASE_NOTES.md
+
+      - name: Publish GitHub Release
+        if: ${{ github.event.inputs.publish_release == 'true' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.event.inputs.version_name }}
+          name: Solo Ledger v${{ github.event.inputs.version_name }}
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: false
+          make_latest: true
+          files: app/build/outputs/apk/release/Solo-Ledger-v${{ github.event.inputs.version_name }}-release.apk
 
       - name: Clean up keystore
         if: always()
