@@ -135,7 +135,6 @@ fun BinScreen(
                             )
                         }
                     }
-                    )
                 }
 
                 items(deletedExpenses, key = { it.id }) { expense ->

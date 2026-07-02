@@ -519,6 +519,7 @@ private fun BudgetCardFront(
         }
     }
 }
+}
 
 @Composable
 private fun BudgetCardBack(
