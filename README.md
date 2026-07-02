@@ -150,7 +150,7 @@
 ## 📄 License
 
 <p align="center">
-  Released under the <b>MIT License</b> · © 2024 Mohammad Kaif Raja
+  Released under the <b>MIT License</b> · © 2026 mkr-infinity
 </p>
 
 <br/>
