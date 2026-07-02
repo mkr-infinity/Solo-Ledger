@@ -1,4 +1,8 @@
+@file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package com.solo.ledger.ui.screens.onboarding
+
+
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -8,6 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -31,7 +36,7 @@ import androidx.core.content.ContextCompat
 import com.solo.ledger.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+
 @Composable
 fun OnboardingScreen(
     viewModel: MainViewModel,
