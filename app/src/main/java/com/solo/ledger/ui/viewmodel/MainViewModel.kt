@@ -214,7 +214,15 @@ class MainViewModel(
 
     // Preferences operations
     fun setTheme(themeKey: String) {
-        viewModelScope.launch { userPreferences.setTheme(themeKey) }
+        viewModelScope.launch {
+            userPreferences.setTheme(themeKey)
+            val theme = com.solo.ledger.ui.theme.AppTheme.fromKey(themeKey)
+            if (theme.isSquare) {
+                userPreferences.setBorderRadius(0f)
+            } else if (borderRadius.value == 0f) {
+                userPreferences.setBorderRadius(16f)
+            }
+        }
     }
 
     fun setNavigationStyle(styleKey: String) {

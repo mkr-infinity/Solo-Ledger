@@ -1,7 +1,9 @@
 package com.solo.ledger.ui.screens.home
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,13 +17,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.solo.ledger.data.model.Category
 import com.solo.ledger.data.model.Expense
 import com.solo.ledger.ui.components.DonutChart
 import com.solo.ledger.ui.viewmodel.MainViewModel
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -41,122 +46,364 @@ fun HomeScreen(
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val categorySpending by viewModel.categorySpending.collectAsStateWithLifecycle()
     val savingsGoals by viewModel.savingsGoals.collectAsStateWithLifecycle()
+    val borderRadius by viewModel.borderRadius.collectAsStateWithLifecycle()
 
     val remaining = monthlyBudget - monthlySpending
     val budgetUsagePercent = if (monthlyBudget > 0) (monthlySpending / monthlyBudget).coerceIn(0.0, 1.0) else 0.0
-
     val recentExpenses = allExpenses.take(5)
+    val cardShape = RoundedCornerShape(borderRadius.dp)
+
+    // Live clock
+    var currentTime by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            currentTime = System.currentTimeMillis()
+            delay(1000)
+        }
+    }
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp),
+        contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Greeting
+        // Top bar: Profile image + Greeting + Live time
         item {
-            Text(
-                text = "Hello, ${userName.ifBlank { "there" }}",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = SimpleDateFormat("EEEE, d MMMM", Locale.getDefault()).format(Date()),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            HomeTopBar(
+                userName = userName,
+                currentTime = currentTime,
+                borderRadius = borderRadius
             )
         }
 
-        // Budget Card
+        // Flippable Budget Card
         item {
-            BudgetOverviewCard(
+            FlippableBudgetCard(
                 monthlyBudget = monthlyBudget,
                 spent = monthlySpending,
                 remaining = remaining,
                 usagePercent = budgetUsagePercent.toFloat(),
-                currencySymbol = currencySymbol
+                currencySymbol = currencySymbol,
+                categorySpending = categorySpending,
+                categories = categories,
+                totalSpending = monthlySpending,
+                cardShape = cardShape
             )
         }
 
-        // Daily Spending
+        // Recent Transactions header with "View All"
         item {
-            DailySpendingCard(
-                todaySpending = todaySpending,
-                currencySymbol = currencySymbol
-            )
-        }
-
-        // Savings Goals
-        if (savingsGoals.isNotEmpty()) {
-            item {
-                SavingsGoalPreview(
-                    goals = savingsGoals,
-                    currencySymbol = currencySymbol,
-                    onViewAll = onNavigateToSavings
-                )
-            }
-        }
-
-        // Category Breakdown
-        if (categorySpending.isNotEmpty()) {
-            item {
-                CategoryBreakdownCard(
-                    categorySpending = categorySpending,
-                    categories = categories,
-                    currencySymbol = currencySymbol,
-                    totalSpending = monthlySpending,
-                    onViewAnalytics = onNavigateToAnalytics
-                )
-            }
-        }
-
-        // Recent Transactions
-        if (recentExpenses.isNotEmpty()) {
-            item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = "Recent Transactions",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onBackground
                 )
+                TextButton(onClick = onNavigateToAnalytics) {
+                    Text(
+                        "View All",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        Icons.Filled.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
+        }
 
+        // Recent expenses
+        if (recentExpenses.isNotEmpty()) {
             items(recentExpenses, key = { it.id }) { expense ->
                 val category = categories.find { it.id == expense.categoryId }
                 RecentTransactionItem(
                     expense = expense,
                     category = category,
-                    currencySymbol = currencySymbol
+                    currencySymbol = currencySymbol,
+                    cardShape = cardShape
                 )
             }
         } else {
             item {
-                EmptyStateCard()
+                EmptyStateCard(cardShape)
+            }
+        }
+
+        // Savings Goals quick view
+        if (savingsGoals.isNotEmpty()) {
+            item {
+                SavingsGoalPreview(
+                    goals = savingsGoals,
+                    currencySymbol = currencySymbol,
+                    onViewAll = onNavigateToSavings,
+                    cardShape = cardShape
+                )
             }
         }
     }
 }
 
 @Composable
-private fun BudgetOverviewCard(
+private fun HomeTopBar(
+    userName: String,
+    currentTime: Long,
+    borderRadius: Float
+) {
+    val dateFormat = SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault())
+    val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Profile avatar
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = userName.firstOrNull()?.uppercase() ?: "U",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column {
+                Text(
+                    text = "Hello, ${userName.ifBlank { "there" }}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    text = dateFormat.format(Date(currentTime)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        // Live clock display
+        Surface(
+            shape = RoundedCornerShape(borderRadius.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            tonalElevation = 2.dp
+        ) {
+            Text(
+                text = timeFormat.format(Date(currentTime)),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                letterSpacing = 1.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun FlippableBudgetCard(
     monthlyBudget: Double,
     spent: Double,
     remaining: Double,
     usagePercent: Float,
-    currencySymbol: String
+    currencySymbol: String,
+    categorySpending: List<com.solo.ledger.data.dao.CategorySpending>,
+    categories: List<Category>,
+    totalSpending: Double,
+    cardShape: RoundedCornerShape
+) {
+    var isFlipped by remember { mutableStateOf(false) }
+    val rotation by animateFloatAsState(
+        targetValue = if (isFlipped) 180f else 0f,
+        animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing),
+        label = "flip"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .clickable { isFlipped = !isFlipped }
+            .graphicsLayer {
+                rotationY = rotation
+                cameraDistance = 12f * density
+            }
+    ) {
+        if (rotation <= 90f) {
+            // Front: Budget info
+            BudgetCardFront(
+                monthlyBudget = monthlyBudget,
+                spent = spent,
+                remaining = remaining,
+                usagePercent = usagePercent,
+                currencySymbol = currencySymbol,
+                cardShape = cardShape
+            )
+        } else {
+            // Back: Spending graph
+            Box(modifier = Modifier.graphicsLayer { rotationY = 180f }) {
+                BudgetCardBack(
+                    categorySpending = categorySpending,
+                    categories = categories,
+                    totalSpending = totalSpending,
+                    currencySymbol = currencySymbol,
+                    cardShape = cardShape
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BudgetCardFront(
+    monthlyBudget: Double,
+    spent: Double,
+    remaining: Double,
+    usagePercent: Float,
+    currencySymbol: String,
+    cardShape: RoundedCornerShape
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxSize(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
+        shape = cardShape
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Monthly Budget",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    )
+                    Text(
+                        text = "$currencySymbol${formatAmount(monthlyBudget)}",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+                Icon(
+                    imageVector = Icons.Filled.TouchApp,
+                    contentDescription = "Tap to flip",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.4f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            // Progress
+            Column {
+                LinearProgressIndicator(
+                    progress = { usagePercent },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = if (usagePercent > 0.8f) MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.secondary,
+                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(
+                            text = "Spent",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                        )
+                        Text(
+                            text = "$currencySymbol${formatAmount(spent)}",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Usage",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                        )
+                        Text(
+                            text = "${(usagePercent * 100).toInt()}%",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "Remaining",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                        )
+                        Text(
+                            text = "$currencySymbol${formatAmount(remaining.coerceAtLeast(0.0))}",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (remaining < 0) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BudgetCardBack(
+    categorySpending: List<com.solo.ledger.data.dao.CategorySpending>,
+    categories: List<Category>,
+    totalSpending: Double,
+    currencySymbol: String,
+    cardShape: RoundedCornerShape
+) {
+    Card(
+        modifier = Modifier.fillMaxSize(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
-        shape = RoundedCornerShape(20.dp)
+        shape = cardShape
     ) {
         Column(
-            modifier = Modifier.padding(20.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -164,81 +411,83 @@ private fun BudgetOverviewCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Monthly Budget",
+                    text = "Spending Breakdown",
                     style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Text(
-                    text = "$currencySymbol${formatAmount(monthlyBudget)}",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                Icon(
+                    imageVector = Icons.Filled.TouchApp,
+                    contentDescription = "Tap to flip",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    modifier = Modifier.size(20.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "$currencySymbol${formatAmount(spent)}",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Text(
-                text = "spent this month",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Progress bar
-            LinearProgressIndicator(
-                progress = { usagePercent },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = if (usagePercent > 0.8f)
-                    MaterialTheme.colorScheme.error
-                else if (usagePercent > 0.6f)
-                    MaterialTheme.colorScheme.tertiary
-                else
-                    MaterialTheme.colorScheme.secondary,
-                trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-            )
-
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        text = "Remaining",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+            if (categorySpending.isNotEmpty()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val chartData = categorySpending.take(5).map { spending ->
+                        val cat = categories.find { it.id == spending.categoryId }
+                        DonutChart.Segment(
+                            value = spending.total.toFloat(),
+                            color = Color(cat?.color ?: 0xFF90A4AE),
+                            label = cat?.name ?: "Other"
+                        )
+                    }
+
+                    DonutChart(
+                        segments = chartData,
+                        modifier = Modifier.size(90.dp),
+                        strokeWidth = 18f
                     )
-                    Text(
-                        text = "$currencySymbol${formatAmount(remaining.coerceAtLeast(0.0))}",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (remaining < 0) MaterialTheme.colorScheme.error
-                        else MaterialTheme.colorScheme.secondary
-                    )
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        categorySpending.take(5).forEach { spending ->
+                            val cat = categories.find { it.id == spending.categoryId }
+                            val percent = if (totalSpending > 0) (spending.total / totalSpending * 100).toInt() else 0
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(cat?.color ?: 0xFF90A4AE))
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "${cat?.name ?: "Other"}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Text(
+                                    text = "$percent%",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
                 }
-                Column(horizontalAlignment = Alignment.End) {
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        text = "Usage",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "${(usagePercent * 100).toInt()}%",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        text = "No spending data yet",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 }
             }
@@ -247,53 +496,71 @@ private fun BudgetOverviewCard(
 }
 
 @Composable
-private fun DailySpendingCard(
-    todaySpending: Double,
-    currencySymbol: String
+private fun RecentTransactionItem(
+    expense: Expense,
+    category: Category?,
+    currencySymbol: String,
+    cardShape: RoundedCornerShape
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        shape = RoundedCornerShape(16.dp)
+        shape = cardShape
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(14.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.tertiaryContainer),
+                        .size(42.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(category?.color ?: 0xFF90A4AE).copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Today,
+                        imageVector = getCategoryIcon(category?.icon),
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                        modifier = Modifier.size(22.dp)
+                        tint = Color(category?.color ?: 0xFF90A4AE),
+                        modifier = Modifier.size(20.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "Today",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "$currencySymbol${formatAmount(todaySpending)}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        text = expense.title,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                    Text(
+                        text = "${category?.name ?: "Other"} • ${expense.time}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "-$currencySymbol${formatAmount(expense.amount)}",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.error
+                )
+                Text(
+                    text = SimpleDateFormat("dd MMM", Locale.getDefault()).format(Date(expense.date)),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
@@ -303,14 +570,15 @@ private fun DailySpendingCard(
 private fun SavingsGoalPreview(
     goals: List<com.solo.ledger.data.model.SavingsGoal>,
     currencySymbol: String,
-    onViewAll: () -> Unit
+    onViewAll: () -> Unit,
+    cardShape: RoundedCornerShape
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        shape = RoundedCornerShape(16.dp)
+        shape = cardShape
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -365,168 +633,13 @@ private fun SavingsGoalPreview(
 }
 
 @Composable
-private fun CategoryBreakdownCard(
-    categorySpending: List<com.solo.ledger.data.dao.CategorySpending>,
-    categories: List<Category>,
-    currencySymbol: String,
-    totalSpending: Double,
-    onViewAnalytics: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Category Breakdown",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                TextButton(onClick = onViewAnalytics) {
-                    Text("Details", style = MaterialTheme.typography.labelMedium)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Mini donut chart
-            if (categorySpending.isNotEmpty()) {
-                val chartData = categorySpending.take(5).map { spending ->
-                    val cat = categories.find { it.id == spending.categoryId }
-                    DonutChart.Segment(
-                        value = spending.total.toFloat(),
-                        color = Color(cat?.color ?: 0xFF90A4AE),
-                        label = cat?.name ?: "Other"
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    DonutChart(
-                        segments = chartData,
-                        modifier = Modifier.size(80.dp)
-                    )
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        categorySpending.take(4).forEach { spending ->
-                            val cat = categories.find { it.id == spending.categoryId }
-                            val percent = if (totalSpending > 0) (spending.total / totalSpending * 100).toInt() else 0
-                            Row(
-                                modifier = Modifier.padding(vertical = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(cat?.color ?: 0xFF90A4AE))
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "${cat?.name ?: "Other"} ($percent%)",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun RecentTransactionItem(
-    expense: Expense,
-    category: Category?,
-    currencySymbol: String
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(category?.color ?: 0xFF90A4AE).copy(alpha = 0.2f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = getCategoryIcon(category?.icon),
-                        contentDescription = null,
-                        tint = Color(category?.color ?: 0xFF90A4AE),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = expense.title,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = category?.name ?: "Other",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = "-$currencySymbol${formatAmount(expense.amount)}",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.error
-                )
-                Text(
-                    text = SimpleDateFormat("dd MMM", Locale.getDefault()).format(Date(expense.date)),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmptyStateCard() {
+private fun EmptyStateCard(cardShape: RoundedCornerShape) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
-        shape = RoundedCornerShape(16.dp)
+        shape = cardShape
     ) {
         Column(
             modifier = Modifier

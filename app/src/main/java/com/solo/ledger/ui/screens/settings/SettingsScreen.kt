@@ -1,8 +1,13 @@
 package com.solo.ledger.ui.screens.settings
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -11,10 +16,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.solo.ledger.ui.navigation.NavigationStyle
+import com.solo.ledger.ui.theme.AppTheme
 import com.solo.ledger.ui.viewmodel.MainViewModel
 
 @Composable
@@ -33,13 +42,18 @@ fun SettingsScreen(
     onNavigateToBin: () -> Unit
 ) {
     val animationsEnabled by viewModel.animationsEnabled.collectAsStateWithLifecycle()
+    val currentThemeKey by viewModel.currentTheme.collectAsStateWithLifecycle()
+    val currentNavStyle by viewModel.navigationStyle.collectAsStateWithLifecycle()
+    val borderRadius by viewModel.borderRadius.collectAsStateWithLifecycle()
+
+    val cardShape = RoundedCornerShape(borderRadius.dp)
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
         contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
             Text(
@@ -47,7 +61,56 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
+
+        // Theme Selection with horizontal preview carousel
+        item {
+            SettingsSectionHeader("Appearance")
+        }
+
+        item {
+            Text(
+                text = "Theme",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            ThemeCarousel(
+                currentThemeKey = currentThemeKey,
+                onThemeSelected = { viewModel.setTheme(it) },
+                cardShape = cardShape
+            )
+        }
+
+        // Navigation Style with horizontal preview carousel
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Navigation",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            NavigationStyleCarousel(
+                currentStyleKey = currentNavStyle,
+                onStyleSelected = { viewModel.setNavigationStyle(it) },
+                cardShape = cardShape
+            )
+        }
+
+        // Animations toggle
+        item {
+            SettingsToggleItem(
+                icon = Icons.Filled.Animation,
+                title = "Animations",
+                subtitle = "Enable smooth transitions",
+                checked = animationsEnabled,
+                onCheckedChange = { viewModel.updateAnimationsEnabled(it) },
+                cardShape = cardShape
             )
         }
 
@@ -60,37 +123,8 @@ fun SettingsScreen(
                 icon = Icons.Filled.Person,
                 title = "Profile",
                 subtitle = "Name, avatar, currency",
-                onClick = onNavigateToProfile
-            )
-        }
-
-        // Appearance Section
-        item {
-            SettingsSectionHeader("Appearance")
-        }
-        item {
-            SettingsItem(
-                icon = Icons.Filled.Palette,
-                title = "Theme",
-                subtitle = "Choose app theme",
-                onClick = onNavigateToTheme
-            )
-        }
-        item {
-            SettingsItem(
-                icon = Icons.Filled.Navigation,
-                title = "Navigation Style",
-                subtitle = "Change navigation bar design",
-                onClick = onNavigateToNavStyle
-            )
-        }
-        item {
-            SettingsToggleItem(
-                icon = Icons.Filled.Animation,
-                title = "Animations",
-                subtitle = "Enable smooth transitions",
-                checked = animationsEnabled,
-                onCheckedChange = { viewModel.updateAnimationsEnabled(it) }
+                onClick = onNavigateToProfile,
+                cardShape = cardShape
             )
         }
 
@@ -103,7 +137,8 @@ fun SettingsScreen(
                 icon = Icons.Filled.Category,
                 title = "Categories",
                 subtitle = "Manage expense categories",
-                onClick = onNavigateToCategories
+                onClick = onNavigateToCategories,
+                cardShape = cardShape
             )
         }
         item {
@@ -111,7 +146,8 @@ fun SettingsScreen(
                 icon = Icons.Filled.Description,
                 title = "Budget Templates",
                 subtitle = "Pre-made budget plans",
-                onClick = onNavigateToBudgetTemplates
+                onClick = onNavigateToBudgetTemplates,
+                cardShape = cardShape
             )
         }
         item {
@@ -119,7 +155,8 @@ fun SettingsScreen(
                 icon = Icons.Filled.Savings,
                 title = "Savings Goals",
                 subtitle = "Track your savings targets",
-                onClick = onNavigateToSavingsGoals
+                onClick = onNavigateToSavingsGoals,
+                cardShape = cardShape
             )
         }
 
@@ -132,7 +169,8 @@ fun SettingsScreen(
                 icon = Icons.Filled.ImportExport,
                 title = "Import / Export",
                 subtitle = "Backup and restore data",
-                onClick = onNavigateToData
+                onClick = onNavigateToData,
+                cardShape = cardShape
             )
         }
         item {
@@ -140,7 +178,8 @@ fun SettingsScreen(
                 icon = Icons.Filled.DeleteSweep,
                 title = "Bin",
                 subtitle = "Recover deleted expenses",
-                onClick = onNavigateToBin
+                onClick = onNavigateToBin,
+                cardShape = cardShape
             )
         }
 
@@ -153,7 +192,8 @@ fun SettingsScreen(
                 icon = Icons.Filled.RocketLaunch,
                 title = "Coming Soon",
                 subtitle = "Premium features in development",
-                onClick = onNavigateToComingSoon
+                onClick = onNavigateToComingSoon,
+                cardShape = cardShape
             )
         }
         item {
@@ -161,7 +201,8 @@ fun SettingsScreen(
                 icon = Icons.Filled.Favorite,
                 title = "Support",
                 subtitle = "Help us grow",
-                onClick = onNavigateToSupport
+                onClick = onNavigateToSupport,
+                cardShape = cardShape
             )
         }
         item {
@@ -169,8 +210,359 @@ fun SettingsScreen(
                 icon = Icons.Filled.Info,
                 title = "About",
                 subtitle = "App info and developer",
-                onClick = onNavigateToAbout
+                onClick = onNavigateToAbout,
+                cardShape = cardShape
             )
+        }
+    }
+}
+
+@Composable
+private fun ThemeCarousel(
+    currentThemeKey: String,
+    onThemeSelected: (String) -> Unit,
+    cardShape: RoundedCornerShape
+) {
+    val scrollState = rememberScrollState()
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(scrollState),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        AppTheme.entries.forEach { theme ->
+            val themeKey = AppTheme.toKey(theme)
+            val isSelected = themeKey == currentThemeKey
+            val colorScheme = com.solo.ledger.ui.theme.getColorScheme(theme)
+            val previewRadius = if (theme.isSquare) 0.dp else 12.dp
+
+            Column(
+                modifier = Modifier
+                    .width(100.dp)
+                    .clickable { onThemeSelected(themeKey) },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Mini preview card
+                Card(
+                    modifier = Modifier
+                        .width(100.dp)
+                        .height(70.dp)
+                        .then(
+                            if (isSelected) Modifier.border(
+                                2.dp,
+                                MaterialTheme.colorScheme.primary,
+                                RoundedCornerShape(previewRadius)
+                            ) else Modifier
+                        ),
+                    colors = CardDefaults.cardColors(
+                        containerColor = colorScheme.background
+                    ),
+                    shape = RoundedCornerShape(previewRadius)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(8.dp),
+                        verticalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Mini header
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(8.dp)
+                                .clip(RoundedCornerShape(previewRadius / 2))
+                                .background(colorScheme.primary)
+                        )
+                        // Mini cards
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(16.dp)
+                                    .clip(RoundedCornerShape(previewRadius / 3))
+                                    .background(colorScheme.surface)
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(16.dp)
+                                    .clip(RoundedCornerShape(previewRadius / 3))
+                                    .background(colorScheme.surfaceVariant)
+                            )
+                        }
+                        // Mini nav
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(8.dp)
+                                .clip(RoundedCornerShape(previewRadius / 2))
+                                .background(colorScheme.primaryContainer)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = theme.displayName,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (isSelected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    maxLines = 1,
+                    fontSize = 10.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NavigationStyleCarousel(
+    currentStyleKey: String,
+    onStyleSelected: (String) -> Unit,
+    cardShape: RoundedCornerShape
+) {
+    val scrollState = rememberScrollState()
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(scrollState),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        NavigationStyle.entries.forEach { style ->
+            val isSelected = style.key == currentStyleKey
+
+            Column(
+                modifier = Modifier
+                    .width(110.dp)
+                    .clickable { onStyleSelected(style.key) },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Nav preview
+                Card(
+                    modifier = Modifier
+                        .width(110.dp)
+                        .height(50.dp)
+                        .then(
+                            if (isSelected) Modifier.border(
+                                2.dp,
+                                MaterialTheme.colorScheme.primary,
+                                cardShape
+                            ) else Modifier
+                        ),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    shape = cardShape
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(8.dp),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        // Simulated nav bar preview
+                        NavigationPreviewMini(style)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = style.displayName,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (isSelected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    maxLines = 1,
+                    fontSize = 10.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NavigationPreviewMini(style: NavigationStyle) {
+    val dotCount = 5
+    when (style) {
+        NavigationStyle.CAPSULE -> {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(20.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(dotCount) { i ->
+                    Box(
+                        modifier = Modifier
+                            .size(if (i == 0) 16.dp else 6.dp, 6.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(
+                                if (i == 0) MaterialTheme.colorScheme.primaryContainer
+                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                            )
+                    )
+                }
+            }
+        }
+        NavigationStyle.FLOATING -> {
+            Row(
+                modifier = Modifier
+                    .width(80.dp)
+                    .height(18.dp)
+                    .clip(RoundedCornerShape(9.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(dotCount) {
+                    Box(
+                        modifier = Modifier
+                            .size(5.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                    )
+                }
+            }
+        }
+        NavigationStyle.MINIMAL_FLAT -> {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(18.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(dotCount) {
+                    Box(
+                        modifier = Modifier
+                            .size(5.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                    )
+                }
+            }
+        }
+        NavigationStyle.ELEVATED -> {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(20.dp)
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(dotCount) { i ->
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(
+                                if (i == 0) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                            )
+                    )
+                }
+            }
+        }
+        NavigationStyle.ROUNDED_PILL -> {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(18.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(dotCount) { i ->
+                    Box(
+                        modifier = Modifier
+                            .size(if (i == 0) 8.dp else 5.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (i == 0) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                            )
+                    )
+                }
+            }
+        }
+        NavigationStyle.COMPACT -> {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(18.dp)
+                    .background(MaterialTheme.colorScheme.surface),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(dotCount) { i ->
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (i == 0) MaterialTheme.colorScheme.primaryContainer
+                                else Color.Transparent
+                            )
+                            .border(
+                                1.dp,
+                                if (i == 0) Color.Transparent
+                                else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                CircleShape
+                            )
+                    )
+                }
+            }
+        }
+        NavigationStyle.MATERIAL_STANDARD -> {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(22.dp)
+                    .background(MaterialTheme.colorScheme.surface),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(dotCount) { i ->
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(
+                            modifier = Modifier
+                                .size(5.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (i == 0) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                                )
+                        )
+                        Spacer(modifier = Modifier.height(1.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(width = 10.dp, height = 2.dp)
+                                .clip(RoundedCornerShape(1.dp))
+                                .background(
+                                    if (i == 0) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                                    else Color.Transparent
+                                )
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -182,7 +574,7 @@ fun SettingsSectionHeader(title: String) {
         style = MaterialTheme.typography.labelLarge,
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
+        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
     )
 }
 
@@ -191,7 +583,8 @@ fun SettingsItem(
     icon: ImageVector,
     title: String,
     subtitle: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    cardShape: RoundedCornerShape = RoundedCornerShape(14.dp)
 ) {
     Card(
         modifier = Modifier
@@ -200,7 +593,7 @@ fun SettingsItem(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        shape = RoundedCornerShape(14.dp)
+        shape = cardShape
     ) {
         Row(
             modifier = Modifier
@@ -244,14 +637,15 @@ fun SettingsToggleItem(
     title: String,
     subtitle: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    cardShape: RoundedCornerShape = RoundedCornerShape(14.dp)
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        shape = RoundedCornerShape(14.dp)
+        shape = cardShape
     ) {
         Row(
             modifier = Modifier

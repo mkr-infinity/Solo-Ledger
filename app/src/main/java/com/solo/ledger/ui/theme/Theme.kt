@@ -4,8 +4,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
-enum class AppTheme(val displayName: String, val isDark: Boolean) {
+enum class AppTheme(val displayName: String, val isDark: Boolean, val isSquare: Boolean = false) {
     LEDGER_DARK("Ledger Dark", true),
     LEDGER_LIGHT("Ledger Light", false),
     EMERALD_DARK("Emerald Dark", true),
@@ -13,7 +14,9 @@ enum class AppTheme(val displayName: String, val isDark: Boolean) {
     ANIME_DARK("Anime Dark", true),
     ANIME_LIGHT("Anime Light", false),
     SPIDER_DARK("Spider Dark", true),
-    SPIDER_LIGHT("Spider Light", false);
+    SPIDER_LIGHT("Spider Light", false),
+    SQUARE_DARK("Square Dark", true, isSquare = true),
+    SQUARE_LIGHT("Square Light", false, isSquare = true);
 
     companion object {
         fun fromKey(key: String): AppTheme = when (key) {
@@ -25,6 +28,8 @@ enum class AppTheme(val displayName: String, val isDark: Boolean) {
             "anime_light" -> ANIME_LIGHT
             "spider_dark" -> SPIDER_DARK
             "spider_light" -> SPIDER_LIGHT
+            "square_dark" -> SQUARE_DARK
+            "square_light" -> SQUARE_LIGHT
             else -> LEDGER_DARK
         }
 
@@ -37,6 +42,8 @@ enum class AppTheme(val displayName: String, val isDark: Boolean) {
             ANIME_LIGHT -> "anime_light"
             SPIDER_DARK -> "spider_dark"
             SPIDER_LIGHT -> "spider_light"
+            SQUARE_DARK -> "square_dark"
+            SQUARE_LIGHT -> "square_light"
         }
     }
 }
@@ -273,6 +280,64 @@ private fun spiderLightColorScheme() = lightColorScheme(
     scrim = SpiderLightColors.scrim
 )
 
+private fun squareDarkColorScheme() = darkColorScheme(
+    primary = SquareDarkColors.primary,
+    onPrimary = SquareDarkColors.onPrimary,
+    primaryContainer = SquareDarkColors.primaryContainer,
+    onPrimaryContainer = SquareDarkColors.onPrimaryContainer,
+    secondary = SquareDarkColors.secondary,
+    onSecondary = SquareDarkColors.onSecondary,
+    secondaryContainer = SquareDarkColors.secondaryContainer,
+    onSecondaryContainer = SquareDarkColors.onSecondaryContainer,
+    tertiary = SquareDarkColors.tertiary,
+    onTertiary = SquareDarkColors.onTertiary,
+    tertiaryContainer = SquareDarkColors.tertiaryContainer,
+    onTertiaryContainer = SquareDarkColors.onTertiaryContainer,
+    background = SquareDarkColors.background,
+    onBackground = SquareDarkColors.onBackground,
+    surface = SquareDarkColors.surface,
+    onSurface = SquareDarkColors.onSurface,
+    surfaceVariant = SquareDarkColors.surfaceVariant,
+    onSurfaceVariant = SquareDarkColors.onSurfaceVariant,
+    outline = SquareDarkColors.outline,
+    outlineVariant = SquareDarkColors.outlineVariant,
+    error = SquareDarkColors.error,
+    onError = SquareDarkColors.onError,
+    errorContainer = SquareDarkColors.errorContainer,
+    inverseSurface = SquareDarkColors.inverseSurface,
+    inverseOnSurface = SquareDarkColors.inverseOnSurface,
+    scrim = SquareDarkColors.scrim
+)
+
+private fun squareLightColorScheme() = lightColorScheme(
+    primary = SquareLightColors.primary,
+    onPrimary = SquareLightColors.onPrimary,
+    primaryContainer = SquareLightColors.primaryContainer,
+    onPrimaryContainer = SquareLightColors.onPrimaryContainer,
+    secondary = SquareLightColors.secondary,
+    onSecondary = SquareLightColors.onSecondary,
+    secondaryContainer = SquareLightColors.secondaryContainer,
+    onSecondaryContainer = SquareLightColors.onSecondaryContainer,
+    tertiary = SquareLightColors.tertiary,
+    onTertiary = SquareLightColors.onTertiary,
+    tertiaryContainer = SquareLightColors.tertiaryContainer,
+    onTertiaryContainer = SquareLightColors.onTertiaryContainer,
+    background = SquareLightColors.background,
+    onBackground = SquareLightColors.onBackground,
+    surface = SquareLightColors.surface,
+    onSurface = SquareLightColors.onSurface,
+    surfaceVariant = SquareLightColors.surfaceVariant,
+    onSurfaceVariant = SquareLightColors.onSurfaceVariant,
+    outline = SquareLightColors.outline,
+    outlineVariant = SquareLightColors.outlineVariant,
+    error = SquareLightColors.error,
+    onError = SquareLightColors.onError,
+    errorContainer = SquareLightColors.errorContainer,
+    inverseSurface = SquareLightColors.inverseSurface,
+    inverseOnSurface = SquareLightColors.inverseOnSurface,
+    scrim = SquareLightColors.scrim
+)
+
 fun getColorScheme(theme: AppTheme): ColorScheme = when (theme) {
     AppTheme.LEDGER_DARK -> ledgerDarkColorScheme()
     AppTheme.LEDGER_LIGHT -> ledgerLightColorScheme()
@@ -282,6 +347,12 @@ fun getColorScheme(theme: AppTheme): ColorScheme = when (theme) {
     AppTheme.ANIME_LIGHT -> animeLightColorScheme()
     AppTheme.SPIDER_DARK -> spiderDarkColorScheme()
     AppTheme.SPIDER_LIGHT -> spiderLightColorScheme()
+    AppTheme.SQUARE_DARK -> squareDarkColorScheme()
+    AppTheme.SQUARE_LIGHT -> squareLightColorScheme()
+}
+
+fun getThemeBorderRadius(theme: AppTheme): Float {
+    return if (theme.isSquare) 0f else 16f
 }
 
 val LocalAppTheme = staticCompositionLocalOf { AppTheme.LEDGER_DARK }
