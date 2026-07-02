@@ -1,12 +1,12 @@
 package com.solo.ledger.ui.screens.logs
 
 import android.content.Intent
-import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -15,9 +15,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.solo.ledger.data.model.AppLog
 import com.solo.ledger.data.model.LogType
@@ -41,7 +44,7 @@ fun LogsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "Activity Logs",
+                        "Logs",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -75,44 +78,52 @@ fun LogsScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        imageVector = Icons.Filled.Article,
+                        imageVector = Icons.Filled.Code,
                         contentDescription = null,
                         modifier = Modifier.size(56.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "No logs recorded yet",
+                        text = "No logs recorded",
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "Activity will appear here as you use the app",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
                 }
             }
         } else {
-            LazyColumn(
+            // Terminal-style log viewer
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                contentPadding = PaddingValues(vertical = 12.dp)
+                    .padding(12.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFF0D1117))
             ) {
-                item {
-                    Text(
-                        text = "${logs.size} log entries",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    item {
+                        TerminalHeader(logCount = logs.size)
+                    }
 
-                items(logs, key = { it.id }) { log ->
-                    LogItem(log = log)
+                    items(logs, key = { it.id }) { log ->
+                        TerminalLogLine(log = log)
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "$ _",
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 12.sp,
+                            color = Color(0xFF8B949E)
+                        )
+                    }
                 }
             }
         }
@@ -128,7 +139,7 @@ fun LogsScreen(
                     "10min" -> now - 10 * 60 * 1000
                     "1hour" -> now - 60 * 60 * 1000
                     "1day" -> now - 24 * 60 * 60 * 1000
-                    "1week" -> now - 7 * 24 * 60 * 60 * 1000
+                    "1week" -> now - 7L * 24 * 60 * 60 * 1000
                     "1month" -> now - 30L * 24 * 60 * 60 * 1000
                     else -> 0L
                 }
@@ -147,7 +158,6 @@ fun LogsScreen(
         )
     }
 
-    // Clear confirmation
     if (showClearConfirm) {
         AlertDialog(
             onDismissRequest = { showClearConfirm = false },
@@ -171,127 +181,93 @@ fun LogsScreen(
 }
 
 @Composable
-private fun LogItem(log: AppLog) {
-    var expanded by remember { mutableStateOf(false) }
-    val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-    val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { expanded = !expanded },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(getLogColor(log.type))
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = log.title,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "${dateFormat.format(Date(log.timestamp))} at ${timeFormat.format(Date(log.timestamp))}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Icon(
-                    imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-
-            AnimatedVisibility(
-                visible = expanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
-            ) {
-                Column(modifier = Modifier.padding(top = 10.dp)) {
-                    Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Column {
-                            Text(
-                                text = "Type",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = log.type.name.replace("_", " "),
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                        Column {
-                            Text(
-                                text = "Timestamp",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
-                                    .format(Date(log.timestamp)),
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-
-                    if (log.details.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Details",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = log.details,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-        }
+private fun TerminalHeader(logCount: Int) {
+    Column {
+        Text(
+            text = "// Solo Ledger Activity Log",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+            color = Color(0xFF8B949E)
+        )
+        Text(
+            text = "// Total entries: $logCount",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+            color = Color(0xFF8B949E)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 
 @Composable
-private fun getLogColor(type: LogType): androidx.compose.ui.graphics.Color {
-    return when (type) {
-        LogType.EXPENSE_ADDED -> MaterialTheme.colorScheme.secondary
-        LogType.EXPENSE_EDITED -> MaterialTheme.colorScheme.tertiary
-        LogType.EXPENSE_DELETED, LogType.BIN_CLEARED -> MaterialTheme.colorScheme.error
-        LogType.EXPENSE_RESTORED -> MaterialTheme.colorScheme.primary
-        LogType.CATEGORY_ADDED, LogType.GOAL_ADDED -> MaterialTheme.colorScheme.secondary
-        LogType.CATEGORY_DELETED -> MaterialTheme.colorScheme.error
-        LogType.GOAL_UPDATED -> MaterialTheme.colorScheme.tertiary
-        LogType.BUDGET_CHANGED, LogType.THEME_CHANGED, LogType.SETTINGS_CHANGED -> MaterialTheme.colorScheme.primary
-        LogType.DATA_EXPORTED, LogType.DATA_IMPORTED -> MaterialTheme.colorScheme.secondary
-        LogType.APP_OPENED -> MaterialTheme.colorScheme.onSurfaceVariant
+private fun TerminalLogLine(log: AppLog) {
+    val timeStr = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date(log.timestamp))
+    val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(log.timestamp))
+
+    val typeColor = when (log.type) {
+        LogType.EXPENSE_ADDED, LogType.GOAL_ADDED, LogType.CATEGORY_ADDED -> Color(0xFF7EE787)
+        LogType.EXPENSE_EDITED, LogType.GOAL_UPDATED, LogType.SETTINGS_CHANGED,
+        LogType.THEME_CHANGED, LogType.BUDGET_CHANGED -> Color(0xFFF0C14B)
+        LogType.EXPENSE_DELETED, LogType.CATEGORY_DELETED, LogType.BIN_CLEARED -> Color(0xFFF85149)
+        LogType.EXPENSE_RESTORED -> Color(0xFF79C0FF)
+        LogType.DATA_EXPORTED, LogType.DATA_IMPORTED -> Color(0xFFD2A8FF)
+        LogType.APP_OPENED -> Color(0xFF8B949E)
+    }
+
+    val typeTag = when (log.type) {
+        LogType.EXPENSE_ADDED -> "ADD"
+        LogType.EXPENSE_EDITED -> "EDT"
+        LogType.EXPENSE_DELETED -> "DEL"
+        LogType.EXPENSE_RESTORED -> "RST"
+        LogType.CATEGORY_ADDED -> "CAT+"
+        LogType.CATEGORY_DELETED -> "CAT-"
+        LogType.GOAL_ADDED -> "GOL+"
+        LogType.GOAL_UPDATED -> "GOL~"
+        LogType.BUDGET_CHANGED -> "BDG"
+        LogType.THEME_CHANGED -> "THM"
+        LogType.DATA_EXPORTED -> "EXP"
+        LogType.DATA_IMPORTED -> "IMP"
+        LogType.SETTINGS_CHANGED -> "SET"
+        LogType.APP_OPENED -> "SYS"
+        LogType.BIN_CLEARED -> "CLR"
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(vertical = 1.dp)
+    ) {
+        Text(
+            text = "[$dateStr $timeStr]",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+            color = Color(0xFF8B949E)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = typeTag.padEnd(5),
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            color = typeColor
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = log.title,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+            color = Color(0xFFE6EDF3)
+        )
+        if (log.details.isNotBlank()) {
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = "| ${log.details}",
+                fontFamily = FontFamily.Monospace,
+                fontSize = 11.sp,
+                color = Color(0xFF8B949E)
+            )
+        }
     }
 }
 
@@ -310,12 +286,11 @@ private fun ExportLogsSheet(
             Text(
                 text = "Export Logs",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Choose a time range to export",
+                text = "Choose time range",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -333,11 +308,11 @@ private fun ExportLogsSheet(
                     onClick = { onExport(key) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                        .padding(vertical = 3.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(10.dp)
                 ) {
                     Row(
                         modifier = Modifier
@@ -348,15 +323,11 @@ private fun ExportLogsSheet(
                         Icon(
                             Icons.Filled.Schedule,
                             contentDescription = null,
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(18.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = label,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                        Text(text = label, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }
