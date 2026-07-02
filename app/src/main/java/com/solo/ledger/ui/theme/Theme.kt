@@ -16,35 +16,19 @@ enum class AppTheme(val displayName: String, val isDark: Boolean, val isSquare: 
     SPIDER_DARK("Spider Dark", true),
     SPIDER_LIGHT("Spider Light", false),
     SQUARE_DARK("Square Dark", true, isSquare = true),
-    SQUARE_LIGHT("Square Light", false, isSquare = true);
+    SQUARE_LIGHT("Square Light", false, isSquare = true),
+    OCEAN_DARK("Ocean Dark", true),
+    OCEAN_LIGHT("Ocean Light", false),
+    SUNSET_DARK("Sunset Dark", true),
+    SUNSET_LIGHT("Sunset Light", false),
+    MIDNIGHT("Midnight", true),
+    ROSE("Rose", true),
+    MINT("Mint", true);
 
     companion object {
-        fun fromKey(key: String): AppTheme = when (key) {
-            "ledger_dark" -> LEDGER_DARK
-            "ledger_light" -> LEDGER_LIGHT
-            "emerald_dark" -> EMERALD_DARK
-            "emerald_light" -> EMERALD_LIGHT
-            "anime_dark" -> ANIME_DARK
-            "anime_light" -> ANIME_LIGHT
-            "spider_dark" -> SPIDER_DARK
-            "spider_light" -> SPIDER_LIGHT
-            "square_dark" -> SQUARE_DARK
-            "square_light" -> SQUARE_LIGHT
-            else -> LEDGER_DARK
-        }
+        fun fromKey(key: String): AppTheme = entries.find { toKey(it) == key } ?: LEDGER_DARK
 
-        fun toKey(theme: AppTheme): String = when (theme) {
-            LEDGER_DARK -> "ledger_dark"
-            LEDGER_LIGHT -> "ledger_light"
-            EMERALD_DARK -> "emerald_dark"
-            EMERALD_LIGHT -> "emerald_light"
-            ANIME_DARK -> "anime_dark"
-            ANIME_LIGHT -> "anime_light"
-            SPIDER_DARK -> "spider_dark"
-            SPIDER_LIGHT -> "spider_light"
-            SQUARE_DARK -> "square_dark"
-            SQUARE_LIGHT -> "square_light"
-        }
+        fun toKey(theme: AppTheme): String = theme.name.lowercase()
     }
 }
 
@@ -349,6 +333,104 @@ fun getColorScheme(theme: AppTheme): ColorScheme = when (theme) {
     AppTheme.SPIDER_LIGHT -> spiderLightColorScheme()
     AppTheme.SQUARE_DARK -> squareDarkColorScheme()
     AppTheme.SQUARE_LIGHT -> squareLightColorScheme()
+    AppTheme.OCEAN_DARK -> darkColorScheme(
+        primary = OceanDarkColors.primary, onPrimary = OceanDarkColors.onPrimary,
+        primaryContainer = OceanDarkColors.primaryContainer, onPrimaryContainer = OceanDarkColors.onPrimaryContainer,
+        secondary = OceanDarkColors.secondary, onSecondary = OceanDarkColors.onSecondary,
+        secondaryContainer = OceanDarkColors.secondaryContainer, onSecondaryContainer = OceanDarkColors.onSecondaryContainer,
+        tertiary = OceanDarkColors.tertiary, onTertiary = OceanDarkColors.onTertiary,
+        tertiaryContainer = OceanDarkColors.tertiaryContainer, onTertiaryContainer = OceanDarkColors.onTertiaryContainer,
+        background = OceanDarkColors.background, onBackground = OceanDarkColors.onBackground,
+        surface = OceanDarkColors.surface, onSurface = OceanDarkColors.onSurface,
+        surfaceVariant = OceanDarkColors.surfaceVariant, onSurfaceVariant = OceanDarkColors.onSurfaceVariant,
+        outline = OceanDarkColors.outline, outlineVariant = OceanDarkColors.outlineVariant,
+        error = OceanDarkColors.error, onError = OceanDarkColors.onError, errorContainer = OceanDarkColors.errorContainer,
+        inverseSurface = OceanDarkColors.inverseSurface, inverseOnSurface = OceanDarkColors.inverseOnSurface, scrim = OceanDarkColors.scrim
+    )
+    AppTheme.OCEAN_LIGHT -> lightColorScheme(
+        primary = OceanLightColors.primary, onPrimary = OceanLightColors.onPrimary,
+        primaryContainer = OceanLightColors.primaryContainer, onPrimaryContainer = OceanLightColors.onPrimaryContainer,
+        secondary = OceanLightColors.secondary, onSecondary = OceanLightColors.onSecondary,
+        secondaryContainer = OceanLightColors.secondaryContainer, onSecondaryContainer = OceanLightColors.onSecondaryContainer,
+        tertiary = OceanLightColors.tertiary, onTertiary = OceanLightColors.onTertiary,
+        tertiaryContainer = OceanLightColors.tertiaryContainer, onTertiaryContainer = OceanLightColors.onTertiaryContainer,
+        background = OceanLightColors.background, onBackground = OceanLightColors.onBackground,
+        surface = OceanLightColors.surface, onSurface = OceanLightColors.onSurface,
+        surfaceVariant = OceanLightColors.surfaceVariant, onSurfaceVariant = OceanLightColors.onSurfaceVariant,
+        outline = OceanLightColors.outline, outlineVariant = OceanLightColors.outlineVariant,
+        error = OceanLightColors.error, onError = OceanLightColors.onError, errorContainer = OceanLightColors.errorContainer,
+        inverseSurface = OceanLightColors.inverseSurface, inverseOnSurface = OceanLightColors.inverseOnSurface, scrim = OceanLightColors.scrim
+    )
+    AppTheme.SUNSET_DARK -> darkColorScheme(
+        primary = SunsetDarkColors.primary, onPrimary = SunsetDarkColors.onPrimary,
+        primaryContainer = SunsetDarkColors.primaryContainer, onPrimaryContainer = SunsetDarkColors.onPrimaryContainer,
+        secondary = SunsetDarkColors.secondary, onSecondary = SunsetDarkColors.onSecondary,
+        secondaryContainer = SunsetDarkColors.secondaryContainer, onSecondaryContainer = SunsetDarkColors.onSecondaryContainer,
+        tertiary = SunsetDarkColors.tertiary, onTertiary = SunsetDarkColors.onTertiary,
+        tertiaryContainer = SunsetDarkColors.tertiaryContainer, onTertiaryContainer = SunsetDarkColors.onTertiaryContainer,
+        background = SunsetDarkColors.background, onBackground = SunsetDarkColors.onBackground,
+        surface = SunsetDarkColors.surface, onSurface = SunsetDarkColors.onSurface,
+        surfaceVariant = SunsetDarkColors.surfaceVariant, onSurfaceVariant = SunsetDarkColors.onSurfaceVariant,
+        outline = SunsetDarkColors.outline, outlineVariant = SunsetDarkColors.outlineVariant,
+        error = SunsetDarkColors.error, onError = SunsetDarkColors.onError, errorContainer = SunsetDarkColors.errorContainer,
+        inverseSurface = SunsetDarkColors.inverseSurface, inverseOnSurface = SunsetDarkColors.inverseOnSurface, scrim = SunsetDarkColors.scrim
+    )
+    AppTheme.SUNSET_LIGHT -> lightColorScheme(
+        primary = SunsetLightColors.primary, onPrimary = SunsetLightColors.onPrimary,
+        primaryContainer = SunsetLightColors.primaryContainer, onPrimaryContainer = SunsetLightColors.onPrimaryContainer,
+        secondary = SunsetLightColors.secondary, onSecondary = SunsetLightColors.onSecondary,
+        secondaryContainer = SunsetLightColors.secondaryContainer, onSecondaryContainer = SunsetLightColors.onSecondaryContainer,
+        tertiary = SunsetLightColors.tertiary, onTertiary = SunsetLightColors.onTertiary,
+        tertiaryContainer = SunsetLightColors.tertiaryContainer, onTertiaryContainer = SunsetLightColors.onTertiaryContainer,
+        background = SunsetLightColors.background, onBackground = SunsetLightColors.onBackground,
+        surface = SunsetLightColors.surface, onSurface = SunsetLightColors.onSurface,
+        surfaceVariant = SunsetLightColors.surfaceVariant, onSurfaceVariant = SunsetLightColors.onSurfaceVariant,
+        outline = SunsetLightColors.outline, outlineVariant = SunsetLightColors.outlineVariant,
+        error = SunsetLightColors.error, onError = SunsetLightColors.onError, errorContainer = SunsetLightColors.errorContainer,
+        inverseSurface = SunsetLightColors.inverseSurface, inverseOnSurface = SunsetLightColors.inverseOnSurface, scrim = SunsetLightColors.scrim
+    )
+    AppTheme.MIDNIGHT -> darkColorScheme(
+        primary = MidnightDarkColors.primary, onPrimary = MidnightDarkColors.onPrimary,
+        primaryContainer = MidnightDarkColors.primaryContainer, onPrimaryContainer = MidnightDarkColors.onPrimaryContainer,
+        secondary = MidnightDarkColors.secondary, onSecondary = MidnightDarkColors.onSecondary,
+        secondaryContainer = MidnightDarkColors.secondaryContainer, onSecondaryContainer = MidnightDarkColors.onSecondaryContainer,
+        tertiary = MidnightDarkColors.tertiary, onTertiary = MidnightDarkColors.onTertiary,
+        tertiaryContainer = MidnightDarkColors.tertiaryContainer, onTertiaryContainer = MidnightDarkColors.onTertiaryContainer,
+        background = MidnightDarkColors.background, onBackground = MidnightDarkColors.onBackground,
+        surface = MidnightDarkColors.surface, onSurface = MidnightDarkColors.onSurface,
+        surfaceVariant = MidnightDarkColors.surfaceVariant, onSurfaceVariant = MidnightDarkColors.onSurfaceVariant,
+        outline = MidnightDarkColors.outline, outlineVariant = MidnightDarkColors.outlineVariant,
+        error = MidnightDarkColors.error, onError = MidnightDarkColors.onError, errorContainer = MidnightDarkColors.errorContainer,
+        inverseSurface = MidnightDarkColors.inverseSurface, inverseOnSurface = MidnightDarkColors.inverseOnSurface, scrim = MidnightDarkColors.scrim
+    )
+    AppTheme.ROSE -> darkColorScheme(
+        primary = RoseDarkColors.primary, onPrimary = RoseDarkColors.onPrimary,
+        primaryContainer = RoseDarkColors.primaryContainer, onPrimaryContainer = RoseDarkColors.onPrimaryContainer,
+        secondary = RoseDarkColors.secondary, onSecondary = RoseDarkColors.onSecondary,
+        secondaryContainer = RoseDarkColors.secondaryContainer, onSecondaryContainer = RoseDarkColors.onSecondaryContainer,
+        tertiary = RoseDarkColors.tertiary, onTertiary = RoseDarkColors.onTertiary,
+        tertiaryContainer = RoseDarkColors.tertiaryContainer, onTertiaryContainer = RoseDarkColors.onTertiaryContainer,
+        background = RoseDarkColors.background, onBackground = RoseDarkColors.onBackground,
+        surface = RoseDarkColors.surface, onSurface = RoseDarkColors.onSurface,
+        surfaceVariant = RoseDarkColors.surfaceVariant, onSurfaceVariant = RoseDarkColors.onSurfaceVariant,
+        outline = RoseDarkColors.outline, outlineVariant = RoseDarkColors.outlineVariant,
+        error = RoseDarkColors.error, onError = RoseDarkColors.onError, errorContainer = RoseDarkColors.errorContainer,
+        inverseSurface = RoseDarkColors.inverseSurface, inverseOnSurface = RoseDarkColors.inverseOnSurface, scrim = RoseDarkColors.scrim
+    )
+    AppTheme.MINT -> darkColorScheme(
+        primary = MintDarkColors.primary, onPrimary = MintDarkColors.onPrimary,
+        primaryContainer = MintDarkColors.primaryContainer, onPrimaryContainer = MintDarkColors.onPrimaryContainer,
+        secondary = MintDarkColors.secondary, onSecondary = MintDarkColors.onSecondary,
+        secondaryContainer = MintDarkColors.secondaryContainer, onSecondaryContainer = MintDarkColors.onSecondaryContainer,
+        tertiary = MintDarkColors.tertiary, onTertiary = MintDarkColors.onTertiary,
+        tertiaryContainer = MintDarkColors.tertiaryContainer, onTertiaryContainer = MintDarkColors.onTertiaryContainer,
+        background = MintDarkColors.background, onBackground = MintDarkColors.onBackground,
+        surface = MintDarkColors.surface, onSurface = MintDarkColors.onSurface,
+        surfaceVariant = MintDarkColors.surfaceVariant, onSurfaceVariant = MintDarkColors.onSurfaceVariant,
+        outline = MintDarkColors.outline, outlineVariant = MintDarkColors.outlineVariant,
+        error = MintDarkColors.error, onError = MintDarkColors.onError, errorContainer = MintDarkColors.errorContainer,
+        inverseSurface = MintDarkColors.inverseSurface, inverseOnSurface = MintDarkColors.inverseOnSurface, scrim = MintDarkColors.scrim
+    )
 }
 
 fun getThemeBorderRadius(theme: AppTheme): Float {
