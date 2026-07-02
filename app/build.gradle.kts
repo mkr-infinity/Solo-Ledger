@@ -1,8 +1,30 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
 }
+
+// Load release signing config from (in priority order):
+//   1. Environment variables (used by CI / GitHub Actions)
+//   2. A local, git-ignored keystore.properties file
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) {
+        load(FileInputStream(keystorePropertiesFile))
+    }
+}
+
+fun signingValue(envKey: String, propKey: String): String? =
+    System.getenv(envKey) ?: keystoreProperties.getProperty(propKey)
+
+val hasReleaseSigning: Boolean =
+    signingValue("KEYSTORE_FILE", "storeFile") != null &&
+    signingValue("KEYSTORE_PASSWORD", "storePassword") != null &&
+    signingValue("KEY_ALIAS", "keyAlias") != null &&
+    signingValue("KEY_PASSWORD", "keyPassword") != null
 
 android {
     namespace = "com.solo.ledger"
@@ -23,12 +45,13 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystoreFile = file("${project.rootDir}/keystore/debug.keystore")
-            if (keystoreFile.exists()) {
-                storeFile = keystoreFile
-                storePassword = "android"
-                keyAlias = "androiddebugkey"
-                keyPassword = "android"
+            if (hasReleaseSigning) {
+                storeFile = rootProject.file(
+                    signingValue("KEYSTORE_FILE", "storeFile")!!
+                )
+                storePassword = signingValue("KEYSTORE_PASSWORD", "storePassword")
+                keyAlias = signingValue("KEY_ALIAS", "keyAlias")
+                keyPassword = signingValue("KEY_PASSWORD", "keyPassword")
             }
         }
     }
@@ -36,10 +59,6 @@ android {
     buildTypes {
         debug {
             isDebuggable = true
-            val keystoreFile = file("${project.rootDir}/keystore/debug.keystore")
-            if (keystoreFile.exists()) {
-                signingConfig = signingConfigs.getByName("release")
-            }
         }
         release {
             isMinifyEnabled = true
@@ -48,9 +67,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            val keystoreFile = file("${project.rootDir}/keystore/debug.keystore")
-            if (keystoreFile.exists()) {
-                signingConfig = signingConfigs.getByName("release")
+            // Only sign the release build when signing material is available,
+            // otherwise Gradle produces an unsigned APK (useful for CI dry-runs).
+            signingConfig = if (hasReleaseSigning) {
+                signingConfigs.getByName("release")
+            } else {
+                null
             }
         }
     }

@@ -12,5 +12,12 @@ local.properties
 /app/release
 *.apk
 *.aab
+
+# --- Signing / secrets (NEVER commit these) ---
+/keystore/
+keystore.properties
 *.jks
 *.keystore
+*.p12
+*.pem
+.storepass
