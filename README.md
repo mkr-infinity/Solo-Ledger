@@ -97,6 +97,18 @@ Inspired by the design quality of CRED, Google Wallet, and Pixel's design langua
 
 ---
 
+## Device Compatibility
+
+| Requirement | Value |
+|-------------|-------|
+| Minimum Android | 8.0 Oreo (API 26) |
+| Target Android | 14 (API 34) |
+| Maximum Android | Latest (no upper limit) |
+| Architecture | arm64-v8a, armeabi-v7a, x86_64 |
+| Screen | All sizes supported |
+
+---
+
 ## Installation
 
 ### Prerequisites

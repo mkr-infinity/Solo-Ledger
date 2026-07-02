@@ -1,15 +1,19 @@
 package com.solo.ledger.ui.viewmodel
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.solo.ledger.data.dao.CategorySpending
+import com.solo.ledger.data.model.AppLog
 import com.solo.ledger.data.model.Category
 import com.solo.ledger.data.model.Expense
+import com.solo.ledger.data.model.LogType
 import com.solo.ledger.data.model.SavingsGoal
 import com.solo.ledger.data.preferences.UserPreferences
 import com.solo.ledger.data.repository.CategoryRepository
 import com.solo.ledger.data.repository.ExpenseRepository
+import com.solo.ledger.data.repository.LogRepository
 import com.solo.ledger.data.repository.SavingsGoalRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -21,6 +25,35 @@ class MainViewModel(
     private val savingsGoalRepository: SavingsGoalRepository,
     private val userPreferences: UserPreferences
 ) : ViewModel() {
+
+    private val logRepository = LogRepository()
+
+    // Logs
+    val appLogs: StateFlow<List<AppLog>> = logRepository.logs
+
+    // Expense counter for support popup trigger
+    private val _totalExpensesAdded = MutableStateFlow(0)
+    val showSupportPopup = MutableStateFlow(false)
+
+    init {
+        logRepository.addLog(LogType.APP_OPENED, "App opened", "Solo Ledger started")
+    }
+
+    fun log(type: LogType, title: String, details: String = "") {
+        logRepository.addLog(type, title, details)
+    }
+
+    fun clearLogs() {
+        logRepository.clearLogs()
+    }
+
+    fun exportLogs(logs: List<AppLog>): String {
+        return logRepository.exportLogsAsText(logs)
+    }
+
+    fun dismissSupportPopup() {
+        showSupportPopup.value = false
+    }
 
     // Preferences
     val currentTheme: StateFlow<String> = userPreferences.theme
@@ -139,24 +172,33 @@ class MainViewModel(
     fun addExpense(expense: Expense) {
         viewModelScope.launch {
             expenseRepository.insertExpense(expense)
+            logRepository.addLog(LogType.EXPENSE_ADDED, "Expense added: ${expense.title}", "Amount: ${expense.amount}")
+            _totalExpensesAdded.value++
+            val count = _totalExpensesAdded.value
+            if (count == 10 || count == 100 || count == 500) {
+                showSupportPopup.value = true
+            }
         }
     }
 
     fun updateExpense(expense: Expense) {
         viewModelScope.launch {
             expenseRepository.updateExpense(expense.copy(updatedAt = System.currentTimeMillis()))
+            logRepository.addLog(LogType.EXPENSE_EDITED, "Expense edited: ${expense.title}")
         }
     }
 
     fun deleteExpense(id: Long) {
         viewModelScope.launch {
             expenseRepository.softDeleteExpense(id)
+            logRepository.addLog(LogType.EXPENSE_DELETED, "Expense moved to bin", "ID: $id")
         }
     }
 
     fun restoreExpense(id: Long) {
         viewModelScope.launch {
             expenseRepository.restoreExpense(id)
+            logRepository.addLog(LogType.EXPENSE_RESTORED, "Expense restored", "ID: $id")
         }
     }
 
@@ -169,6 +211,7 @@ class MainViewModel(
     fun clearBin() {
         viewModelScope.launch {
             expenseRepository.clearBin()
+            logRepository.addLog(LogType.BIN_CLEARED, "Bin cleared")
         }
     }
 

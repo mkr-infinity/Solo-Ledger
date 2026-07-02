@@ -176,7 +176,9 @@ fun SoloLedgerMainApp() {
                         onNavigateToComingSoon = { navController.navigate(Screen.ComingSoon.route) },
                         onNavigateToBudgetTemplates = { navController.navigate(Screen.BudgetTemplates.route) },
                         onNavigateToSavingsGoals = { navController.navigate(Screen.SavingsGoals.route) },
-                        onNavigateToBin = { navController.navigate(Screen.Bin.route) }
+                        onNavigateToBin = { navController.navigate(Screen.Bin.route) },
+                        onNavigateToLogs = { navController.navigate(Screen.Logs.route) },
+                        onNavigateToUpdates = { navController.navigate(Screen.Updates.route) }
                     )
                 }
 
@@ -254,7 +256,30 @@ fun SoloLedgerMainApp() {
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
+
+                composable(Screen.Logs.route) {
+                    com.solo.ledger.ui.screens.logs.LogsScreen(
+                        viewModel = viewModel,
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+
+                composable(Screen.Updates.route) {
+                    com.solo.ledger.ui.screens.update.UpdateScreen(
+                        viewModel = viewModel,
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
             }
+        }
+
+        // Support popup
+        val showPopup by viewModel.showSupportPopup.collectAsStateWithLifecycle()
+        if (showPopup) {
+            com.solo.ledger.ui.components.SupportPopup(
+                onDismiss = { viewModel.dismissSupportPopup() },
+                onMaybeLater = { viewModel.dismissSupportPopup() }
+            )
         }
     }
 }

@@ -22,4 +22,6 @@ sealed class Screen(val route: String) {
     object ThemeSelector : Screen("theme_selector")
     object NavigationStyleSelector : Screen("navigation_style_selector")
     object DataManagement : Screen("data_management")
+    object Logs : Screen("logs")
+    object Updates : Screen("updates")
 }

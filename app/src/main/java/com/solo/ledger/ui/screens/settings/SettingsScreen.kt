@@ -1,5 +1,6 @@
 package com.solo.ledger.ui.screens.settings
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,7 +40,9 @@ fun SettingsScreen(
     onNavigateToComingSoon: () -> Unit,
     onNavigateToBudgetTemplates: () -> Unit,
     onNavigateToSavingsGoals: () -> Unit,
-    onNavigateToBin: () -> Unit
+    onNavigateToBin: () -> Unit,
+    onNavigateToLogs: () -> Unit,
+    onNavigateToUpdates: () -> Unit
 ) {
     val animationsEnabled by viewModel.animationsEnabled.collectAsStateWithLifecycle()
     val currentThemeKey by viewModel.currentTheme.collectAsStateWithLifecycle()
@@ -189,6 +192,24 @@ fun SettingsScreen(
         }
         item {
             SettingsItem(
+                icon = Icons.Filled.Article,
+                title = "Logs",
+                subtitle = "View activity history and export",
+                onClick = onNavigateToLogs,
+                cardShape = cardShape
+            )
+        }
+        item {
+            SettingsItem(
+                icon = Icons.Filled.Update,
+                title = "Updates",
+                subtitle = "Check for new versions",
+                onClick = onNavigateToUpdates,
+                cardShape = cardShape
+            )
+        }
+        item {
+            SettingsItem(
                 icon = Icons.Filled.NewReleases,
                 title = "Coming Soon",
                 subtitle = "Premium features in development",
@@ -213,6 +234,75 @@ fun SettingsScreen(
                 onClick = onNavigateToAbout,
                 cardShape = cardShape
             )
+        }
+
+        // Version easter egg
+        item {
+            VersionEasterEgg(cardShape = cardShape)
+        }
+    }
+}
+
+@Composable
+private fun VersionEasterEgg(cardShape: RoundedCornerShape) {
+    var tapCount by remember { mutableIntStateOf(0) }
+    var showMessage by remember { mutableStateOf(false) }
+    var currentMessage by remember { mutableStateOf("") }
+
+    val messages = listOf(
+        "Stop poking me!",
+        "I am just a version number, relax.",
+        "Okay, you found me. Now what?",
+        "Do you expect me to do a trick?",
+        "Fine, I will just sit here.",
+        "You really have nothing better to do?",
+        "Still going? Respect.",
+        "Alright alright, you win. Happy now?",
+        "This is getting out of hand.",
+        "Go track some expenses instead!",
+        "I am not hiding any secrets, I promise.",
+        "You must be fun at parties.",
+        "Achievement unlocked: Version Tapper."
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                tapCount++
+                if (tapCount == 5) {
+                    currentMessage = "Hey there! Need help? Check the About section."
+                    showMessage = true
+                } else if (tapCount > 5) {
+                    currentMessage = messages[(tapCount - 6) % messages.size]
+                    showMessage = true
+                }
+            },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        shape = cardShape
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "v1.0.0",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            AnimatedVisibility(visible = showMessage) {
+                Text(
+                    text = currentMessage,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
         }
     }
 }
